@@ -89,12 +89,12 @@ async function NewsContent() {
             />
           </div>
         </ClipReveal>
-        <h3 className="mt-6 text-2xl leading-snug font-bold md:text-3xl">
+        <h3 dir="auto" className="mt-6 text-2xl leading-snug font-bold md:text-3xl">
           <Link href="/news" className="hover:underline">
             {featured.title}
           </Link>
         </h3>
-        <p className="mt-3 line-clamp-3 max-w-prose text-ink/80">
+        <p dir="auto" className="mt-3 line-clamp-3 max-w-prose text-ink/80">
           {excerpt(featured.body)}
         </p>
         <p className="mt-4">{date(featured.publishedAt)}</p>
@@ -105,7 +105,7 @@ async function NewsContent() {
           {others.slice(0, 3).map((item) => (
             <li key={item.id} className="border-b border-hairline py-6">
               <p>{date(item.publishedAt)}</p>
-              <h3 className="mt-1 text-lg leading-snug font-semibold md:text-xl">
+              <h3 dir="auto" className="mt-1 text-lg leading-snug font-semibold md:text-xl">
                 <Link href="/news" className="hover:underline">
                   {item.title}
                 </Link>

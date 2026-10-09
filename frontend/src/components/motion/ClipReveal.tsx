@@ -4,10 +4,10 @@ import { useRef, type ReactNode } from "react";
 import {
   cubicBezier,
   motion,
-  useReducedMotion,
   useScroll,
   useTransform,
 } from "motion/react";
+import { useReducedMotion } from "./useReducedMotion";
 import { useLocale } from "next-intl";
 import { getDirection, type Locale } from "@/i18n/routing";
 

@@ -42,7 +42,9 @@ export function Header() {
     if (!menuOpen) return;
 
     const links = panelRef.current?.querySelectorAll<HTMLElement>("a") ?? [];
-    links[0]?.focus();
+    // The panel is `visibility: hidden` until its fade-in has started, and
+    // hidden elements can't take focus, so focus the first link just after.
+    const focusTimer = window.setTimeout(() => links[0]?.focus(), 60);
     document.documentElement.style.overflow = "hidden";
 
     const onKeyDown = (e: KeyboardEvent) => {
@@ -73,6 +75,7 @@ export function Header() {
     document.addEventListener("keydown", onKeyDown);
     mq.addEventListener("change", onChange);
     return () => {
+      window.clearTimeout(focusTimer);
       document.documentElement.style.overflow = "";
       document.removeEventListener("keydown", onKeyDown);
       mq.removeEventListener("change", onChange);

@@ -4,10 +4,10 @@ import { useRef, type ReactNode } from "react";
 import {
   cubicBezier,
   motion,
-  useReducedMotion,
   useScroll,
   useTransform,
 } from "motion/react";
+import { useReducedMotion } from "./useReducedMotion";
 
 const ease = cubicBezier(0.22, 0.61, 0.36, 1);
 
@@ -37,7 +37,7 @@ export function HeroScroll({
 
   const scale = useTransform(scrollYProgress, [0, 1], [1, 1.12], { ease });
   const y = useTransform(scrollYProgress, [0, 1], [0, -96], { ease });
-  const opacity = useTransform(scrollYProgress, [0, 0.65], [1, 0], { ease });
+  const opacity = useTransform(scrollYProgress, [0.05, 0.8], [1, 0]);
 
   return (
     <section ref={ref} id="hero" className={className}>

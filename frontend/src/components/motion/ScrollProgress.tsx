@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll } from "motion/react";
+import { motion, useScroll } from "motion/react";
+import { useReducedMotion } from "./useReducedMotion";
 
 // Thin gold line at the very top. Its width is bound directly to scroll
 // position (0 → 1), so it fills when scrolling down and empties when

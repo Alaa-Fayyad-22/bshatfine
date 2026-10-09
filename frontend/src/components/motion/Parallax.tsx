@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, type ReactNode } from "react";
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { motion, useScroll, useTransform } from "motion/react";
+import { useReducedMotion } from "./useReducedMotion";
 
 // Subtle vertical parallax for a photo. The frame stays put (and clips); the
 // content inside is 20% taller and slides ±8% as the frame crosses the

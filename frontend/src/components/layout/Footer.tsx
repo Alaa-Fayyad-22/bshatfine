@@ -28,7 +28,7 @@ export function Footer() {
                 <a
                   href={contact.phoneHref}
                   dir="ltr"
-                  className="inline-block underline-offset-4 hover:underline"
+                  className="inline-flex min-h-11 items-center underline-offset-4 hover:underline"
                 >
                   {contact.phoneDisplay}
                 </a>
@@ -50,7 +50,7 @@ export function Footer() {
                 <li key={item.key}>
                   <Link
                     href={item.href}
-                    className="inline-flex min-h-11 items-center underline-offset-4 hover:underline"
+                    className="inline-flex min-h-11 min-w-11 items-center underline-offset-4 hover:underline"
                   >
                     {tn(item.key)}
                   </Link>
