@@ -52,5 +52,48 @@
     "hours": "Monday to Friday, 8 am to 2 pm",
     "linksTitle": "Links",
     "rights": "© Bshatfine Municipality"
+  },
+  "Home": {
+    "Hero": {
+      "subtitle": "Services, news and official notices for the people of Bshatfine in the Chouf, in one place.",
+      "cta": "Online services"
+    },
+    "Services": {
+      "title": "Municipal services",
+      "items": {
+        "permits": {
+          "number": "01",
+          "title": "Building permits",
+          "text": "Apply for a building or renovation permit and follow your application."
+        },
+        "certificates": {
+          "number": "02",
+          "title": "Certificates and statements",
+          "text": "Request a residence statement or a certificate issued by the municipality."
+        },
+        "fees": {
+          "number": "03",
+          "title": "Municipal fees",
+          "text": "See the fees due on your property and how to pay them."
+        },
+        "requests": {
+          "number": "04",
+          "title": "Complaints and requests",
+          "text": "Report a problem with a road, street lighting or cleaning."
+        }
+      }
+    },
+    "News": {
+      "title": "Latest news",
+      "all": "All news",
+      "empty": "No news has been published yet.",
+      "error": "We could not load the news right now. Please try again shortly.",
+      "loading": "Loading news"
+    },
+    "About": {
+      "title": "About Bshatfine",
+      "text": "Bshatfine is a village in the Chouf District of Mount Lebanon, home to residents and families living near and far. The municipality looks after its daily affairs, from building permits and certificates to cleaning and roads, and publishes its news, notices and event dates here.",
+      "imageAlt": "View of the Chouf hills around Bshatfine"
+    }
   }
 }
