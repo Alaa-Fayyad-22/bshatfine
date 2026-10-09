@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Bshatfine.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261009074949_InitialCreate")]
+    [Migration("20261009081241_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -27,7 +27,7 @@ namespace Bshatfine.Infrastructure.Migrations
 
             modelBuilder.Entity("Bshatfine.Domain.Entities.News", b =>
                 {
-                    b.Property<Guid>("ID")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -43,7 +43,7 @@ namespace Bshatfine.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.HasKey("ID");
+                    b.HasKey("Id");
 
                     b.HasIndex("PublishedAt");
 

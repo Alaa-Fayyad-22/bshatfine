@@ -15,14 +15,14 @@ namespace Bshatfine.Infrastructure.Migrations
                 name: "News",
                 columns: table => new
                 {
-                    ID = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Body = table.Column<string>(type: "text", nullable: false),
                     PublishedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_News", x => x.ID);
+                    table.PrimaryKey("PK_News", x => x.Id);
                 });
 
             migrationBuilder.CreateIndex(

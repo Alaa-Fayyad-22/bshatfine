@@ -24,7 +24,7 @@ namespace Bshatfine.Infrastructure.Migrations
 
             modelBuilder.Entity("Bshatfine.Domain.Entities.News", b =>
                 {
-                    b.Property<Guid>("ID")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
@@ -40,7 +40,7 @@ namespace Bshatfine.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.HasKey("ID");
+                    b.HasKey("Id");
 
                     b.HasIndex("PublishedAt");
 
