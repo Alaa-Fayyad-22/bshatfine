@@ -11,8 +11,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     {
         modelBuilder.Entity<News>(entity =>
         {
-            entity.Property(n => n.Title).HasMaxLength(200).IsRequired();
-            entity.HasIndex(n => n.PublishedAt);
+            entity.Property(n => n.Title).HasMaxLength(Bshatfine.Domain.Entities.News.TitleMaxLength).IsRequired();
+            entity.Property(n => n.Body).IsRequired();
+
+            entity.Property(n => n.Status)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            entity.HasIndex(n => new { n.Status, n.PublishedAt });
         });
     }
 }

@@ -17,13 +17,7 @@ public class NewsService(INewsRepository repository)
 
     public async Task<NewsDto> CreateAsync(CreateNewsRequest request, CancellationToken ct)
     {
-        var news = new News
-        {
-            Id = Guid.CreateVersion7(),
-            Title = request.Title.Trim(),
-            Body = request.Body.Trim(),
-            PublishedAt = DateTime.UtcNow
-        };
+        var news = News.CreateDraft(request.Title, request.Body);
 
         await repository.AddAsync(news, ct);
         return new NewsDto(news.Id, news.Title, news.Body, news.PublishedAt);
