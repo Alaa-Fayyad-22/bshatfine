@@ -1,0 +1,29 @@
+{
+  "Meta": {
+    "title": "Bshatfine Municipality",
+    "description": "The official website of Bshatfine Municipality in the Chouf"
+  },
+  "Nav": {
+    "home": "Home",
+    "news": "News",
+    "events": "Events",
+    "services": "Services",
+    "contact": "Contact",
+    "login": "Log in"
+  },
+  "Language": {
+    "switchTo": "العربية",
+    "switchLabel": "Switch to Arabic",
+    "code": "ar"
+  },
+  "ComingSoon": {
+    "title": "Coming soon",
+    "text": "We are working on this page. It will be available soon.",
+    "backHome": "Back to home"
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "text": "We could not find the page you were looking for. Its address may have changed.",
+    "backHome": "Back to home"
+  }
+}

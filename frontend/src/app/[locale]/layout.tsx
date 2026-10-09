@@ -1,0 +1,61 @@
+import type { Metadata } from "next";
+import { IBM_Plex_Sans, IBM_Plex_Sans_Arabic } from "next/font/google";
+import { notFound } from "next/navigation";
+import { hasLocale, NextIntlClientProvider } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getDirection, routing } from "@/i18n/routing";
+import "../globals.css";
+
+// next/font self-hosts the font files and exposes them as CSS variables,
+// which globals.css then uses depending on the page language.
+const plexArabic = IBM_Plex_Sans_Arabic({
+  variable: "--font-plex-arabic",
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+const plexLatin = IBM_Plex_Sans({
+  variable: "--font-plex-latin",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
+// Tells Next to prebuild /ar and /en at build time.
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
+export async function generateMetadata({
+  params,
+}: LayoutProps<"/[locale]">): Promise<Metadata> {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) return {};
+  const t = await getTranslations({ locale, namespace: "Meta" });
+  return { title: t("title"), description: t("description") };
+}
+
+export default async function LocaleLayout({
+  children,
+  params,
+}: LayoutProps<"/[locale]">) {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) notFound();
+
+  // Lets server components below read the locale without re-reading headers,
+  // which keeps the pages statically renderable.
+  setRequestLocale(locale);
+
+  return (
+    <html
+      lang={locale}
+      dir={getDirection(locale)}
+      className={`${plexArabic.variable} ${plexLatin.variable}`}
+    >
+      <body className="min-h-dvh">
+        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+      </body>
+    </html>
+  );
+}
