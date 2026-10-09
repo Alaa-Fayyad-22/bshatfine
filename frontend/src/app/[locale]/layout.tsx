@@ -4,6 +4,10 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getDirection, routing } from "@/i18n/routing";
+import { AlertBar } from "@/components/layout/AlertBar";
+import { Footer } from "@/components/layout/Footer";
+import { Header } from "@/components/layout/Header";
+import { ScrollProgress } from "@/components/motion/ScrollProgress";
 import "../globals.css";
 
 // next/font self-hosts the font files and exposes them as CSS variables,
@@ -46,6 +50,7 @@ export default async function LocaleLayout({
   // Lets server components below read the locale without re-reading headers,
   // which keeps the pages statically renderable.
   setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "Skip" });
 
   return (
     <html
@@ -53,8 +58,22 @@ export default async function LocaleLayout({
       dir={getDirection(locale)}
       className={`${plexArabic.variable} ${plexLatin.variable}`}
     >
-      <body className="min-h-dvh">
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+      <body className="flex min-h-dvh flex-col">
+        <NextIntlClientProvider>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[60] focus:rounded-control focus:bg-ivory focus:px-4 focus:py-3 focus:font-semibold"
+          >
+            {t("toContent")}
+          </a>
+          <ScrollProgress />
+          <AlertBar />
+          <Header />
+          <main id="main" className="flex-1">
+            {children}
+          </main>
+          <Footer />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

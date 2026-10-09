@@ -9,7 +9,8 @@
     "events": "Events",
     "services": "Services",
     "contact": "Contact",
-    "login": "Log in"
+    "login": "Log in",
+    "brand": "Bshatfine Municipality"
   },
   "Language": {
     "switchTo": "العربية",
@@ -25,5 +26,31 @@
     "title": "Page not found",
     "text": "We could not find the page you were looking for. Its address may have changed.",
     "backHome": "Back to home"
+  },
+  "Skip": {
+    "toContent": "Skip to content"
+  },
+  "Alert": {
+    "label": "Municipality notice",
+    "warning": "Notice",
+    "danger": "Urgent",
+    "details": "Details"
+  },
+  "Header": {
+    "mainNav": "Main navigation",
+    "menuOpen": "Open menu",
+    "menuClose": "Close menu",
+    "homeLabel": "Bshatfine Municipality, home page"
+  },
+  "Footer": {
+    "about": "Bshatfine Municipality, Chouf District, Mount Lebanon.",
+    "contactTitle": "Contact",
+    "addressLabel": "Address",
+    "address": "Municipality building, Bshatfine, Chouf",
+    "phoneLabel": "Phone",
+    "hoursLabel": "Office hours",
+    "hours": "Monday to Friday, 8 am to 2 pm",
+    "linksTitle": "Links",
+    "rights": "© Bshatfine Municipality"
   }
 }

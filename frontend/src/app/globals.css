@@ -135,3 +135,19 @@
     cursor: pointer;
   }
 }
+
+/*
+ * Reduced motion, enforced in CSS as well as in JS: anything driven by scroll
+ * (hero, clip reveal, parallax) is forced to its plain, visible end state, and
+ * the progress line is hidden. Inline styles from `motion` lose to !important.
+ */
+@media (prefers-reduced-motion: reduce) {
+  [data-scroll-motion] {
+    clip-path: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  [data-scroll-progress] {
+    display: none !important;
+  }
+}

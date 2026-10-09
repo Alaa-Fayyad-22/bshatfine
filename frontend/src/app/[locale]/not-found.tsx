@@ -5,7 +5,7 @@ export default function NotFound() {
   const t = useTranslations("NotFound");
 
   return (
-    <main className="section-y">
+    <div className="section-y">
       <div className="page-container">
         <h1 className="text-4xl font-bold md:text-5xl">{t("title")}</h1>
         <p className="mt-4 max-w-prose">{t("text")}</p>
@@ -13,6 +13,6 @@ export default function NotFound() {
           {t("backHome")}
         </Link>
       </div>
-    </main>
+    </div>
   );
 }
