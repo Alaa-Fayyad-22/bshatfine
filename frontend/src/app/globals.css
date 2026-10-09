@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens (Tailwind v4: defined in CSS with @theme, no tailwind.config).
+ * Every `--color-x` becomes bg-x / text-x / border-x, every `--text-x`
+ * becomes text-x, every `--radius-x` becomes rounded-x.
+ */
+@theme {
+  /* Palette */
+  --color-ivory: #f7f3ea; /* base background */
+  --color-sand: #efe8da; /* alternate sections */
+  --color-cedar: #14342b; /* primary */
+  --color-gold: #c9a24d; /* accent */
+  --color-ink: #1a1a1a; /* text */
+  --color-hairline: #e2dacb; /* 1px borders */
+
+  /* Alert statuses, tuned to the palette (text-safe on ivory) */
+  --color-alert-warn: #9a6a12; /* muted amber */
+  --color-alert-danger: #9b3a2e; /* muted brick red */
+
+  /* Type scale, ratio 1.25: 14 / 16 / 18 / 22 / 28 / 36 / 44 / 56 / 72 px */
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem; /* body */
+  --text-lg: 1.375rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.25rem;
+  --text-3xl: 2.75rem;
+  --text-4xl: 3.5rem;
+  --text-5xl: 4.5rem;
+
+  /* Radius: 0 for full-bleed, 6px controls, 12px content cards/images */
+  --radius-control: 6px;
+  --radius-card: 12px;
+
+  /* No drop shadows by default: separate with space and hairlines */
+  --shadow-*: initial;
+  --drop-shadow-*: initial;
+
+  /* Fonts are set per language below; this is the default utility */
+  --font-sans: var(--font-plex-arabic), var(--font-plex-latin), system-ui,
+    sans-serif;
+
+  /* Soft, non-bouncy easing shared by CSS and (via JS copies) motion */
+  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Section rhythm: 72px on mobile, 120px from the md breakpoint up */
+@utility section-y {
+  padding-block: 4.5rem;
+  @media (min-width: 48rem) {
+    padding-block: 7.5rem;
+  }
+}
+
+/*
+ * Page container: centered, capped width, side gutters of 16px (mobile),
+ * 32px (md) and 48px (lg). Uses padding-inline / margin-inline, so it is
+ * identical in RTL and LTR. Full-bleed sections put this container inside
+ * themselves instead of being narrowed by it.
+ */
+@utility page-container {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (min-width: 48rem) {
+    padding-inline: 2rem;
+  }
+  @media (min-width: 64rem) {
+    padding-inline: 3rem;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  /* Arabic pages: Plex Sans Arabic first; English pages: Plex Sans first */
+  html:lang(ar) {
+    --font-sans: var(--font-plex-arabic), var(--font-plex-latin), system-ui,
+      sans-serif;
+  }
+  html:lang(en) {
+    --font-sans: var(--font-plex-latin), var(--font-plex-arabic), system-ui,
+      sans-serif;
+  }
+
+  body {
+    background-color: var(--color-ivory);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-md);
+    line-height: 1.7;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    /* Safety net: motion/parallax or a wide child must never create a
+       horizontal scrollbar. `clip` (unlike `hidden`) keeps position:sticky. */
+    overflow-x: clip;
+  }
+
+  /* Long Arabic/English words wrap instead of pushing the page wider */
+  h1,
+  h2,
+  h3,
+  p {
+    overflow-wrap: break-word;
+  }
+
+  /* Visible focus: cedar on light surfaces, gold on cedar surfaces */
+  :focus-visible {
+    outline: 2px solid var(--color-cedar);
+    outline-offset: 3px;
+  }
+  .on-cedar :focus-visible {
+    outline-color: var(--color-gold);
+  }
+
+  ::selection {
+    background-color: var(--color-gold);
+    color: var(--color-ink);
+  }
+
+  /* Comfortable tap targets */
+  button,
+  [role="button"] {
+    cursor: pointer;
+  }
+}
