@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { useTranslations } from "next-intl";
 import { ArrowIcon } from "@/components/ArrowIcon";
+import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Link } from "@/i18n/navigation";
 import { getNews, type NewsDto } from "@/lib/api";
 import { excerpt } from "@/lib/text";
@@ -77,15 +78,17 @@ async function NewsContent() {
     <div className="mt-10 grid gap-12 md:mt-14 lg:grid-cols-5 lg:gap-16">
       <article className="lg:col-span-3">
         {/* PLACEHOLDER: the API has no image field yet */}
-        <div className="relative aspect-[3/2] overflow-hidden rounded-card bg-sand">
-          <Image
-            src="/images/news-placeholder.jpg"
-            alt=""
-            fill
-            sizes="(min-width: 1024px) 55vw, 100vw"
-            className="object-cover"
-          />
-        </div>
+        <ClipReveal>
+          <div className="relative aspect-[3/2] overflow-hidden rounded-card bg-sand">
+            <Image
+              src="/images/news-placeholder.jpg"
+              alt=""
+              fill
+              sizes="(min-width: 1024px) 55vw, 100vw"
+              className="object-cover"
+            />
+          </div>
+        </ClipReveal>
         <h3 className="mt-6 text-2xl leading-snug font-bold md:text-3xl">
           <Link href="/news" className="hover:underline">
             {featured.title}

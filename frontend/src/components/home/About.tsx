@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { Parallax } from "@/components/motion/Parallax";
 
 // Asymmetric: the photo is flush with the START edge of the viewport (it
 // bleeds off the page; no container, no rounding), the text sits on the other
@@ -10,7 +11,7 @@ export function About() {
   return (
     <section aria-labelledby="about-title" className="section-y bg-sand">
       <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:gap-0">
-        <div className="relative aspect-[4/3] overflow-hidden lg:aspect-auto lg:h-[38rem]">
+        <Parallax className="aspect-[4/3] lg:aspect-auto lg:h-[38rem]">
           {/* PLACEHOLDER photo: replace public/images/about-placeholder.jpg */}
           <Image
             src="/images/about-placeholder.jpg"
@@ -19,7 +20,7 @@ export function About() {
             sizes="(min-width: 1024px) 60vw, 100vw"
             className="object-cover"
           />
-        </div>
+        </Parallax>
 
         <div className="px-4 md:px-8 lg:ps-16 lg:pe-12 lg:pt-28 xl:pe-24">
           <h2 id="about-title" className="text-3xl font-bold md:text-4xl">
