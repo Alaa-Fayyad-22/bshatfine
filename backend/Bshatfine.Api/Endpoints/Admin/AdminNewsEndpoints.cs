@@ -1,0 +1,45 @@
+using Bshatfine.Application.Dtos;
+using Bshatfine.Application.Services;
+
+namespace Bshatfine.Api.Endpoints.Admin;
+
+public static class AdminNewsEndpoints
+{
+    public static void MapAdminNewsEndpoints(this IEndpointRouteBuilder app)
+    {
+        var group = app.MapGroup("/api/admin/news");
+
+        group.MapGet("/", async (NewsService service, CancellationToken ct, int page = 1, int pageSize = 20) =>
+            Results.Ok(await service.GetAllForAdminAsync(page, pageSize, ct)));
+
+        group.MapGet("/{id:guid}", async (Guid id, NewsService service, CancellationToken ct) =>
+        {
+            var news = await service.GetByIdForAdminAsync(id, ct);
+            return news is null ? Results.NotFound() : Results.Ok(news);
+        });
+
+        group.MapPost("/", async (CreateNewsRequest request, NewsService service, CancellationToken ct) =>
+        {
+            var created = await service.CreateAsync(request, ct);
+            return Results.Created($"/api/admin/news/{created.Id}", created);
+        });
+
+        group.MapPut("/{id:guid}", async (Guid id, UpdateNewsRequest request, NewsService service, CancellationToken ct) =>
+        {
+            var news = await service.UpdateAsync(id, request, ct);
+            return news is null ? Results.NotFound() : Results.Ok(news);
+        });
+
+        group.MapPost("/{id:guid}/publish", async (Guid id, NewsService service, CancellationToken ct) =>
+        {
+            var news = await service.PublishAsync(id, ct);
+            return news is null ? Results.NotFound() : Results.Ok(news);
+        });
+
+        group.MapPost("/{id:guid}/archive", async (Guid id, NewsService service, CancellationToken ct) =>
+        {
+            var news = await service.ArchiveAsync(id, ct);
+            return news is null ? Results.NotFound() : Results.Ok(news);
+        });
+    }
+}

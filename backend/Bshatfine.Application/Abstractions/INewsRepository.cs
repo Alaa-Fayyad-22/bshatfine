@@ -4,6 +4,9 @@ namespace Bshatfine.Application.Abstractions;
 
 public interface INewsRepository
 {
-    Task<List<News>> GetLatestAsync(int page, int pageSize, CancellationToken ct);
-    Task AddAsync(News news, CancellationToken ct);
+    Task<List<News>> GetPublishedAsync(int page, int pageSize, CancellationToken ct);
+    Task<List<News>> GetAllAsync(int page, int pageSize, CancellationToken ct);
+    Task<News?> GetByIdAsync(Guid id, CancellationToken ct);
+    void Add(News news);
+    Task SaveChangesAsync(CancellationToken ct);
 }
