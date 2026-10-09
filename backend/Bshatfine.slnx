@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Bshatfine.Api/Bshatfine.Api.csproj" />
+  <Project Path="Bshatfine.Application/Bshatfine.Application.csproj" />
+  <Project Path="Bshatfine.Domain/Bshatfine.Domain.csproj" />
+  <Project Path="Bshatfine.Infrastructure/Bshatfine.Infrastructure.csproj" />
+</Solution>

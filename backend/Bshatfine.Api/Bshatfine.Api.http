@@ -1,0 +1,6 @@
+@Bshatfine.Api_HostAddress = http://localhost:5246
+
+GET {{Bshatfine.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
