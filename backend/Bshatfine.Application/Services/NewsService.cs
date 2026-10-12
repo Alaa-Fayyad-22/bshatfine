@@ -17,6 +17,13 @@ public class NewsService(INewsRepository repository)
         return items.Select(n => n.ToDto(language)).ToList();
     }
 
+    public async Task<NewsDto?> GetPublishedByIdAsync(string lang, Guid id, CancellationToken ct)
+    {
+        var language = ParseLanguage(lang);
+        var news = await repository.GetPublishedByIdAsync(id, ct);
+        return news?.ToDto(language);
+    }
+
     // ---------- Admin ----------
     public async Task<List<AdminNewsDto>> GetAllForAdminAsync(int page, int pageSize, CancellationToken ct)
     {

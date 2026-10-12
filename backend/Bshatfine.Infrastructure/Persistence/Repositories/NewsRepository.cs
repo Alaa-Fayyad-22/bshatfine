@@ -30,6 +30,12 @@ public class NewsRepository(AppDbContext db) : INewsRepository
             .Include(n => n.Translations)
             .FirstOrDefaultAsync(n => n.Id == id, ct);
 
+    public Task<News?> GetPublishedByIdAsync(Guid id, CancellationToken ct) =>
+        db.News
+            .AsNoTracking()
+            .Include(n => n.Translations)
+            .FirstOrDefaultAsync(n => n.Id == id, ct);
+
     public void Add(News news) => db.News.Add(news);
 
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);

@@ -10,5 +10,11 @@ public static class NewsEndpoints
 
         group.MapGet("/", async (NewsService service, CancellationToken ct, string lang = "ar", int page = 1, int pageSize = 10) =>
             Results.Ok(await service.GetPublishedAsync(lang, page, pageSize, ct)));
+
+        group.MapGet("/{id:guid}", async (Guid id, NewsService service, CancellationToken ct, string lang = "ar") =>
+        {
+            var news = await service.GetPublishedByIdAsync(lang, id, ct);
+            return news is null ? Results.NotFound() : Results.Ok(news);
+        });
     }
 }

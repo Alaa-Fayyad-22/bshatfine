@@ -95,5 +95,25 @@
       "text": "Bshatfine is a village in the Chouf District of Mount Lebanon, home to residents and families living near and far. The municipality looks after its daily affairs, from building permits and certificates to cleaning and roads, and publishes its news, notices and event dates here.",
       "imageAlt": "View of the Chouf hills around Bshatfine"
     }
+  },
+  "News": {
+    "title": "News",
+    "intro": "Announcements and updates from Bshatfine Municipality, newest first.",
+    "loading": "Loading news",
+    "empty": "No news has been published yet.",
+    "emptyPage": "There is no news on this page.",
+    "error": "We could not load the news right now. Please try again shortly.",
+    "pagination": "News pages",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page}",
+    "back": "Back to news",
+    "articleError": "We could not load this article right now. Please try again shortly.",
+    "onlyIn": "This article is only available in {language}",
+    "onlyInOther": "This article is only available in another language",
+    "languages": {
+      "ar": "Arabic",
+      "en": "English"
+    }
   }
 }

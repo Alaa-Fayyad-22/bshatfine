@@ -21,3 +21,19 @@ export async function getNews(locale: string, page = 1, pageSize = 10): Promise<
 
   return res.json();
 }
+
+// Returns null when the article does not exist or is not published (404);
+// any other failure throws so callers can show an "API down" state.
+export async function getNewsById(locale: string, id: string): Promise<NewsDto | null> {
+  const res = await fetch(`${API_URL}/api/news/${encodeURIComponent(id)}?lang=${locale}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
+  });
+
+  if (res.status === 404) return null;
+  if (!res.ok) {
+    throw new Error(`Failed to load news article: ${res.status}`);
+  }
+
+  return res.json();
+}
