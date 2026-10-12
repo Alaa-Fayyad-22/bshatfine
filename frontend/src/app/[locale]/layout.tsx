@@ -4,10 +4,6 @@ import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getDirection, routing } from "@/i18n/routing";
-import { AlertBar } from "@/components/layout/AlertBar";
-import { Footer } from "@/components/layout/Footer";
-import { Header } from "@/components/layout/Header";
-import { ScrollProgress } from "@/components/motion/ScrollProgress";
 import "../globals.css";
 
 // next/font self-hosts the font files and exposes them as CSS variables,
@@ -66,13 +62,7 @@ export default async function LocaleLayout({
           >
             {t("toContent")}
           </a>
-          <ScrollProgress />
-          <AlertBar />
-          <Header />
-          <main id="main" className="flex-1">
-            {children}
-          </main>
-          <Footer />
+          {children}
         </NextIntlClientProvider>
       </body>
     </html>

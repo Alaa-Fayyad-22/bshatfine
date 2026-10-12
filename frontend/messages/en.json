@@ -115,5 +115,84 @@
       "ar": "Arabic",
       "en": "English"
     }
+  },
+  "Admin": {
+    "title": "Administration",
+    "navLabel": "Admin sections",
+    "backToSite": "Back to site",
+    "brand": "Admin",
+    "nav": {
+      "news": "News"
+    },
+    "status": {
+      "Draft": "Draft",
+      "Published": "Published",
+      "Archived": "Archived"
+    },
+    "languages": {
+      "ar": "Arabic",
+      "en": "English"
+    },
+    "list": {
+      "title": "News",
+      "new": "New article",
+      "filterLabel": "Filter by status",
+      "all": "All",
+      "colTitle": "Title",
+      "colStatus": "Status",
+      "colCreated": "Created",
+      "colPublished": "Published",
+      "colActions": "Actions",
+      "edit": "Edit",
+      "editLabel": "Edit: {title}",
+      "untitled": "(untitled)",
+      "notPublished": "Not published",
+      "loading": "Loading articles",
+      "empty": "There are no articles yet.",
+      "emptyFilter": "No articles match this filter on this page.",
+      "error": "Could not load the articles. Check that the API is running.",
+      "retry": "Try again",
+      "pagination": "Article pages",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page}"
+    },
+    "form": {
+      "newTitle": "New article",
+      "editTitle": "Edit article",
+      "backToList": "Back to news list",
+      "loading": "Loading article",
+      "notFound": "This article was not found.",
+      "loadError": "Could not load the article. Check that the API is running.",
+      "languagesLabel": "Article language",
+      "tabHint": "Filled",
+      "fieldTitle": "Title",
+      "fieldBody": "Body",
+      "chars": "{count} of {max} characters",
+      "status": "Status",
+      "created": "Created",
+      "updated": "Last updated",
+      "published": "Published",
+      "saveDraft": "Save draft",
+      "publish": "Publish",
+      "archive": "Archive",
+      "saving": "Saving…",
+      "publishing": "Publishing…",
+      "archiving": "Archiving…",
+      "archiveConfirm": "Archive this article? It will be removed from the public site and can no longer be edited.",
+      "archiveYes": "Yes, archive",
+      "cancel": "Cancel",
+      "archivedNote": "This article is archived. It is read-only and no longer shown on the public site.",
+      "needContent": "Add a title and a body in at least one language before saving.",
+      "unsaved": "You have unsaved changes.",
+      "leaveConfirm": "You have unsaved changes. Leave this page and lose them?",
+      "networkError": "Could not reach the server. Check your connection and that the API is running.",
+      "apiError": "The server rejected the request ({status}).",
+      "savedOk": "Draft saved.",
+      "createdOk": "Article created as a draft.",
+      "publishedOk": "Article published.",
+      "archivedOk": "Article archived.",
+      "errorTitle": "Something went wrong"
+    }
   }
 }

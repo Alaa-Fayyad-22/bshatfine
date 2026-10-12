@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bshatfine Municipality, frontend
 
-## Getting Started
+Next.js app (App Router, Cache Components, next-intl for Arabic and English).
 
-First, run the development server:
+## Environment variables
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Set these in `frontend/.env.local` (git-ignored):
+
+| Variable | Used by | Purpose |
+| --- | --- | --- |
+| `API_URL` | server code (`src/lib/api.ts`, public pages) | Backend base URL for server-side fetches. Never sent to the browser. |
+| `NEXT_PUBLIC_API_URL` | browser code (`src/lib/admin-api.ts`, admin forms) | Backend base URL for requests made from the browser. |
+
+```
+API_URL=http://localhost:5246
+NEXT_PUBLIC_API_URL=http://localhost:5246
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Why two variables: the admin forms create, edit, publish and archive news from
+client components, so those requests run in the visitor's browser. Next.js only
+exposes variables prefixed with `NEXT_PUBLIC_` to browser code (the value is
+inlined at build time, so rebuild after changing it). Plain `API_URL` stays
+server-only. The backend must allow the frontend origin via CORS
+(`http://localhost:3000` in development).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+npm run dev     # development server
+npm run lint
+npm run build
+npm start
+```
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The admin area is at `/ar/admin` and `/en/admin` (not linked from the public site).
