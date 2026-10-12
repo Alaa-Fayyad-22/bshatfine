@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { hasLocale, useTranslations } from "next-intl";
+import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowIcon } from "@/components/ArrowIcon";
 import { ClipReveal } from "@/components/motion/ClipReveal";
@@ -32,10 +32,11 @@ export async function generateMetadata({
   return { title: `${t("news")} | ${t("brand")}` };
 }
 
-// `params` is only awaited inside <Suspense> (the id is unknown at build time),
-// so the page frame and back link are part of the static shell.
-export default function Page({ params }: PageProps<"/[locale]/news/[id]">) {
-  const t = useTranslations("News");
+export default async function Page({ params }: PageProps<"/[locale]/news/[id]">) {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) notFound();
+  setRequestLocale(locale);
+  const t = await getTranslations("News");
 
   return (
     <div className="section-y">
@@ -48,7 +49,7 @@ export default function Page({ params }: PageProps<"/[locale]/news/[id]">) {
           {t("back")}
         </Link>
         <Suspense fallback={<ArticleSkeleton label={t("loading")} />}>
-          <Article params={params} />
+          <Article locale={locale} params={params} />
         </Suspense>
       </div>
     </div>
@@ -68,10 +69,14 @@ function directionOf(language: string): "rtl" | "ltr" | "auto" {
   return hasLocale(routing.locales, language) ? getDirection(language) : "auto";
 }
 
-async function Article({ params }: Pick<PageProps<"/[locale]/news/[id]">, "params">) {
-  const { locale, id } = await params;
-  if (!hasLocale(routing.locales, locale)) notFound();
-  setRequestLocale(locale);
+async function Article({
+  locale,
+  params,
+}: {
+  locale: string;
+  params: PageProps<"/[locale]/news/[id]">["params"];
+}) {
+  const { id } = await params;
   const t = await getTranslations("News");
   const format = await getFormatter();
   const article = await loadArticle(locale, id);

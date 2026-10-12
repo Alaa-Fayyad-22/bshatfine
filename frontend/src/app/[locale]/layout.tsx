@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getDirection, routing } from "@/i18n/routing";
@@ -69,11 +68,7 @@ export default async function LocaleLayout({
           </a>
           <ScrollProgress />
           <AlertBar />
-          {/* Header reads the pathname, which is unknown while prerendering
-              dynamic routes such as /news/[id]; reserve its 72px meanwhile. */}
-          <Suspense fallback={<div className="h-18" aria-hidden />}>
-            <Header />
-          </Suspense>
+          <Header />
           <main id="main" className="flex-1">
             {children}
           </main>
