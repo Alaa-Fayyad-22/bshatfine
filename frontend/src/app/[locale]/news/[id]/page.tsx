@@ -10,6 +10,13 @@ import { Link } from "@/i18n/navigation";
 import { getDirection, routing } from "@/i18n/routing";
 import { getNewsById, type NewsDto } from "@/lib/api";
 
+// Cache Components needs at least one param to prerender the route shell. The
+// API is not reachable (or may be down) at build time, so no article is
+// prerendered: this entry only produces the shell, and real ids render on demand.
+export function generateStaticParams() {
+  return [{ id: "_" }];
+}
+
 export async function generateMetadata({
   params,
 }: PageProps<"/[locale]/news/[id]">): Promise<Metadata> {
