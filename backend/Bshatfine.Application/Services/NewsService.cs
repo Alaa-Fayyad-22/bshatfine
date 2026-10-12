@@ -40,7 +40,7 @@ public class NewsService(INewsRepository repository)
 
     public async Task<AdminNewsDto> CreateAsync(CreateNewsRequest request, CancellationToken ct)
     {
-        if (request.Translations.Count == 0)
+        if (request.Translations is null || request.Translations.Count == 0)
             throw new DomainException("At least one translation is required.");
 
         var first = request.Translations[0];
@@ -54,12 +54,31 @@ public class NewsService(INewsRepository repository)
         return news.ToAdminDto();
     }
 
-    public Task<AdminNewsDto?> UpdateAsync(Guid id, UpdateNewsRequest request, CancellationToken ct) =>
-    ChangeAsync(id, news =>
+    public Task<AdminNewsDto?> UpdateAsync(Guid id, UpdateNewsRequest request, CancellationToken ct)
     {
-        foreach (var t in request.Translations)
-            news.SetTranslation(ParseLanguage(t.Language), t.Title, t.Body);
-    }, ct);
+        if (request.Translations is null || request.Translations.Count == 0)
+            throw new DomainException("At least one translation is required.");
+
+        return ChangeAsync(id, news =>
+        {
+            // 1. Add or update every language that was sent
+            foreach (var t in request.Translations)
+                news.SetTranslation(ParseLanguage(t.Language), t.Title, t.Body);
+
+            // 2. Which languages were sent?
+            var sent = request.Translations
+                .Select(t => ParseLanguage(t.Language))
+                .ToHashSet();
+
+            // 3. Remove the ones that weren't
+            var toRemove = news.Translations
+                .Where(t => !sent.Contains(t.Language))
+                .ToList();
+
+            foreach (var t in toRemove)
+                news.RemoveTranslation(t.Language);
+        }, ct);
+    }
 
     public Task<AdminNewsDto?> PublishAsync(Guid id, CancellationToken ct) =>
         ChangeAsync(id, news => news.Publish(), ct);

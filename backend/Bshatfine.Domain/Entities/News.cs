@@ -38,6 +38,22 @@ public class News
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void RemoveTranslation(Language language)
+    {
+        if (Status == NewsStatus.Archived)
+            throw new DomainException("Archived news cannot be edited.");
+
+        if (language == Language.Ar)
+            throw new DomainException("The Arabic translation cannot be removed.");
+
+        var existing = GetTranslation(language);
+        if (existing is null)
+            return;
+
+        _translations.Remove(existing);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public static News CreateDraft(Language language, string title, string body)
     {
         // Step 1: create the article itself
