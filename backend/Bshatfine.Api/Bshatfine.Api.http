@@ -1,6 +1,25 @@
-@Bshatfine.Api_HostAddress = http://localhost:5246
+﻿@baseUrl = http://localhost:5246
 
-GET {{Bshatfine.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Create a draft in Arabic and English
+# @name createNews
+POST {{baseUrl}}/api/admin/news
+Content-Type: application/json
 
-###
+{
+  "translations": [
+    { "language": "ar", "title": "أعمال صيانة في الشارع الرئيسي", "body": "تبدأ الأعمال صباح الاثنين وتستمر ثلاثة أيام." },
+    { "language": "en", "title": "Maintenance work on the main street", "body": "Work starts Monday morning and lasts three days." }
+  ]
+}
+
+### Publish it (uses the id from the request above)
+POST {{baseUrl}}/api/admin/news/{{createNews.response.body.$.id}}/publish
+
+### Public list in Arabic
+GET {{baseUrl}}/api/news?lang=ar
+
+### Public list in English
+GET {{baseUrl}}/api/news?lang=en
+
+### Admin list (all statuses, all translations)
+GET {{baseUrl}}/api/admin/news

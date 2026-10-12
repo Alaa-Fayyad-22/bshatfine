@@ -7,6 +7,7 @@ import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Link } from "@/i18n/navigation";
 import { getNews, type NewsDto } from "@/lib/api";
 import { excerpt } from "@/lib/text";
+import { getLocale } from "next-intl/server";
 
 // The heading renders immediately; the list streams in behind <Suspense>
 // (required by Cache Components, since the API call is uncached).
@@ -38,8 +39,10 @@ export function NewsSection() {
 }
 
 async function loadNews(): Promise<NewsDto[] | null> {
+  
   try {
-    const items = await getNews(1, 4);
+    const locale = await getLocale();
+    const items = await getNews(locale, 1, 4);
     return [...items].sort(
       (a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt),
     );

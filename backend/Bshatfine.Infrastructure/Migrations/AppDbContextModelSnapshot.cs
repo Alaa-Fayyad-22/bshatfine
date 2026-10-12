@@ -25,12 +25,7 @@ namespace Bshatfine.Infrastructure.Migrations
             modelBuilder.Entity("Bshatfine.Domain.Entities.News", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -43,11 +38,6 @@ namespace Bshatfine.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -56,6 +46,50 @@ namespace Bshatfine.Infrastructure.Migrations
                     b.HasIndex("Status", "PublishedAt");
 
                     b.ToTable("News");
+                });
+
+            modelBuilder.Entity("Bshatfine.Domain.Entities.NewsTranslations", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<Guid>("NewsId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NewsId", "Language")
+                        .IsUnique();
+
+                    b.ToTable("NewsTranslations", (string)null);
+                });
+
+            modelBuilder.Entity("Bshatfine.Domain.Entities.NewsTranslations", b =>
+                {
+                    b.HasOne("Bshatfine.Domain.Entities.News", null)
+                        .WithMany("Translations")
+                        .HasForeignKey("NewsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bshatfine.Domain.Entities.News", b =>
+                {
+                    b.Navigation("Translations");
                 });
 #pragma warning restore 612, 618
         }

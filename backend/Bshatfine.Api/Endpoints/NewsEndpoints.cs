@@ -8,7 +8,7 @@ public static class NewsEndpoints
     {
         var group = app.MapGroup("/api/news");
 
-        group.MapGet("/", async (NewsService service, CancellationToken ct, int page = 1, int pageSize = 10) =>
-            Results.Ok(await service.GetPublishedAsync(page, pageSize, ct)));
+        group.MapGet("/", async (NewsService service, CancellationToken ct, string lang = "ar", int page = 1, int pageSize = 10) =>
+            Results.Ok(await service.GetPublishedAsync(lang, page, pageSize, ct)));
     }
 }
