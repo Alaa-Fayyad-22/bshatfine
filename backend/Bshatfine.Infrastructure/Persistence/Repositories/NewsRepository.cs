@@ -19,6 +19,7 @@ public class NewsRepository(AppDbContext db) : INewsRepository
 
     public Task<List<News>> GetAllAsync(int page, int pageSize, CancellationToken ct) =>
         db.News
+            .Include(n => n.Translations)
             .AsNoTracking()
             .OrderByDescending(n => n.CreatedAt)
             .Skip((page - 1) * pageSize)
@@ -34,7 +35,7 @@ public class NewsRepository(AppDbContext db) : INewsRepository
         db.News
             .AsNoTracking()
             .Include(n => n.Translations)
-            .FirstOrDefaultAsync(n => n.Id == id, ct);
+            .FirstOrDefaultAsync(n => n.Id == id && n.Status == NewsStatus.Published, ct);
 
     public void Add(News news) => db.News.Add(news);
 
