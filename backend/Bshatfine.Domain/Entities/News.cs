@@ -37,6 +37,8 @@ public class News
         }
 
         UpdatedAt = DateTime.UtcNow;
+
+        RefreshSlug();
     }
 
     private void RefreshSlug()
@@ -61,6 +63,7 @@ public class News
 
         _translations.Remove(existing);
         UpdatedAt = DateTime.UtcNow;
+        RefreshSlug();
     }
 
     public static News CreateDraft(IReadOnlyList<(Language Language, string Title, string Body)> translations)
@@ -80,6 +83,8 @@ public class News
 
         foreach (var t in translations)
             news._translations.Add(NewsTranslations.Create(news.Id, t.Language, t.Title, t.Body));
+
+        news.RefreshSlug();
 
         return news;
     }
