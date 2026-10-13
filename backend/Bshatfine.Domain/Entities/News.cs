@@ -88,8 +88,9 @@ public class News
             throw new DomainException("An Arabic translation is required before publishing.");
 
         Status = NewsStatus.Published;
-        PublishedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
+        var now = DateTime.UtcNow;
+        PublishedAt = now;
+        UpdatedAt = now;
     }
 
     public void Archive()
