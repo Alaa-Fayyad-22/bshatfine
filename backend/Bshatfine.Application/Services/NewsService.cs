@@ -55,11 +55,10 @@ public class NewsService(INewsRepository repository)
     {
         var translations = RequireTranslations(request.Translations);
 
-        var first = translations[0];
-        var news = News.CreateDraft(ParseLanguage(first.Language), first.Title, first.Body);
-
-        foreach (var t in translations.Skip(1))
-            news.SetTranslation(ParseLanguage(t.Language), t.Title, t.Body);
+        var news = News.CreateDraft(
+    translations
+        .Select(t => (ParseLanguage(t.Language), t.Title, t.Body))
+        .ToList());
 
         repository.Add(news);
         await repository.SaveChangesAsync(ct);

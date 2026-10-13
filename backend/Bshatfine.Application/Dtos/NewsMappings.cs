@@ -28,6 +28,7 @@ public static class NewsMappings
         news.UpdatedAt,
         news.PublishedAt,
         news.Translations
+        .OrderBy(t => t.Language)
             .Select(t => new NewsTranslationDto(
                 t.Language.ToString().ToLowerInvariant(),
                 t.Title,

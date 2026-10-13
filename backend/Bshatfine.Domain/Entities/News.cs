@@ -54,9 +54,14 @@ public class News
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public static News CreateDraft(Language language, string title, string body)
+    public static News CreateDraft(IReadOnlyList<(Language Language, string Title, string Body)> translations)
     {
-        // Step 1: create the article itself
+        if (translations.Count == 0)
+            throw new DomainException("At least one translation is required.");
+
+        if (translations.Select(t => t.Language).Distinct().Count() != translations.Count)
+            throw new DomainException("Each language can only appear once.");
+
         var news = new News
         {
             Id = Guid.CreateVersion7(),
@@ -64,10 +69,9 @@ public class News
             CreatedAt = DateTime.UtcNow
         };
 
-        // Step 2: give it its first translation (this also validates title and body)
-        news._translations.Add(NewsTranslations.Create(news.Id, language, title, body));
+        foreach (var t in translations)
+            news._translations.Add(NewsTranslations.Create(news.Id, t.Language, t.Title, t.Body));
 
-        // Step 3: hand back the finished article
         return news;
     }
 
