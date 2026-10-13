@@ -40,13 +40,12 @@ public class NewsService(INewsRepository repository)
 
     public async Task<AdminNewsDto> CreateAsync(CreateNewsRequest request, CancellationToken ct)
     {
-        if (request.Translations is null || request.Translations.Count == 0)
-            throw new DomainException("At least one translation is required.");
+        var translations = RequireTranslations(request.Translations);
 
-        var first = request.Translations[0];
+        var first = translations[0];
         var news = News.CreateDraft(ParseLanguage(first.Language), first.Title, first.Body);
 
-        foreach (var t in request.Translations.Skip(1))
+        foreach (var t in translations.Skip(1))
             news.SetTranslation(ParseLanguage(t.Language), t.Title, t.Body);
 
         repository.Add(news);
@@ -56,17 +55,16 @@ public class NewsService(INewsRepository repository)
 
     public Task<AdminNewsDto?> UpdateAsync(Guid id, UpdateNewsRequest request, CancellationToken ct)
     {
-        if (request.Translations is null || request.Translations.Count == 0)
-            throw new DomainException("At least one translation is required.");
+        var translations = RequireTranslations(request.Translations);
 
         return ChangeAsync(id, news =>
         {
             // 1. Add or update every language that was sent
-            foreach (var t in request.Translations)
+            foreach (var t in translations)
                 news.SetTranslation(ParseLanguage(t.Language), t.Title, t.Body);
 
             // 2. Which languages were sent?
-            var sent = request.Translations
+            var sent = translations
                 .Select(t => ParseLanguage(t.Language))
                 .ToHashSet();
 
@@ -98,11 +96,25 @@ public class NewsService(INewsRepository repository)
         return news.ToAdminDto();
     }
 
-    private static Language ParseLanguage(string code)
+    // The list must exist, be non-empty, and contain no null entries
+    // (JSON like {"translations":[null]} would otherwise crash with a NullReferenceException).
+    private static List<NewsTranslationDto> RequireTranslations(List<NewsTranslationDto>? translations)
     {
-        if (Enum.TryParse<Language>(code, ignoreCase: true, out var language)
-    && Enum.IsDefined(language))
-            return language;
+        if (translations is null || translations.Count == 0)
+            throw new DomainException("At least one translation is required.");
+        if (translations.Any(t => t is null))
+            throw new DomainException("Translations cannot contain empty entries.");
+        return translations;
+    }
+
+    // Matches only the enum NAMES (ar, en). Enum.TryParse alone would also accept
+    // numbers such as "1", which is not a language code.
+    private static Language ParseLanguage(string? code)
+    {
+        var name = Enum.GetNames<Language>()
+            .FirstOrDefault(n => string.Equals(n, code, StringComparison.OrdinalIgnoreCase));
+        if (name is not null)
+            return Enum.Parse<Language>(name);
         throw new DomainException($"Unsupported language: '{code}'.");
     }
 

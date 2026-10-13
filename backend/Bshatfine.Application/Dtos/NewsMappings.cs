@@ -7,11 +7,16 @@ public static class NewsMappings
 {
     public static NewsDto ToDto(this News news, Language language)
     {
-        var translation = news.GetTranslation(language) ?? news.GetTranslation(Language.En);
+        // Requested language first, then Arabic (always present on published news).
+        // The DTO reports the language of the text actually returned, so the
+        // frontend can tell when it received a fallback.
+        var translation = news.GetTranslation(language)
+            ?? news.GetTranslation(Language.Ar)
+            ?? news.Translations.First();
         return new NewsDto(
             news.Id,
-            language.ToString().ToLowerInvariant(),
-            translation!.Title,
+            translation.Language.ToString().ToLowerInvariant(),
+            translation.Title,
             translation.Body,
             news.PublishedAt);
     }

@@ -80,7 +80,7 @@ public class News
         if (Status == NewsStatus.Archived)
             throw new DomainException("Archived news cannot be published.");
 
-        if (GetTranslation(Language.En) is null)
+        if (GetTranslation(Language.Ar) is null)
             throw new DomainException("An Arabic translation is required before publishing.");
 
         Status = NewsStatus.Published;
