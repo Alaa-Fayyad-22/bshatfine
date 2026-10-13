@@ -15,6 +15,7 @@ public static class NewsMappings
             ?? news.Translations.First();
         return new NewsDto(
             news.Id,
+            news.Slug,
             translation.Language.ToString().ToLowerInvariant(),
             translation.Title,
             translation.Body,
@@ -23,6 +24,7 @@ public static class NewsMappings
 
     public static AdminNewsDto ToAdminDto(this News news) =>
     new(news.Id,
+        news.Slug,
         news.Status.ToString(),
         news.CreatedAt,
         news.UpdatedAt,

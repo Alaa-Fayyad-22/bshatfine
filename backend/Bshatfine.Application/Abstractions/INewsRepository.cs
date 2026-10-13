@@ -10,4 +10,5 @@ public interface INewsRepository
     Task<News?> GetByIdAsync(Guid id, CancellationToken ct);
     void Add(News news);
     Task SaveChangesAsync(CancellationToken ct);
+    Task<News?> GetPublishedBySlugAsync(string slug, CancellationToken ct);
 }

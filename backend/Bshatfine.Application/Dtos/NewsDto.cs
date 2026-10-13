@@ -1,9 +1,10 @@
 namespace Bshatfine.Application.Dtos;
 
-public record NewsDto(Guid Id, string Language, string Title, string Body, DateTime? PublishedAt);
+public record NewsDto(Guid Id, string Slug, string Language, string Title, string Body, DateTime? PublishedAt);
 
 public record AdminNewsDto(
     Guid Id,
+    string Slug,
     string Status,
     DateTime CreatedAt,
     DateTime? UpdatedAt,

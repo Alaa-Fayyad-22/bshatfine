@@ -31,6 +31,13 @@ public class NewsService(INewsRepository repository)
     }
 
 
+    public async Task<NewsDto?> GetPublishedBySlugAsync(string lang, string slug, CancellationToken ct)
+    {
+        var language = ParseLanguage(lang);
+        var news = await repository.GetPublishedBySlugAsync(slug, ct);
+        return news?.ToDto(language);
+    }
+
     // ---------- Admin ----------
     public async Task<PagedResult<AdminNewsDto>> GetAllForAdminAsync(int page, int pageSize, CancellationToken ct)
     {

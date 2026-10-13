@@ -52,6 +52,14 @@ public class NewsRepository(AppDbContext db) : INewsRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(n => n.Id == id && n.Status == NewsStatus.Published, ct);
 
+
+    public Task<News?> GetPublishedBySlugAsync(string slug, CancellationToken ct) =>
+       db.News
+           .Include(n => n.Translations)
+           .AsNoTracking()
+           .FirstOrDefaultAsync(n => n.Slug == slug && n.Status == NewsStatus.Published, ct);
+
+
     public void Add(News news) => db.News.Add(news);
 
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);

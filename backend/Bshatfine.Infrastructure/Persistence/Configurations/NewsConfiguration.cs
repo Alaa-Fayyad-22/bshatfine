@@ -17,7 +17,9 @@ public class NewsConfiguration : IEntityTypeConfiguration<News>
         builder.Property(n => n.Status).HasConversion<string>().HasMaxLength(20);
         builder.HasIndex(n => new { n.Status, n.PublishedAt });
         builder.HasMany(n => n.Translations).WithOne().HasForeignKey(t => t.NewsId).OnDelete(DeleteBehavior.Cascade);
+        builder.Property(n => n.Slug).HasMaxLength(70).IsRequired();
+        builder.HasIndex(n => n.Slug).IsUnique();
 
-        
+
     }
 }

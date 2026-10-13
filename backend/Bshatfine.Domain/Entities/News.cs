@@ -1,6 +1,6 @@
 using Bshatfine.Domain.Enums;
 using Bshatfine.Domain.Exceptions;
-
+using Bshatfine.Domain.Common;
 namespace Bshatfine.Domain.Entities;
 
 public class News
@@ -11,6 +11,7 @@ public class News
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     public DateTime? PublishedAt { get; private set; }
+    public string Slug { get; private set; } = string.Empty;
     private readonly List<NewsTranslations> _translations = [];
     public IReadOnlyCollection<NewsTranslations> Translations => _translations;
 
@@ -36,6 +37,14 @@ public class News
         }
 
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    private void RefreshSlug()
+    {
+        if (Status != NewsStatus.Draft)
+            return;
+
+        Slug = SlugGenerator.Generate(GetTranslation(Language.En)?.Title, Id);
     }
 
     public void RemoveTranslation(Language language)
