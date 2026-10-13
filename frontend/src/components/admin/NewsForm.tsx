@@ -162,7 +162,7 @@ export function NewsForm({ id }: { id?: string }) {
     return run("save", async () => {
       if (article) {
         apply(await updateNews(article.id, translations));
-        setSuccess(t("savedOk"));
+        setSuccess(t(article.status === "Published" ? "changesSavedOk" : "savedOk"));
       } else {
         const created = await createNews(translations);
         goToEdit(created.id, "createdOk");
@@ -273,6 +273,14 @@ export function NewsForm({ id }: { id?: string }) {
             <dt className="text-ink/70">{t("status")}</dt>
             <dd className="font-medium">
               <StatusText status={article.status} />
+            </dd>
+          </div>
+          <div>
+            <dt className="text-ink/70">{t("slug")}</dt>
+            <dd>
+              <code dir="ltr" className="font-mono">
+                {article.slug}
+              </code>
             </dd>
           </div>
           {dateRow(t("created"), article.createdAt)}
@@ -393,7 +401,11 @@ export function NewsForm({ id }: { id?: string }) {
               disabled={busy !== null}
               className={`${button} border-cedar bg-cedar text-ivory`}
             >
-              {busy === "save" ? t("saving") : t("saveDraft")}
+              {busy === "save"
+                ? t("saving")
+                : article?.status === "Published"
+                  ? t("saveChanges")
+                  : t("saveDraft")}
             </button>
 
             {(!article || article.status === "Draft") && (
@@ -405,6 +417,15 @@ export function NewsForm({ id }: { id?: string }) {
               >
                 {busy === "publish" ? t("publishing") : t("publish")}
               </button>
+            )}
+
+            {article?.status === "Published" && (
+              <Link
+                href={`/news/${article.slug}`}
+                className={`${button} border-ink/40 bg-ivory`}
+              >
+                {t("viewPublic")}
+              </Link>
             )}
 
             {article?.status === "Published" && !confirmArchive && (

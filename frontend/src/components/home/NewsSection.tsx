@@ -42,7 +42,7 @@ async function loadNews(): Promise<NewsDto[] | null> {
   
   try {
     const locale = await getLocale();
-    const items = await getNews(locale, 1, 4);
+    const { items } = await getNews(locale, 1, 4);
     return [...items].sort(
       (a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt),
     );
@@ -93,7 +93,7 @@ async function NewsContent() {
           </div>
         </ClipReveal>
         <h3 dir="auto" className="mt-6 text-2xl leading-snug font-bold md:text-3xl">
-          <Link href={`/news/${featured.id}`} className="hover:underline">
+          <Link href={`/news/${featured.slug}`} className="hover:underline">
             {featured.title}
           </Link>
         </h3>
@@ -109,7 +109,7 @@ async function NewsContent() {
             <li key={item.id} className="border-b border-hairline py-6">
               <p>{date(item.publishedAt)}</p>
               <h3 dir="auto" className="mt-1 text-lg leading-snug font-semibold md:text-xl">
-                <Link href={`/news/${item.id}`} className="hover:underline">
+                <Link href={`/news/${item.slug}`} className="hover:underline">
                   {item.title}
                 </Link>
               </h3>

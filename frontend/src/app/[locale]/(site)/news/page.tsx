@@ -7,7 +7,7 @@ import { getFormatter, getTranslations, setRequestLocale } from "next-intl/serve
 import { ArrowIcon } from "@/components/ArrowIcon";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { getNews, type NewsDto } from "@/lib/api";
+import { getNews, type NewsPage } from "@/lib/api";
 import { excerpt } from "@/lib/text";
 
 const PAGE_SIZE = 10;
@@ -47,7 +47,7 @@ function parsePage(value: string | string[] | undefined): number {
   return Number.isInteger(n) && n >= 1 ? n : 1;
 }
 
-async function loadPage(locale: string, page: number): Promise<NewsDto[] | null> {
+async function loadPage(locale: string, page: number): Promise<NewsPage | null> {
   try {
     return await getNews(locale, page, PAGE_SIZE);
   } catch {
@@ -66,9 +66,9 @@ async function NewsList({
   const page = parsePage((await searchParams).page);
   const t = await getTranslations("News");
   const format = await getFormatter();
-  const items = await loadPage(locale, page);
+  const result = await loadPage(locale, page);
 
-  if (items === null) {
+  if (result === null) {
     return (
       <p role="status" className="mt-12 max-w-prose text-ink/80">
         {t("error")}
@@ -76,16 +76,30 @@ async function NewsList({
     );
   }
 
-  // The API has no total count: offer "Next" only after a full page.
-  const hasNext = items.length === PAGE_SIZE;
+  const { items, totalPages } = result;
+
+  // Asked for a page past the end: say so and point back to page 1.
+  if (page > Math.max(totalPages, 1)) {
+    return (
+      <div role="status" className="mt-12 max-w-prose text-ink/80">
+        <p>{t("pageOutOfRange")}</p>
+        <Link
+          href="/news"
+          className="mt-3 inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
+        >
+          {t("goToFirst")}
+        </Link>
+      </div>
+    );
+  }
+
+  const hasNext = page < totalPages;
   const hasPrevious = page > 1;
 
   return (
     <>
       {items.length === 0 ? (
-        <p className="mt-12 max-w-prose text-ink/80">
-          {hasPrevious ? t("emptyPage") : t("empty")}
-        </p>
+        <p className="mt-12 max-w-prose text-ink/80">{t("empty")}</p>
       ) : (
         <ul className="mt-10 border-t border-hairline md:mt-14">
           {items.map((item) => (
@@ -110,7 +124,7 @@ async function NewsList({
                     dir="auto"
                     className="mt-1 text-lg leading-snug font-bold md:text-xl"
                   >
-                    <Link href={`/news/${item.id}`} className="hover:underline">
+                    <Link href={`/news/${item.slug}`} className="hover:underline">
                       {item.title}
                     </Link>
                   </h2>
@@ -124,7 +138,7 @@ async function NewsList({
         </ul>
       )}
 
-      {(hasPrevious || hasNext) && (
+      {totalPages > 1 && (
         <nav
           aria-label={t("pagination")}
           className="mt-10 flex items-center justify-between gap-6"
@@ -141,7 +155,7 @@ async function NewsList({
           ) : (
             <span />
           )}
-          <span className="text-sm text-ink/70">{t("page", { page })}</span>
+          <span className="text-sm text-ink/70">{t("page", { page, total: totalPages })}</span>
           {hasNext ? (
             <Link
               href={{ pathname: "/news", query: { page: page + 1 } }}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { listAdminNews, type AdminNewsDto, type NewsStatus } from "@/lib/admin-api";
+import { listAdminNews, type AdminNewsDto, type AdminNewsPage, type NewsStatus } from "@/lib/admin-api";
 import { StatusText } from "./StatusText";
 
 export const PAGE_SIZE = 20;
@@ -27,7 +27,7 @@ export function NewsTable({ page }: { page: number }) {
   const key = `${page}:${attempt}`;
   const [result, setResult] = useState<{
     key: string;
-    items: AdminNewsDto[] | null;
+    data: AdminNewsPage | null;
   } | null>(null);
 
   // Fetch in the browser; a result only counts while its key matches the
@@ -35,8 +35,8 @@ export function NewsTable({ page }: { page: number }) {
   useEffect(() => {
     let cancelled = false;
     listAdminNews(page, PAGE_SIZE).then(
-      (items) => !cancelled && setResult({ key, items }),
-      () => !cancelled && setResult({ key, items: null }),
+      (data) => !cancelled && setResult({ key, data }),
+      () => !cancelled && setResult({ key, data: null }),
     );
     return () => {
       cancelled = true;
@@ -44,8 +44,8 @@ export function NewsTable({ page }: { page: number }) {
   }, [page, key]);
 
   const current = result?.key === key ? result : null;
-  const items = current?.items ?? null;
-  const failed = current !== null && current.items === null;
+  const data = current?.data ?? null;
+  const failed = current !== null && current.data === null;
   const load = () => setAttempt((n) => n + 1);
 
   const date = (iso: string | null) =>
@@ -69,7 +69,7 @@ export function NewsTable({ page }: { page: number }) {
       </div>
     );
   }
-  if (items === null) {
+  if (data === null) {
     return (
       <p role="status" className="mt-8 text-ink/70">
         {t("loading")}
@@ -77,15 +77,32 @@ export function NewsTable({ page }: { page: number }) {
     );
   }
 
+  const { items, totalCount, totalPages } = data;
+
+  // Asked for a page past the end: say so and point back to page 1.
+  if (page > Math.max(totalPages, 1)) {
+    return (
+      <div role="status" className="mt-8 max-w-prose">
+        <p>{t("pageOutOfRange")}</p>
+        <Link
+          href="/admin/news"
+          className="mt-3 inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
+        >
+          {t("goToFirst")}
+        </Link>
+      </div>
+    );
+  }
+
   const visible =
     filter === "All" ? items : items.filter((i) => i.status === (filter as NewsStatus));
-  // The API has no total count: offer "Next" only after a full page.
-  const hasNext = items.length === PAGE_SIZE;
+  const hasNext = page < totalPages;
   const hasPrevious = page > 1;
 
   return (
     <>
-      <div role="group" aria-label={t("filterLabel")} className="mt-8 flex flex-wrap gap-2">
+      <p className="mt-6 text-ink/80">{t("total", { count: totalCount })}</p>
+      <div role="group" aria-label={t("filterLabel")} className="mt-4 flex flex-wrap gap-2">
         {filters.map((f) => (
           <button
             key={f}
@@ -153,7 +170,7 @@ export function NewsTable({ page }: { page: number }) {
         </div>
       )}
 
-      {(hasPrevious || hasNext) && (
+      {totalPages > 1 && (
         <nav
           aria-label={t("pagination")}
           className="mt-8 flex items-center justify-between gap-6"
@@ -173,7 +190,7 @@ export function NewsTable({ page }: { page: number }) {
           ) : (
             <span />
           )}
-          <span className="text-sm text-ink/70">{t("page", { page })}</span>
+          <span className="text-sm text-ink/70">{t("page", { page, total: totalPages })}</span>
           {hasNext ? (
             <Link
               href={{ pathname: "/admin/news", query: { page: page + 1 } }}

@@ -1,42 +1,54 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { cache } from "react";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowIcon } from "@/components/ArrowIcon";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Link } from "@/i18n/navigation";
 import { getDirection, routing } from "@/i18n/routing";
-import { getNewsById, type NewsDto } from "@/lib/api";
+import { getNewsBySlug, type NewsDto } from "@/lib/api";
 
-// Cache Components needs at least one param to prerender the route shell. The
-// API is not reachable (or may be down) at build time, so no article is
-// prerendered: this entry only produces the shell, and real ids render on demand.
+// Cache Components needs at least one param to prerender the route shell. This
+// placeholder only produces the shell; real slugs render on demand.
 export function generateStaticParams() {
-  return [{ id: "_" }];
+  return [{ slug: "_" }];
 }
+
+// One request per render, shared by generateMetadata and the page.
+const loadArticle = cache(
+  async (locale: string, slug: string): Promise<NewsDto | null | undefined> => {
+    try {
+      return await getNewsBySlug(locale, slug);
+    } catch {
+      return undefined; // API down
+    }
+  },
+);
 
 export async function generateMetadata({
   params,
-}: PageProps<"/[locale]/news/[id]">): Promise<Metadata> {
-  const { locale, id } = await params;
+}: PageProps<"/[locale]/news/[slug]">): Promise<Metadata> {
+  const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "Nav" });
-  try {
-    const article = await getNewsById(locale, id);
-    if (article) return { title: `${article.title} | ${t("brand")}` };
-  } catch {
-    // API down: fall back to the section title below.
-  }
+  const article = await loadArticle(locale, slug);
+  if (article) return { title: `${article.title} | ${t("brand")}` };
   return { title: `${t("news")} | ${t("brand")}` };
 }
 
-export default async function Page({ params }: PageProps<"/[locale]/news/[id]">) {
-  const { locale } = await params;
+// The article is fetched here, before any <Suspense> boundary (and with no
+// loading.tsx, which would be one), so an unknown slug can still produce a
+// real HTTP 404. Once a fallback has streamed, the status is stuck at 200.
+// getNewsBySlug is cached, which is what lets the route resolve it up front.
+export default async function Page({ params }: PageProps<"/[locale]/news/[slug]">) {
+  const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const t = await getTranslations("News");
+  const article = await loadArticle(locale, slug);
+  if (article === null) notFound();
 
   return (
     <div className="section-y">
@@ -48,20 +60,16 @@ export default async function Page({ params }: PageProps<"/[locale]/news/[id]">)
           <ArrowIcon className="size-5 -scale-x-100 rtl:scale-x-100" />
           {t("back")}
         </Link>
-        <Suspense fallback={<ArticleSkeleton label={t("loading")} />}>
-          <Article locale={locale} params={params} />
-        </Suspense>
+        {article === undefined ? (
+          <p role="status" className="mt-12 max-w-prose text-ink/80">
+            {t("articleError")}
+          </p>
+        ) : (
+          <Article locale={locale} article={article} />
+        )}
       </div>
     </div>
   );
-}
-
-async function loadArticle(locale: string, id: string): Promise<NewsDto | null | undefined> {
-  try {
-    return await getNewsById(locale, id);
-  } catch {
-    return undefined; // API down
-  }
 }
 
 // Text direction of the returned language ("auto" if it is not one we know).
@@ -69,26 +77,9 @@ function directionOf(language: string): "rtl" | "ltr" | "auto" {
   return hasLocale(routing.locales, language) ? getDirection(language) : "auto";
 }
 
-async function Article({
-  locale,
-  params,
-}: {
-  locale: string;
-  params: PageProps<"/[locale]/news/[id]">["params"];
-}) {
-  const { id } = await params;
+async function Article({ locale, article }: { locale: string; article: NewsDto }) {
   const t = await getTranslations("News");
   const format = await getFormatter();
-  const article = await loadArticle(locale, id);
-
-  if (article === undefined) {
-    return (
-      <p role="status" className="mt-12 max-w-prose text-ink/80">
-        {t("articleError")}
-      </p>
-    );
-  }
-  if (article === null) notFound();
 
   const differs = article.language !== locale;
   const paragraphs = article.body.split(/\n{2,}/).filter((p) => p.trim() !== "");
@@ -130,14 +121,5 @@ async function Article({
         </div>
       </div>
     </article>
-  );
-}
-
-function ArticleSkeleton({ label }: { label: string }) {
-  return (
-    <div role="status" aria-label={label} className="mt-8 md:mt-12">
-      <div className="h-10 w-3/4 animate-pulse bg-sand motion-reduce:animate-none" />
-      <div className="mt-8 aspect-[3/2] max-w-3xl animate-pulse rounded-card bg-sand motion-reduce:animate-none" />
-    </div>
   );
 }

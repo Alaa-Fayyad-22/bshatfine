@@ -12,11 +12,20 @@ export type TranslationDto = {
 
 export type AdminNewsDto = {
   id: string;
+  slug: string;
   status: NewsStatus;
   createdAt: string;
   updatedAt: string | null;
   publishedAt: string | null;
   translations: TranslationDto[];
+};
+
+export type AdminNewsPage = {
+  items: AdminNewsDto[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5246";
@@ -52,7 +61,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json();
 }
 
-export function listAdminNews(page = 1, pageSize = 20): Promise<AdminNewsDto[]> {
+export function listAdminNews(page = 1, pageSize = 20): Promise<AdminNewsPage> {
   return request(`?page=${page}&pageSize=${pageSize}`);
 }
 

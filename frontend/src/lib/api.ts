@@ -1,14 +1,25 @@
+import { cacheLife } from "next/cache";
+
 export type NewsDto = {
   id: string;
+  slug: string;
   language: string;
   title: string;
   body: string;
   publishedAt: string;
 };
 
+export type NewsPage = {
+  items: NewsDto[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+};
+
 const API_URL = process.env.API_URL ?? "http://localhost:5246";
 
-export async function getNews(locale: string, page = 1, pageSize = 10): Promise<NewsDto[]> {
+export async function getNews(locale: string, page = 1, pageSize = 10): Promise<NewsPage> {
   const res = await fetch(`${API_URL}/api/news?lang=${locale}&page=${page}&pageSize=${pageSize}`, {
     cache: "no-store",
     // Fail fast if the API is down so the page never hangs on it.
@@ -24,9 +35,16 @@ export async function getNews(locale: string, page = 1, pageSize = 10): Promise<
 
 // Returns null when the article does not exist or is not published (404);
 // any other failure throws so callers can show an "API down" state.
-export async function getNewsById(locale: string, id: string): Promise<NewsDto | null> {
-  const res = await fetch(`${API_URL}/api/news/${encodeURIComponent(id)}?lang=${locale}`, {
-    cache: "no-store",
+//
+// Cached for a short time on purpose: the article page needs the answer
+// before it renders so that an unknown slug gets a real HTTP 404. Under Cache
+// Components, an uncached fetch there would make the route stream (and so
+// answer 200). Thrown errors are never cached.
+export async function getNewsBySlug(locale: string, slug: string): Promise<NewsDto | null> {
+  "use cache";
+  cacheLife("minutes");
+
+  const res = await fetch(`${API_URL}/api/news/${encodeURIComponent(slug)}?lang=${locale}`, {
     signal: AbortSignal.timeout(5000),
   });
 
@@ -36,4 +54,22 @@ export async function getNewsById(locale: string, id: string): Promise<NewsDto |
   }
 
   return res.json();
+}
+
+// Live (uncached) existence check, used by the proxy to answer an unknown slug
+// with a real HTTP 404. Cache Components sends the page's static shell with a
+// 200 before the page body resolves, so the page alone cannot set the status.
+// true/false when the API answered 200/404; null when it could not be reached
+// (the page then shows its own error state).
+export async function newsExists(locale: string, slug: string): Promise<boolean | null> {
+  try {
+    const res = await fetch(`${API_URL}/api/news/${encodeURIComponent(slug)}?lang=${locale}`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(3000),
+    });
+    if (res.status === 404) return false;
+    return res.ok ? true : null;
+  } catch {
+    return null;
+  }
 }
