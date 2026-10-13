@@ -9,12 +9,18 @@ namespace Bshatfine.Application.Services;
 public class NewsService(INewsRepository repository)
 {
     // ---------- Public ----------
-    public async Task<List<NewsDto>> GetPublishedAsync(string lang, int page, int pageSize, CancellationToken ct)
+    public async Task<PagedResult<NewsDto>> GetPublishedAsync(string lang, int page, int pageSize, CancellationToken ct)
     {
         var language = ParseLanguage(lang);
         (page, pageSize) = NormalizePaging(page, pageSize);
-        var items = await repository.GetPublishedAsync(page, pageSize, ct);
-        return items.Select(n => n.ToDto(language)).ToList();
+
+        var (items, total) = await repository.GetPublishedAsync(page, pageSize, ct);
+
+        return new PagedResult<NewsDto>(
+            items.Select(n => n.ToDto(language)).ToList(),
+            page,
+            pageSize,
+            total);
     }
 
     public async Task<NewsDto?> GetPublishedByIdAsync(string lang, Guid id, CancellationToken ct)
@@ -24,12 +30,19 @@ public class NewsService(INewsRepository repository)
         return news?.ToDto(language);
     }
 
+
     // ---------- Admin ----------
-    public async Task<List<AdminNewsDto>> GetAllForAdminAsync(int page, int pageSize, CancellationToken ct)
+    public async Task<PagedResult<AdminNewsDto>> GetAllForAdminAsync(int page, int pageSize, CancellationToken ct)
     {
         (page, pageSize) = NormalizePaging(page, pageSize);
-        var items = await repository.GetAllAsync(page, pageSize, ct);
-        return items.Select(n => n.ToAdminDto()).ToList();
+
+        var (items, total) = await repository.GetAllAsync(page, pageSize, ct);
+
+        return new PagedResult<AdminNewsDto>(
+            items.Select(n => n.ToAdminDto()).ToList(),
+            page,
+            pageSize,
+            total);
     }
 
     public async Task<AdminNewsDto?> GetByIdForAdminAsync(Guid id, CancellationToken ct)

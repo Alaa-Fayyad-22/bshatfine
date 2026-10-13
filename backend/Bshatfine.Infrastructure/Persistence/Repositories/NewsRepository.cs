@@ -7,24 +7,39 @@ namespace Bshatfine.Infrastructure.Persistence.Repositories;
 
 public class NewsRepository(AppDbContext db) : INewsRepository
 {
-    public Task<List<News>> GetPublishedAsync(int page, int pageSize, CancellationToken ct) =>
-        db.News
+    public async Task<(List<News> Items, int TotalCount)> GetPublishedAsync(int page, int pageSize, CancellationToken ct)
+    {
+        var query = db.News.Where(n => n.Status == NewsStatus.Published);
+
+        var total = await query.CountAsync(ct);
+
+        var items = await query
             .Include(n => n.Translations)
             .AsNoTracking()
-            .Where(n => n.Status == NewsStatus.Published)
             .OrderByDescending(n => n.PublishedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync(ct) ;
+            .ToListAsync(ct);
 
-    public Task<List<News>> GetAllAsync(int page, int pageSize, CancellationToken ct) =>
-        db.News
+        return (items, total);
+    }
+
+    public async Task<(List<News> Items, int TotalCount)> GetAllAsync(int page, int pageSize, CancellationToken ct)
+    {
+        var query = db.News.AsQueryable();
+
+        var total = await query.CountAsync(ct);
+
+        var items = await query
             .Include(n => n.Translations)
             .AsNoTracking()
             .OrderByDescending(n => n.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);
+
+        return (items, total);
+    }
 
     public Task<News?> GetByIdAsync(Guid id, CancellationToken ct) =>
         db.News
@@ -33,8 +48,8 @@ public class NewsRepository(AppDbContext db) : INewsRepository
 
     public Task<News?> GetPublishedByIdAsync(Guid id, CancellationToken ct) =>
         db.News
-            .AsNoTracking()
             .Include(n => n.Translations)
+            .AsNoTracking()
             .FirstOrDefaultAsync(n => n.Id == id && n.Status == NewsStatus.Published, ct);
 
     public void Add(News news) => db.News.Add(news);
