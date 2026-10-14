@@ -42,6 +42,12 @@ public static class AdminNewsEndpoints
             return news is null ? Results.NotFound() : Results.Ok(news);
         });
 
+        group.MapPost("/{id:guid}/republish", async (Guid id, NewsService service, CancellationToken ct) =>
+        {
+            var news = await service.RepublishAsync(id, ct);
+            return news is null ? Results.NotFound() : Results.Ok(news);
+        });
+
         // ---------- Cover image ----------
         group.MapPost("/{id:guid}/cover", async (Guid id, IFormFile file, NewsService service, CancellationToken ct) =>
         {

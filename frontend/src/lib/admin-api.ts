@@ -18,7 +18,14 @@ export type AdminNewsDto = {
   updatedAt: string | null;
   publishedAt: string | null;
   translations: TranslationDto[];
+  // Relative to the API base; turn it into a URL with coverUrl().
+  coverImageUrl: string | null;
 };
+
+export { coverUrl } from "./cover";
+
+export const COVER_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const COVER_MAX_BYTES = 5 * 1024 * 1024;
 
 export type AdminNewsPage = {
   items: AdminNewsDto[];
@@ -42,10 +49,13 @@ export class AdminApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}/api/admin/news${path}`, {
-    ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
-  });
+  // A FormData body needs the browser to set its own multipart Content-Type
+  // (with the boundary), so only JSON requests get the header.
+  const headers: HeadersInit =
+    init?.body instanceof FormData
+      ? { ...init?.headers }
+      : { "Content-Type": "application/json", ...init?.headers };
+  const res = await fetch(`${API_URL}/api/admin/news${path}`, { ...init, headers });
 
   if (!res.ok) {
     let detail: string | null = null;
@@ -92,4 +102,15 @@ export function publishNews(id: string): Promise<AdminNewsDto> {
 
 export function archiveNews(id: string): Promise<AdminNewsDto> {
   return request(`/${encodeURIComponent(id)}/archive`, { method: "POST" });
+}
+
+// Sends the image as multipart/form-data, field "file".
+export function uploadNewsCover(id: string, file: File): Promise<AdminNewsDto> {
+  const body = new FormData();
+  body.append("file", file);
+  return request(`/${encodeURIComponent(id)}/cover`, { method: "POST", body });
+}
+
+export function removeNewsCover(id: string): Promise<AdminNewsDto> {
+  return request(`/${encodeURIComponent(id)}/cover`, { method: "DELETE" });
 }

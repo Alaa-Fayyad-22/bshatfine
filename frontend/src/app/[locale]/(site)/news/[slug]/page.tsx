@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowIcon } from "@/components/ArrowIcon";
+import { NewsCover } from "@/components/NewsCover";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Link } from "@/i18n/navigation";
 import { getDirection, routing } from "@/i18n/routing";
-import { getNewsBySlug, type NewsDto } from "@/lib/api";
+import { coverUrl, getNewsBySlug, type NewsDto } from "@/lib/api";
 
 // Cache Components needs at least one param to prerender the route shell. This
 // placeholder only produces the shell; real slugs render on demand.
@@ -34,7 +34,19 @@ export async function generateMetadata({
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "Nav" });
   const article = await loadArticle(locale, slug);
-  if (article) return { title: `${article.title} | ${t("brand")}` };
+  if (article) {
+    const title = `${article.title} | ${t("brand")}`;
+    const cover = coverUrl(article.coverImageUrl);
+    // Absolute URLs, so shared links show the photo. Without a cover the
+    // site-wide defaults apply.
+    return {
+      title,
+      ...(cover && {
+        openGraph: { title, type: "article", images: [{ url: cover, alt: article.title }] },
+        twitter: { card: "summary_large_image", title, images: [cover] },
+      }),
+    };
+  }
   return { title: `${t("news")} | ${t("brand")}` };
 }
 
@@ -100,15 +112,13 @@ async function Article({ locale, article }: { locale: string; article: NewsDto }
         <h1 className="mt-2 max-w-3xl text-2xl leading-tight font-bold md:text-3xl">
           {article.title}
         </h1>
-        {/* PLACEHOLDER: the API has no image field yet */}
         <ClipReveal className="mt-8 max-w-3xl">
           <div className="relative aspect-[3/2] overflow-hidden rounded-card bg-sand">
-            <Image
-              src="/images/news-placeholder.jpg"
-              alt=""
-              fill
+            <NewsCover
+              coverImageUrl={article.coverImageUrl}
+              title={article.title}
               sizes="(min-width: 768px) 48rem, 100vw"
-              className="object-cover"
+              preload
             />
           </div>
         </ClipReveal>

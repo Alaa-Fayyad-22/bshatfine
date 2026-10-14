@@ -103,6 +103,9 @@ public class NewsService(INewsRepository repository, IFileStorage storage)
     public Task<AdminNewsDto?> ArchiveAsync(Guid id, CancellationToken ct) =>
         ChangeAsync(id, news => news.Archive(), ct);
 
+    public Task<AdminNewsDto?> RepublishAsync(Guid id, CancellationToken ct) =>
+    ChangeAsync(id, news => news.Republish(), ct);
+
     public async Task<AdminNewsDto?> SetCoverImageAsync(Guid id, Stream content, long length, CancellationToken ct)
     {
         if (length == 0)

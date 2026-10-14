@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowIcon } from "@/components/ArrowIcon";
+import { NewsCover } from "@/components/NewsCover";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { getNews, type NewsPage } from "@/lib/api";
@@ -105,14 +105,11 @@ async function NewsList({
           {items.map((item) => (
             <li key={item.id} className="border-b border-hairline py-8">
               <article className="grid gap-6 sm:grid-cols-[12rem_1fr] sm:gap-8">
-                {/* PLACEHOLDER: the API has no image field yet */}
                 <div className="relative aspect-[3/2] overflow-hidden rounded-card bg-sand">
-                  <Image
-                    src="/images/news-placeholder.jpg"
-                    alt=""
-                    fill
+                  <NewsCover
+                    coverImageUrl={item.coverImageUrl}
+                    title={item.title}
                     sizes="(min-width: 640px) 12rem, 100vw"
-                    className="object-cover"
                   />
                 </div>
                 <div>

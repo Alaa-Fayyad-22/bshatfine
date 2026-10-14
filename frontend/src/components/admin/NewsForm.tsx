@@ -6,13 +6,18 @@ import { Link, useRouter } from "@/i18n/navigation";
 import {
   AdminApiError,
   archiveNews,
+  COVER_MAX_BYTES,
+  COVER_TYPES,
   createNews,
   getAdminNews,
   publishNews,
+  removeNewsCover,
   updateNews,
+  uploadNewsCover,
   type AdminNewsDto,
   type TranslationDto,
 } from "@/lib/admin-api";
+import { NewsCover } from "@/components/NewsCover";
 import { StatusText } from "./StatusText";
 
 const MAX_TITLE = 200;
@@ -20,7 +25,7 @@ const FLASH_KEY = "admin-news-flash";
 const langs = ["ar", "en"] as const;
 type Lang = (typeof langs)[number];
 type Values = Record<Lang, { title: string; body: string }>;
-type Busy = "save" | "publish" | "archive" | null;
+type Busy = "save" | "publish" | "archive" | "upload" | "removeCover" | null;
 type Flash = "createdOk" | "publishedOk";
 
 const empty: Values = { ar: { title: "", body: "" }, en: { title: "", body: "" } };
@@ -57,6 +62,8 @@ export function NewsForm({ id }: { id?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [confirmRemoveCover, setConfirmRemoveCover] = useState(false);
+  const fileRef = useRef<HTMLInputElement | null>(null);
   const tabRefs = useRef<Record<Lang, HTMLButtonElement | null>>({ ar: null, en: null });
 
   const dirty = JSON.stringify(values) !== baseline;
@@ -206,6 +213,59 @@ export function NewsForm({ id }: { id?: string }) {
     });
   }
 
+  // The file was chosen in the hidden input. Check it here first, so an
+  // obviously wrong file never costs an upload; the API still has the last word
+  // and its message is shown as is.
+  function onCoverPicked(file: File | undefined) {
+    if (fileRef.current) fileRef.current.value = ""; // allow picking the same file again
+    if (!file) return;
+    if (!(COVER_TYPES as readonly string[]).includes(file.type)) {
+      setSuccess(null);
+      return setError(t("coverTypeError"));
+    }
+    if (file.size > COVER_MAX_BYTES) {
+      setSuccess(null);
+      return setError(t("coverSizeError", { max: COVER_MAX_BYTES / (1024 * 1024) }));
+    }
+
+    if (article) {
+      return run("upload", async () => {
+        // Only the cover changes: keep whatever is typed in the form.
+        setArticle(await uploadNewsCover(article.id, file));
+        setSuccess(t("coverUploadedOk"));
+      });
+    }
+
+    // New article: a cover needs a saved draft, so save it first.
+    const translations = toTranslations(values);
+    if (translations.length === 0) {
+      setSuccess(null);
+      return setError(t("coverNeedContent"));
+    }
+    return run("upload", async () => {
+      const created = await createNews(translations);
+      try {
+        await uploadNewsCover(created.id, file);
+      } catch (e) {
+        // The draft exists now. Stay here so the reason stays visible, adopt it
+        // and point the address bar at its edit URL without remounting.
+        apply(created);
+        window.history.replaceState(null, "", `/${locale}/admin/news/${created.id}`);
+        throw e;
+      }
+      goToEdit(created.id, "createdOk");
+    });
+  }
+
+  function removeCover() {
+    if (!article) return;
+    return run("removeCover", async () => {
+      setArticle(await removeNewsCover(article.id));
+      setConfirmRemoveCover(false);
+      setSuccess(t("coverRemovedOk"));
+    });
+  }
+
   function onTabKey(e: KeyboardEvent<HTMLButtonElement>) {
     let next: Lang | null = null;
     if (e.key === "ArrowLeft" || e.key === "ArrowRight") next = tab === "ar" ? "en" : "ar";
@@ -294,6 +354,98 @@ export function NewsForm({ id }: { id?: string }) {
           {t("archivedNote")}
         </p>
       )}
+
+      <section aria-labelledby={`${uid}-cover-title`} className="mt-8 border-t border-hairline pt-6">
+        <h2 id={`${uid}-cover-title`} className="font-medium">
+          {t("coverTitle")}
+        </h2>
+        <div className="mt-3 grid max-w-xl gap-4">
+          <div className="relative aspect-[3/2] overflow-hidden rounded-card bg-sand">
+            {article?.coverImageUrl ? (
+              <NewsCover
+                coverImageUrl={article.coverImageUrl}
+                title={t("coverPreviewAlt")}
+                sizes="(min-width: 768px) 36rem, 100vw"
+              />
+            ) : (
+              <p className="absolute inset-0 grid place-items-center px-4 text-center text-sm text-ink/70">
+                {t("coverNone")}
+              </p>
+            )}
+            {(busy === "upload" || busy === "removeCover") && (
+              <p
+                role="status"
+                className="absolute inset-0 grid place-items-center bg-ivory/80 font-medium"
+              >
+                {busy === "upload" ? t("coverUploading") : t("coverRemoving")}
+              </p>
+            )}
+          </div>
+          {!archived && (
+            <>
+              <p id={`${uid}-cover-hint`} className="text-sm text-ink/70">
+                {article ? t("coverHint") : t("coverHintNew")}
+              </p>
+              <input
+                ref={fileRef}
+                type="file"
+                accept={COVER_TYPES.join(",")}
+                hidden
+                tabIndex={-1}
+                onChange={(e) => onCoverPicked(e.target.files?.[0])}
+              />
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  disabled={busy !== null}
+                  aria-describedby={`${uid}-cover-hint`}
+                  onClick={() => fileRef.current?.click()}
+                  className={`${button} border-cedar bg-ivory text-cedar`}
+                >
+                  {article?.coverImageUrl ? t("coverReplace") : t("coverChoose")}
+                </button>
+                {article?.coverImageUrl && !confirmRemoveCover && (
+                  <button
+                    type="button"
+                    disabled={busy !== null}
+                    onClick={() => setConfirmRemoveCover(true)}
+                    className={`${button} border-alert-danger bg-ivory text-alert-danger`}
+                  >
+                    {t("coverRemove")}
+                  </button>
+                )}
+              </div>
+              {article?.coverImageUrl && confirmRemoveCover && (
+                <div
+                  role="alertdialog"
+                  aria-label={t("coverRemove")}
+                  className="max-w-prose border border-alert-danger p-4"
+                >
+                  <p>{t("coverRemoveConfirm")}</p>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={removeCover}
+                      disabled={busy !== null}
+                      className={`${button} border-alert-danger bg-alert-danger text-ivory`}
+                    >
+                      {busy === "removeCover" ? t("coverRemoving") : t("coverRemoveYes")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setConfirmRemoveCover(false)}
+                      disabled={busy !== null}
+                      className={`${button} border-ink/40 bg-ivory`}
+                    >
+                      {t("cancel")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </section>
 
       <div
         role="tablist"

@@ -7,7 +7,11 @@ export type NewsDto = {
   title: string;
   body: string;
   publishedAt: string;
+  // Relative to the API base; turn it into a URL with coverUrl() (./cover).
+  coverImageUrl: string | null;
 };
+
+export { coverUrl } from "./cover";
 
 export type NewsPage = {
   items: NewsDto[];

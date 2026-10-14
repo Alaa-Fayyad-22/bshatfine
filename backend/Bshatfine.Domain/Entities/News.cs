@@ -140,4 +140,17 @@ public class News
         Status = NewsStatus.Archived;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void Republish()
+    {
+        if (Status != NewsStatus.Archived)
+            throw new DomainException("Only archived news can be republished.");
+
+        if (GetTranslation(Language.Ar) is null)
+            throw new DomainException("An Arabic translation is required before publishing.");
+
+        Status = NewsStatus.Published;
+        UpdatedAt = DateTime.UtcNow;
+
+    }
 }

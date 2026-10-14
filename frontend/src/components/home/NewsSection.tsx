@@ -1,8 +1,8 @@
-import Image from "next/image";
 import { Suspense } from "react";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { useTranslations } from "next-intl";
 import { ArrowIcon } from "@/components/ArrowIcon";
+import { NewsCover } from "@/components/NewsCover";
 import { ClipReveal } from "@/components/motion/ClipReveal";
 import { Link } from "@/i18n/navigation";
 import { getNews, type NewsDto } from "@/lib/api";
@@ -80,15 +80,12 @@ async function NewsContent() {
   return (
     <div className="mt-10 grid gap-12 md:mt-14 lg:grid-cols-5 lg:gap-16">
       <article className="lg:col-span-3">
-        {/* PLACEHOLDER: the API has no image field yet */}
         <ClipReveal>
           <div className="relative aspect-[3/2] overflow-hidden rounded-card bg-sand">
-            <Image
-              src="/images/news-placeholder.jpg"
-              alt=""
-              fill
+            <NewsCover
+              coverImageUrl={featured.coverImageUrl}
+              title={featured.title}
               sizes="(min-width: 1024px) 55vw, 100vw"
-              className="object-cover"
             />
           </div>
         </ClipReveal>
@@ -106,13 +103,21 @@ async function NewsContent() {
       {others.length > 0 && (
         <ul className="self-start border-t border-hairline lg:col-span-2">
           {others.slice(0, 3).map((item) => (
-            <li key={item.id} className="border-b border-hairline py-6">
-              <p>{date(item.publishedAt)}</p>
-              <h3 dir="auto" className="mt-1 text-lg leading-snug font-semibold md:text-xl">
-                <Link href={`/news/${item.slug}`} className="hover:underline">
-                  {item.title}
-                </Link>
-              </h3>
+            <li
+              key={item.id}
+              className="grid grid-cols-[6rem_1fr] items-start gap-4 border-b border-hairline py-6"
+            >
+              <div className="relative aspect-[3/2] overflow-hidden rounded-card bg-sand">
+                <NewsCover coverImageUrl={item.coverImageUrl} title={item.title} sizes="6rem" />
+              </div>
+              <div>
+                <p>{date(item.publishedAt)}</p>
+                <h3 dir="auto" className="mt-1 text-lg leading-snug font-semibold md:text-xl">
+                  <Link href={`/news/${item.slug}`} className="hover:underline">
+                    {item.title}
+                  </Link>
+                </h3>
+              </div>
             </li>
           ))}
         </ul>

@@ -200,6 +200,23 @@
       "createdOk": "Article created as a draft.",
       "publishedOk": "Article published.",
       "archivedOk": "Article archived.",
+      "coverTitle": "Cover image",
+      "coverNone": "No cover image",
+      "coverPreviewAlt": "Cover image preview",
+      "coverHint": "JPEG, PNG or WebP, up to 5 MB.",
+      "coverHintNew": "JPEG, PNG or WebP, up to 5 MB. Choosing an image saves the article as a draft first.",
+      "coverChoose": "Choose image",
+      "coverReplace": "Replace",
+      "coverRemove": "Remove",
+      "coverUploading": "Uploading…",
+      "coverRemoving": "Removing…",
+      "coverRemoveConfirm": "Remove the cover image? The article will show the default picture instead.",
+      "coverRemoveYes": "Yes, remove",
+      "coverTypeError": "This file type is not allowed. Choose a JPEG, PNG or WebP image.",
+      "coverSizeError": "This image is too large. The maximum size is {max} MB.",
+      "coverNeedContent": "Add a title and a body in at least one language first. The article is saved as a draft before the image is uploaded.",
+      "coverUploadedOk": "Cover image saved.",
+      "coverRemovedOk": "Cover image removed.",
       "errorTitle": "Something went wrong"
     }
   }

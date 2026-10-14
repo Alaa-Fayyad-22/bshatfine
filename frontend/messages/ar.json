@@ -200,6 +200,23 @@
       "createdOk": "تم إنشاء الخبر كمسودة.",
       "publishedOk": "تم نشر الخبر.",
       "archivedOk": "تمت أرشفة الخبر.",
+      "coverTitle": "صورة الغلاف",
+      "coverNone": "لا توجد صورة غلاف",
+      "coverPreviewAlt": "معاينة صورة الغلاف",
+      "coverHint": "JPEG أو PNG أو WebP، حتى 5 ميغابايت.",
+      "coverHintNew": "JPEG أو PNG أو WebP، حتى 5 ميغابايت. اختيار صورة يحفظ الخبر كمسودة أولاً.",
+      "coverChoose": "اختيار صورة",
+      "coverReplace": "استبدال",
+      "coverRemove": "إزالة",
+      "coverUploading": "جارٍ الرفع…",
+      "coverRemoving": "جارٍ الإزالة…",
+      "coverRemoveConfirm": "هل تريد إزالة صورة الغلاف؟ سيعرض الخبر الصورة الافتراضية بدلاً منها.",
+      "coverRemoveYes": "نعم، أزِل",
+      "coverTypeError": "نوع الملف غير مسموح. اختر صورة بصيغة JPEG أو PNG أو WebP.",
+      "coverSizeError": "الصورة كبيرة جداً. الحد الأقصى {max} ميغابايت.",
+      "coverNeedContent": "أضف عنواناً ونصاً بلغة واحدة على الأقل أولاً. يُحفظ الخبر كمسودة قبل رفع الصورة.",
+      "coverUploadedOk": "تم حفظ صورة الغلاف.",
+      "coverRemovedOk": "تمت إزالة صورة الغلاف.",
       "errorTitle": "حدث خطأ"
     }
   }
