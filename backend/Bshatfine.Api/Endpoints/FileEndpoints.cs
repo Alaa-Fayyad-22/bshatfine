@@ -1,4 +1,3 @@
-
 using Bshatfine.Application.Abstractions;
 
 namespace Bshatfine.Api.Endpoints;
@@ -16,6 +15,6 @@ public static class FileEndpoints
             http.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
             http.Response.Headers["X-Content-Type-Options"] = "nosniff";
             return Results.File(file.Data, file.ContentType);
-        });
+        }).AllowAnonymous();
     }
 }

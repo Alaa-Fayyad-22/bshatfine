@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
-
+using Bshatfine.Application.Security;
+using Microsoft.AspNetCore.Authorization;
 namespace Bshatfine.Api.Security;
 
 public static class AuthenticationSetup
@@ -71,7 +72,19 @@ public static class AuthenticationSetup
         services.Configure<SecurityStampValidatorOptions>(options =>
             options.ValidationInterval = TimeSpan.FromMinutes(1));
 
-        services.AddAuthorization();
+        services.AddAuthorizationBuilder()
+    // Secure by default: every endpoint requires a logged-in user
+    // unless it is explicitly marked AllowAnonymous
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build())
+    .AddPolicy(Policies.Staff, policy => policy
+        .RequireAuthenticatedUser()
+        .RequireRole(Roles.Staff))
+        // When 2FA is added: .RequireClaim("amr", "mfa")
+    .AddPolicy(Policies.AdminOnly, policy => policy
+        .RequireAuthenticatedUser()
+        .RequireRole(Roles.Admin));
         return services;
     }
 }

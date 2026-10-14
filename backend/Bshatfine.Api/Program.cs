@@ -1,10 +1,11 @@
 using Bshatfine.Api.Endpoints;
 using Bshatfine.Api.Endpoints.Admin;
 using Bshatfine.Api.Errors;
+using Bshatfine.Api.Security;
 using Bshatfine.Application;
+using Bshatfine.Application.Security;
 using Bshatfine.Infrastructure;
 using Bshatfine.Infrastructure.Identity;
-using Bshatfine.Api.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 const string FrontendCorsPolicy = "Frontend";
@@ -15,45 +16,50 @@ var connectionString = builder.Configuration.GetConnectionString("Default")
 
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
+builder.WebHost.ConfigureKestrel(options =>
+    options.Limits.MaxRequestBodySize = 11 * 1024 * 1024); // 11 MB: the largest upload + form overhead
+
 // ---------- Services ----------
 builder.Services.AddInfrastructure(connectionString);
 builder.Services.AddApplication();
-builder.WebHost.ConfigureKestrel(options =>
-   options.Limits.MaxRequestBodySize = 11 * 1024 * 1024); // 11 MB: the largest upload + form overhead
+
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 builder.Services.AddExceptionHandler<BadHttpRequestExceptionHandler>();
+
 builder.Services.AddCors(options =>
     options.AddPolicy(FrontendCorsPolicy, policy =>
         policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
-              .AllowAnyMethod()));
+              .AllowAnyMethod()
+              .AllowCredentials()));
+
 builder.Services.AddBshatfineAuthentication();
-
 builder.Services.AddOpenApi();
-
-
 
 // ---------- Pipeline ----------
 var app = builder.Build();
 await IdentitySeeder.SeedAsync(app.Services, app.Configuration);
 
 app.UseExceptionHandler();
+app.UseHttpsRedirection();
 app.UseCors(FrontendCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi().AllowAnonymous();
 }
 
-app.UseHttpsRedirection();
-
 // ---------- Endpoints ----------
+// Public
 app.MapNewsEndpoints();
-app.MapAdminNewsEndpoints();
 app.MapFileEndpoints();
 app.MapAuthEndpoints();
+
+// Staff only: everything under /api/admin inherits this protection
+var admin = app.MapGroup("/api/admin").RequireAuthorization(Policies.Staff);
+admin.MapAdminNewsEndpoints();
 
 app.Run();

@@ -7,7 +7,7 @@ public static class AdminNewsEndpoints
 {
     public static void MapAdminNewsEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/admin/news");
+        var group = app.MapGroup("/news");
 
         group.MapGet("/", async (NewsService service, CancellationToken ct, int page = 1, int pageSize = 20) =>
             Results.Ok(await service.GetAllForAdminAsync(page, pageSize, ct)));
@@ -55,7 +55,7 @@ public static class AdminNewsEndpoints
             var news = await service.SetCoverImageAsync(id, stream, file.Length, ct);
             return news is null ? Results.NotFound() : Results.Ok(news);
         }).DisableAntiforgery()
-        .WithFormOptions(multipartBodyLengthLimit: 11 * 1024 * 1024); ;
+        .WithFormOptions(multipartBodyLengthLimit: 11 * 1024 * 1024); 
 
         group.MapDelete("/{id:guid}/cover", async (Guid id, NewsService service, CancellationToken ct) =>
         {
