@@ -8,8 +8,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Bshatfine.Infrastructure.Audit;
 using Microsoft.Extensions.DependencyInjection;
-
+using Microsoft.AspNetCore.DataProtection;
 namespace Bshatfine.Infrastructure;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 
 public static class DependencyInjection
 {
@@ -54,6 +55,9 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogger, AuditLogger>();
         services.AddScoped<IAuditLogQueries, AuditLogQueries>();
         services.AddScoped<IUserAdminService, UserAdminService>();
+        services.AddDataProtection()
+            .SetApplicationName("Bshatfine")
+            .PersistKeysToDbContext<AppDbContext>();
 
         return services;
     }
