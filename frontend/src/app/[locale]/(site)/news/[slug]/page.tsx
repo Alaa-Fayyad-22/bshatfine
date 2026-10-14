@@ -12,13 +12,18 @@ import { coverUrl, getNewsBySlug, type NewsDto } from "@/lib/api";
 
 // Cache Components needs at least one param to prerender the route shell. This
 // placeholder only produces the shell; real slugs render on demand.
+const SHELL_SLUG = "_";
+
 export function generateStaticParams() {
-  return [{ slug: "_" }];
+  return [{ slug: SHELL_SLUG }];
 }
 
 // One request per render, shared by generateMetadata and the page.
 const loadArticle = cache(
   async (locale: string, slug: string): Promise<NewsDto | null | undefined> => {
+    // Building the shell must never depend on the API being up (and the
+    // placeholder is not an article anyway).
+    if (slug === SHELL_SLUG) return null;
     try {
       return await getNewsBySlug(locale, slug);
     } catch {
