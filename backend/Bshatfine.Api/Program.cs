@@ -34,17 +34,22 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod()
               .AllowCredentials()));
 
+
+
 builder.Services.AddBshatfineAuthentication();
+builder.Services.AddBshatfineRateLimiting(builder.Configuration);
 builder.Services.AddOpenApi();
 
 // ---------- Pipeline ----------
 var app = builder.Build();
 await IdentitySeeder.SeedAsync(app.Services, app.Configuration);
 
+app.UseForwardedHeaders();
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors(FrontendCorsPolicy);
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
@@ -59,7 +64,9 @@ app.MapFileEndpoints();
 app.MapAuthEndpoints();
 
 // Staff only: everything under /api/admin inherits this protection
-var admin = app.MapGroup("/api/admin").RequireAuthorization(Policies.Staff);
+var admin = app.MapGroup("/api/admin")
+    .RequireAuthorization(Policies.Staff)
+    .RequireRateLimiting(RateLimitPolicies.Admin);
 admin.MapAdminNewsEndpoints();
 
 admin.MapAdminAuditEndpoints();

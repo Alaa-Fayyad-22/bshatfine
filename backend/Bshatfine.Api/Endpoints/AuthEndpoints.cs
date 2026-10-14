@@ -3,6 +3,7 @@ using Bshatfine.Application.Abstractions;
 using Bshatfine.Application.Security;
 using Bshatfine.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
+using Bshatfine.Api.Security;
 
 namespace Bshatfine.Api.Endpoints;
 
@@ -67,7 +68,7 @@ public static class AuthEndpoints
                 UserId: user.Id, UserEmail: user.Email), ct);
 
             return Results.Problem(InvalidLogin, statusCode: StatusCodes.Status401Unauthorized);
-        }).AllowAnonymous();
+        }).AllowAnonymous().RequireRateLimiting(RateLimitPolicies.Login);
 
         // ---------- Login, step 2: authenticator code ----------
         group.MapPost("/login/2fa", async (TwoFactorCodeRequest request, SignInManager<AppUser> signIn) =>
@@ -82,7 +83,7 @@ public static class AuthEndpoints
                 return Results.Problem(TooManyAttempts, statusCode: StatusCodes.Status429TooManyRequests);
 
             return Results.Problem("Invalid code.", statusCode: StatusCodes.Status401Unauthorized);
-        }).AllowAnonymous();
+        }).AllowAnonymous().RequireRateLimiting(RateLimitPolicies.Login);
 
         // ---------- Login, step 2 (alternative): recovery code ----------
         group.MapPost("/login/recovery", async (TwoFactorCodeRequest request, SignInManager<AppUser> signIn) =>
@@ -96,7 +97,7 @@ public static class AuthEndpoints
                 return Results.Problem(TooManyAttempts, statusCode: StatusCodes.Status429TooManyRequests);
 
             return Results.Problem("Invalid recovery code.", statusCode: StatusCodes.Status401Unauthorized);
-        }).AllowAnonymous();
+        }).AllowAnonymous().RequireRateLimiting(RateLimitPolicies.Login);
 
         // ---------- Logout ----------
         group.MapPost("/logout", async (ClaimsPrincipal principal, SignInManager<AppUser> signIn,
