@@ -125,7 +125,7 @@ export function NewsTable({ page }: { page: number }) {
           {items.length === 0 ? t("empty") : t("emptyFilter")}
         </p>
       ) : (
-        <div className="mt-6 overflow-x-auto">
+        <div className="relative mt-6 overflow-x-auto">
           <table className="w-full min-w-[40rem] border-collapse text-start text-base">
             <thead>
               <tr className="border-b border-ink/30 text-sm text-ink/70">

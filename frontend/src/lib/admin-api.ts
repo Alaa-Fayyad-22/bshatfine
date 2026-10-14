@@ -2,6 +2,8 @@
 // client components), so it reads NEXT_PUBLIC_API_URL: Next.js only exposes
 // env vars with that prefix to browser code. Public pages keep using the
 // server-only API_URL in ./api.ts.
+import { reportAuthFailure } from "./auth-api";
+
 export type NewsStatus = "Draft" | "Published" | "Archived";
 
 export type TranslationDto = {
@@ -55,9 +57,17 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     init?.body instanceof FormData
       ? { ...init?.headers }
       : { "Content-Type": "application/json", ...init?.headers };
-  const res = await fetch(`${API_URL}/api/admin/news${path}`, { ...init, headers });
+  // The session lives in an HttpOnly cookie, sent only with credentials: "include".
+  const res = await fetch(`${API_URL}/api/admin/news${path}`, {
+    ...init,
+    headers,
+    credentials: "include",
+    cache: "no-store",
+  });
 
   if (!res.ok) {
+    // 401 = session ended, 403 = not staff: the admin guard reacts to either.
+    reportAuthFailure(res.status);
     let detail: string | null = null;
     try {
       const problem = await res.json();

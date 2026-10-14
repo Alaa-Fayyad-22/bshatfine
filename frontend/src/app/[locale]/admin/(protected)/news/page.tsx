@@ -6,6 +6,9 @@ import { NewsTable } from "@/components/admin/NewsTable";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 
+// Behind AdminGuard (renders nothing until the session is confirmed).
+export const instant = false;
+
 export default async function AdminNewsPage({
   params,
   searchParams,
