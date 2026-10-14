@@ -17,7 +17,10 @@ var connectionString = builder.Configuration.GetConnectionString("Default")
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 
 builder.WebHost.ConfigureKestrel(options =>
-    options.Limits.MaxRequestBodySize = 11 * 1024 * 1024); // 11 MB: the largest upload + form overhead
+{
+    options.Limits.MaxRequestBodySize = 11 * 1024 * 1024; // 11 MB: the largest upload + form overhead
+    options.AddServerHeader = false;                      // don't advertise what we run
+});
 
 // ---------- Services ----------
 builder.Services.AddInfrastructure(connectionString);
@@ -45,6 +48,7 @@ var app = builder.Build();
 await IdentitySeeder.SeedAsync(app.Services, app.Configuration);
 
 app.UseForwardedHeaders();
+app.UseBshatfineSecurityHeaders();
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors(FrontendCorsPolicy);
