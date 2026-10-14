@@ -4,6 +4,7 @@ using Bshatfine.Api.Errors;
 using Bshatfine.Application;
 using Bshatfine.Infrastructure;
 using Bshatfine.Infrastructure.Identity;
+using Bshatfine.Api.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 const string FrontendCorsPolicy = "Frontend";
@@ -27,6 +28,7 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()));
+builder.Services.AddBshatfineAuthentication();
 
 builder.Services.AddOpenApi();
 
@@ -38,6 +40,8 @@ await IdentitySeeder.SeedAsync(app.Services, app.Configuration);
 
 app.UseExceptionHandler();
 app.UseCors(FrontendCorsPolicy);
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
@@ -50,5 +54,6 @@ app.UseHttpsRedirection();
 app.MapNewsEndpoints();
 app.MapAdminNewsEndpoints();
 app.MapFileEndpoints();
+app.MapAuthEndpoints();
 
 app.Run();
