@@ -78,13 +78,15 @@ public static class AuthenticationSetup
     .SetFallbackPolicy(new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build())
-    .AddPolicy(Policies.Staff, policy => policy
+        .AddPolicy(Policies.Staff, policy => policy
         .RequireAuthenticatedUser()
-        .RequireRole(Roles.Staff))
+        .RequireRole(Roles.Staff)
+        .RequireAssertion(ctx => !ctx.User.HasClaim(c => c.Type == CustomClaims.MustChangePassword)))
         // When 2FA is added: .RequireClaim("amr", "mfa")
     .AddPolicy(Policies.AdminOnly, policy => policy
         .RequireAuthenticatedUser()
-        .RequireRole(Roles.Admin));
+        .RequireRole(Roles.Admin)
+        .RequireAssertion(ctx => !ctx.User.HasClaim(c => c.Type == CustomClaims.MustChangePassword)));
         return services;
     }
 }

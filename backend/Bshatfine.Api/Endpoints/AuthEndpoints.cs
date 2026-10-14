@@ -8,6 +8,7 @@ using Bshatfine.Api.Security;
 namespace Bshatfine.Api.Endpoints;
 
 public record LoginRequest(string Email, string Password);
+public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
 public record TwoFactorCodeRequest(string Code);
 
@@ -124,6 +125,7 @@ public static class AuthEndpoints
                 user.Email,
                 user.DisplayName,
                 Roles = principal.FindAll(ClaimTypes.Role).Select(c => c.Value),
+                user.MustChangePassword,
                 user.TwoFactorEnabled,
                 MfaVerified = principal.HasClaim("amr", "mfa")
             });
@@ -183,6 +185,37 @@ public static class AuthEndpoints
 
             return Results.Ok(new { recoveryCodes });
         }).RequireAuthorization();
+
+
+        // ---------- Change my password (also completes a forced change) ----------
+        group.MapPost("/change-password", async (ChangePasswordRequest request, ClaimsPrincipal principal,
+            UserManager<AppUser> users, SignInManager<AppUser> signIn, IAuditLogger audit, CancellationToken ct) =>
+        {
+            var user = await users.GetUserAsync(principal);
+            if (user is null)
+                return Results.Unauthorized();
+
+            if (string.Equals(request.CurrentPassword, request.NewPassword, StringComparison.Ordinal))
+                return Results.Problem("The new password must be different from the current one.",
+                    statusCode: StatusCodes.Status400BadRequest);
+
+            var result = await users.ChangePasswordAsync(
+                user, request.CurrentPassword ?? string.Empty, request.NewPassword ?? string.Empty);
+
+            if (!result.Succeeded)
+                return Results.Problem(string.Join(" ", result.Errors.Select(e => e.Description)),
+                    statusCode: StatusCodes.Status400BadRequest);
+
+            user.MustChangePassword = false;
+            await users.UpdateAsync(user);
+
+            // The password change updated the security stamp: issue a fresh session without the flag
+            await signIn.RefreshSignInAsync(user);
+
+            await audit.LogAsync(new AuditEvent(AuditActions.PasswordChanged, "User", user.Id.ToString()), ct);
+            return Results.NoContent();
+        }).RequireAuthorization()
+          .RequireRateLimiting(RateLimitPolicies.Login);
     }
 
     // Codes are often typed with spaces or dashes, like "123 456"

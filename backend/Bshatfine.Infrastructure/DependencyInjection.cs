@@ -38,6 +38,7 @@ public static class DependencyInjection
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<AppDbContext>()
             .AddRoles<IdentityRole<Guid>>()
+            .AddClaimsPrincipalFactory<AppUserClaimsPrincipalFactory>()
             .AddEntityFrameworkStores<AppDbContext>()
             .AddSignInManager()
             .AddDefaultTokenProviders(); ;
@@ -49,6 +50,7 @@ public static class DependencyInjection
         services.AddHttpContextAccessor();
         services.AddScoped<IAuditLogger, AuditLogger>();
         services.AddScoped<IAuditLogQueries, AuditLogQueries>();
+        services.AddScoped<IUserAdminService, UserAdminService>();
 
         return services;
     }
