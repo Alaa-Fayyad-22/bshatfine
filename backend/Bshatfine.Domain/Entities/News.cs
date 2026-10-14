@@ -37,7 +37,7 @@ public class News
             _translations.Add(NewsTranslations.Create(Id, language, title, body));
         }
 
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = Clock.UtcNow;
 
         RefreshSlug();
     }
@@ -51,7 +51,7 @@ public class News
             throw new DomainException("Cover image path is required.");
 
         CoverImagePath = path;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = Clock.UtcNow;
     }
 
     public void RemoveCoverImage()
@@ -63,7 +63,7 @@ public class News
             return;
 
         CoverImagePath = null;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = Clock.UtcNow;
     }
 
     private void RefreshSlug()
@@ -87,7 +87,7 @@ public class News
             return;
 
         _translations.Remove(existing);
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = Clock.UtcNow;
         RefreshSlug();
     }
 
@@ -103,7 +103,7 @@ public class News
         {
             Id = Guid.CreateVersion7(),
             Status = NewsStatus.Draft,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = Clock.UtcNow
         };
 
         foreach (var t in translations)
@@ -127,7 +127,7 @@ public class News
             throw new DomainException("An Arabic translation is required before publishing.");
 
         Status = NewsStatus.Published;
-        var now = DateTime.UtcNow;
+        var now = Clock.UtcNow;
         PublishedAt = now;
         UpdatedAt = now;
     }
@@ -138,7 +138,7 @@ public class News
             throw new DomainException("News is already archived.");
 
         Status = NewsStatus.Archived;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = Clock.UtcNow;
     }
 
     public void Republish()
@@ -150,7 +150,7 @@ public class News
             throw new DomainException("An Arabic translation is required before publishing.");
 
         Status = NewsStatus.Published;
-        UpdatedAt = DateTime.UtcNow;
+        UpdatedAt = Clock.UtcNow;
 
     }
 }
