@@ -27,4 +27,6 @@ public static class AuditActions
     public const string UserForcedLogout = "user.forced_logout";
     public const string UserUnlocked = "user.unlocked";
     public const string PasswordChanged = "auth.password.changed";
+    public const string Registered = "auth.registered";
+    public const string RegistrationDuplicate = "auth.register.duplicate_email";
 }

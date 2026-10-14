@@ -4,10 +4,12 @@ using Bshatfine.Application.Security;
 using Bshatfine.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Bshatfine.Api.Security;
+using Bshatfine.Domain.Common;
 
 namespace Bshatfine.Api.Endpoints;
 
 public record LoginRequest(string Email, string Password);
+public record RegisterRequest(string Email, string Password, string DisplayName);
 public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
 public record TwoFactorCodeRequest(string Code);
@@ -216,6 +218,57 @@ public static class AuthEndpoints
             return Results.NoContent();
         }).RequireAuthorization()
           .RequireRateLimiting(RateLimitPolicies.Login);
+
+        // ---------- Citizen registration (switched off in Phase 1) ----------
+        group.MapPost("/register", async (RegisterRequest request, IConfiguration config,
+            UserManager<AppUser> users, IAuditLogger audit, CancellationToken ct) =>
+        {
+            // Switched off: behave exactly like a route that doesn't exist
+            if (!config.GetValue<bool>("Auth:RegistrationEnabled"))
+                return Results.NotFound();
+
+            // The same answer whether the email is new or already registered
+            const string Accepted = "If this email can be used, you will receive a confirmation email.";
+
+            var email = (request.Email ?? string.Empty).Trim();
+            var name = (request.DisplayName ?? string.Empty).Trim();
+
+            if (name.Length is 0 or > 100)
+                return Results.Problem("Please enter your name (up to 100 characters).",
+                    statusCode: StatusCodes.Status400BadRequest);
+
+            if (await users.FindByEmailAsync(email) is not null)
+            {
+                await audit.LogAsync(new AuditEvent(AuditActions.RegistrationDuplicate, UserEmail: email), ct);
+                return Results.Accepted(value: new { message = Accepted });
+            }
+
+            var user = new AppUser
+            {
+                Id = Guid.CreateVersion7(),
+                UserName = email,
+                Email = email,
+                EmailConfirmed = false, // confirmed by email in Phase 2
+                DisplayName = name,
+                IsActive = true,
+                CreatedAt = Clock.UtcNow
+            };
+
+            var result = await users.CreateAsync(user, request.Password ?? string.Empty);
+            if (!result.Succeeded)
+                return Results.Problem(string.Join(" ", result.Errors.Select(e => e.Description)),
+                    statusCode: StatusCodes.Status400BadRequest);
+
+            // ALWAYS a Citizen. The request has no role field, so nobody can choose another role.
+            await users.AddToRoleAsync(user, Roles.Citizen);
+
+            // TODO (Phase 2): send the email confirmation link here.
+            await audit.LogAsync(new AuditEvent(AuditActions.Registered, "User", user.Id.ToString(),
+                UserId: user.Id, UserEmail: email), ct);
+
+            return Results.Accepted(value: new { message = Accepted });
+        }).AllowAnonymous()
+          .RequireRateLimiting(RateLimitPolicies.Register);
     }
 
     // Codes are often typed with spaces or dashes, like "123 456"

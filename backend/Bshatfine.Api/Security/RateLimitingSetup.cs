@@ -10,6 +10,7 @@ public static class RateLimitPolicies
     public const string Login = "login";
     public const string Admin = "admin";
     public const string Uploads = "uploads";
+    public const string Register = "register";
 }
 
 public static class RateLimitingSetup
@@ -27,6 +28,13 @@ public static class RateLimitingSetup
 
         services.AddRateLimiter(options =>
         {
+            options.AddPolicy(RateLimitPolicies.Register, http =>
+                RateLimitPartition.GetFixedWindowLimiter(ClientIp(http), _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromHours(1),
+                    QueueLimit = 0
+                }));
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
             options.OnRejected = async (context, ct) =>

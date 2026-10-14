@@ -34,6 +34,9 @@ public static class DependencyInjection
 
                 // One account per email
                 options.User.RequireUniqueEmail = true;
+                // Accounts need a confirmed email to log in.
+                // Staff are confirmed at creation; citizens will confirm by email in Phase 2.
+                options.SignIn.RequireConfirmedEmail = true;
             })
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<AppDbContext>()
