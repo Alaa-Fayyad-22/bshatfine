@@ -42,6 +42,11 @@ builder.Services.AddCors(options =>
 builder.Services.AddBshatfineAuthentication();
 builder.Services.AddBshatfineRateLimiting(builder.Configuration);
 builder.Services.AddOpenApi();
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(365);
+    options.IncludeSubDomains = true;
+});
 
 // ---------- Pipeline ----------
 var app = builder.Build();
@@ -50,7 +55,11 @@ await IdentitySeeder.SeedAsync(app.Services, app.Configuration);
 app.UseForwardedHeaders();
 app.UseBshatfineSecurityHeaders();
 app.UseExceptionHandler();
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
 app.UseCors(FrontendCorsPolicy);
 app.UseAuthentication();
 app.UseRateLimiter();
