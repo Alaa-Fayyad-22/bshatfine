@@ -62,4 +62,6 @@ app.MapAuthEndpoints();
 var admin = app.MapGroup("/api/admin").RequireAuthorization(Policies.Staff);
 admin.MapAdminNewsEndpoints();
 
+admin.MapAdminAuditEndpoints();
+
 app.Run();

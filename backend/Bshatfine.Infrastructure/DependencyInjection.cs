@@ -6,6 +6,7 @@ using Bshatfine.Infrastructure.Persistence.Repositories;
 using Bshatfine.Infrastructure.Storage;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Bshatfine.Infrastructure.Audit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Bshatfine.Infrastructure;
@@ -45,6 +46,9 @@ public static class DependencyInjection
         services.AddScoped<INewsRepository, NewsRepository>();
         services.AddScoped<IFileStorage, DatabaseFileStorage>();
         services.AddSingleton<IImageOptimizer, SkiaImageOptimizer>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<IAuditLogger, AuditLogger>();
+        services.AddScoped<IAuditLogQueries, AuditLogQueries>();
 
         return services;
     }

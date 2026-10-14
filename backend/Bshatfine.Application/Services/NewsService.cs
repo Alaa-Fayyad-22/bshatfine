@@ -1,14 +1,18 @@
 using Bshatfine.Application.Abstractions;
 using Bshatfine.Application.Dtos;
 using Bshatfine.Application.Images;
+using Bshatfine.Application.Security;
 using Bshatfine.Domain.Entities;
 using Bshatfine.Domain.Enums;
 using Bshatfine.Domain.Exceptions;
 
 namespace Bshatfine.Application.Services;
 
-public class NewsService(INewsRepository repository, IFileStorage storage, IImageOptimizer imageOptimizer)
+public class NewsService(INewsRepository repository, IFileStorage storage,
+    IImageOptimizer imageOptimizer, IAuditLogger audit)
 {
+    private const string EntityType = "News";
+
     // ---------- Public ----------
     public async Task<PagedResult<NewsDto>> GetPublishedAsync(string lang, int page, int pageSize, CancellationToken ct)
     {
@@ -38,7 +42,7 @@ public class NewsService(INewsRepository repository, IFileStorage storage, IImag
         return news?.ToDto(language, storage);
     }
 
-    // ---------- Admin ----------
+    // ---------- Admin: reading ----------
     public async Task<PagedResult<AdminNewsDto>> GetAllForAdminAsync(int page, int pageSize, CancellationToken ct)
     {
         (page, pageSize) = NormalizePaging(page, pageSize);
@@ -58,6 +62,7 @@ public class NewsService(INewsRepository repository, IFileStorage storage, IImag
         return news?.ToAdminDto(storage);
     }
 
+    // ---------- Admin: changes (each one is audited) ----------
     public async Task<AdminNewsDto> CreateAsync(CreateNewsRequest request, CancellationToken ct)
     {
         var translations = RequireTranslations(request.Translations);
@@ -69,6 +74,8 @@ public class NewsService(INewsRepository repository, IFileStorage storage, IImag
 
         repository.Add(news);
         await repository.SaveChangesAsync(ct);
+        await audit.LogAsync(new AuditEvent(AuditActions.NewsCreated, EntityType, news.Id.ToString()), ct);
+
         return news.ToAdminDto(storage);
     }
 
@@ -94,17 +101,17 @@ public class NewsService(INewsRepository repository, IFileStorage storage, IImag
 
             foreach (var t in toRemove)
                 news.RemoveTranslation(t.Language);
-        }, ct);
+        }, AuditActions.NewsUpdated, ct);
     }
 
     public Task<AdminNewsDto?> PublishAsync(Guid id, CancellationToken ct) =>
-        ChangeAsync(id, news => news.Publish(), ct);
+        ChangeAsync(id, news => news.Publish(), AuditActions.NewsPublished, ct);
 
     public Task<AdminNewsDto?> ArchiveAsync(Guid id, CancellationToken ct) =>
-        ChangeAsync(id, news => news.Archive(), ct);
+        ChangeAsync(id, news => news.Archive(), AuditActions.NewsArchived, ct);
 
     public Task<AdminNewsDto?> RepublishAsync(Guid id, CancellationToken ct) =>
-    ChangeAsync(id, news => news.Republish(), ct);
+        ChangeAsync(id, news => news.Republish(), AuditActions.NewsRepublished, ct);
 
     public async Task<AdminNewsDto?> SetCoverImageAsync(Guid id, Stream content, long length, CancellationToken ct)
     {
@@ -117,14 +124,14 @@ public class NewsService(INewsRepository repository, IFileStorage storage, IImag
         if (news is null)
             return null;
 
-        // Read the upload into memory (max 5 MB), then inspect its first bytes
+        // Read the upload into memory (max 10 MB), then inspect its first bytes
         using var buffer = new MemoryStream();
         await content.CopyToAsync(buffer, ct);
         if (buffer.Length > ImageValidator.MaxBytes)
             throw new DomainException("The image must be 10 MB or smaller.");
 
         var header = buffer.GetBuffer().AsSpan(0, (int)Math.Min(buffer.Length, 12));
-        var extension = ImageValidator.DetectExtension(header)
+        _ = ImageValidator.DetectExtension(header)
             ?? throw new DomainException("Only JPEG, PNG or WebP images are allowed.");
 
         buffer.Position = 0;
@@ -148,6 +155,8 @@ public class NewsService(INewsRepository repository, IFileStorage storage, IImag
         if (oldKey is not null)
             await storage.DeleteAsync(oldKey, ct);
 
+        await audit.LogAsync(new AuditEvent(AuditActions.NewsCoverSet, EntityType, news.Id.ToString()), ct);
+
         return news.ToAdminDto(storage);
     }
 
@@ -164,11 +173,13 @@ public class NewsService(INewsRepository repository, IFileStorage storage, IImag
         if (oldKey is not null)
             await storage.DeleteAsync(oldKey, ct);
 
+        await audit.LogAsync(new AuditEvent(AuditActions.NewsCoverRemoved, EntityType, news.Id.ToString()), ct);
+
         return news.ToAdminDto(storage);
     }
 
     // ---------- Helpers ----------
-    private async Task<AdminNewsDto?> ChangeAsync(Guid id, Action<News> change, CancellationToken ct)
+    private async Task<AdminNewsDto?> ChangeAsync(Guid id, Action<News> change, string auditAction, CancellationToken ct)
     {
         var news = await repository.GetByIdAsync(id, ct);
         if (news is null)
@@ -176,6 +187,8 @@ public class NewsService(INewsRepository repository, IFileStorage storage, IImag
 
         change(news);
         await repository.SaveChangesAsync(ct);
+        await audit.LogAsync(new AuditEvent(auditAction, EntityType, news.Id.ToString()), ct);
+
         return news.ToAdminDto(storage);
     }
 

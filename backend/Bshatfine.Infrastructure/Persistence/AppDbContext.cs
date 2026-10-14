@@ -4,6 +4,7 @@ using Bshatfine.Infrastructure.Storage;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Bshatfine.Infrastructure.Audit;
 
 namespace Bshatfine.Infrastructure.Persistence;
 
@@ -12,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 {
     public DbSet<News> News => Set<News>();
     public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

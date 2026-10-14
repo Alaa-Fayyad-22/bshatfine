@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using Bshatfine.Application.Abstractions;
+using Bshatfine.Application.Security;
 using Bshatfine.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 
@@ -18,25 +20,51 @@ public static class AuthEndpoints
         var group = app.MapGroup("/api/auth");
 
         // ---------- Login, step 1: password ----------
-        group.MapPost("/login", async (LoginRequest request, UserManager<AppUser> users, SignInManager<AppUser> signIn) =>
+        group.MapPost("/login", async (LoginRequest request, UserManager<AppUser> users,
+            SignInManager<AppUser> signIn, IAuditLogger audit, CancellationToken ct) =>
         {
             var user = await users.FindByEmailAsync(request.Email ?? string.Empty);
 
             // Unknown email or disabled account: the SAME answer as a wrong password
             if (user is null || !user.IsActive)
+            {
+                // AUDIT: the log keeps the real reason; the user only sees the generic message
+                await audit.LogAsync(new AuditEvent(AuditActions.LoginFailed,
+                    Details: new { reason = user is null ? "unknown_email" : "inactive" },
+                    UserId: user?.Id,
+                    UserEmail: request.Email), ct);
+
                 return Results.Problem(InvalidLogin, statusCode: StatusCodes.Status401Unauthorized);
+            }
 
             var result = await signIn.PasswordSignInAsync(
                 user, request.Password ?? string.Empty, isPersistent: false, lockoutOnFailure: true);
 
             if (result.Succeeded)
+            {
+                // AUDIT
+                await audit.LogAsync(new AuditEvent(AuditActions.LoginSucceeded,
+                    UserId: user.Id, UserEmail: user.Email), ct);
+
                 return Results.Ok(new { requiresTwoFactor = false });
+            }
 
             if (result.RequiresTwoFactor)
                 return Results.Ok(new { requiresTwoFactor = true });
 
             if (result.IsLockedOut)
+            {
+                // AUDIT
+                await audit.LogAsync(new AuditEvent(AuditActions.LoginLockedOut,
+                    UserId: user.Id, UserEmail: user.Email), ct);
+
                 return Results.Problem(TooManyAttempts, statusCode: StatusCodes.Status429TooManyRequests);
+            }
+
+            // AUDIT
+            await audit.LogAsync(new AuditEvent(AuditActions.LoginFailed,
+                Details: new { reason = "wrong_password" },
+                UserId: user.Id, UserEmail: user.Email), ct);
 
             return Results.Problem(InvalidLogin, statusCode: StatusCodes.Status401Unauthorized);
         }).AllowAnonymous();
@@ -71,8 +99,13 @@ public static class AuthEndpoints
         }).AllowAnonymous();
 
         // ---------- Logout ----------
-        group.MapPost("/logout", async (SignInManager<AppUser> signIn) =>
+        group.MapPost("/logout", async (ClaimsPrincipal principal, SignInManager<AppUser> signIn,
+            IAuditLogger audit, CancellationToken ct) =>
         {
+            // AUDIT: log BEFORE signing out, while we still know who the user is
+            if (principal.Identity?.IsAuthenticated == true)
+                await audit.LogAsync(new AuditEvent(AuditActions.Logout), ct);
+
             await signIn.SignOutAsync();
             return Results.NoContent();
         }).AllowAnonymous();
