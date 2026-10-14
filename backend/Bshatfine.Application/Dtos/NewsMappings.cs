@@ -1,11 +1,12 @@
 using Bshatfine.Domain.Entities;
 using Bshatfine.Domain.Enums;
+using Bshatfine.Application.Abstractions;
 
 namespace Bshatfine.Application.Dtos;
 
 public static class NewsMappings
 {
-    public static NewsDto ToDto(this News news, Language language)
+    public static NewsDto ToDto(this News news, Language language, IFileStorage storage)
     {
         // Requested language first, then Arabic (always present on published news).
         // The DTO reports the language of the text actually returned, so the
@@ -19,10 +20,11 @@ public static class NewsMappings
             translation.Language.ToString().ToLowerInvariant(),
             translation.Title,
             translation.Body,
-            news.PublishedAt);
+            news.PublishedAt,
+            news.CoverImagePath is null ? null : storage.GetPublicUrl(news.CoverImagePath));
     }
 
-    public static AdminNewsDto ToAdminDto(this News news) =>
+    public static AdminNewsDto ToAdminDto(this News news, IFileStorage storage) =>
     new(news.Id,
         news.Slug,
         news.Status.ToString(),
@@ -35,5 +37,6 @@ public static class NewsMappings
                 t.Language.ToString().ToLowerInvariant(),
                 t.Title,
                 t.Body))
-            .ToList());
+            .ToList(),
+        news.CoverImagePath is null ? null : storage.GetPublicUrl(news.CoverImagePath));
 }

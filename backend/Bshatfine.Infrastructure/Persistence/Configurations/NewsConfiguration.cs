@@ -19,6 +19,7 @@ public class NewsConfiguration : IEntityTypeConfiguration<News>
         builder.HasMany(n => n.Translations).WithOne().HasForeignKey(t => t.NewsId).OnDelete(DeleteBehavior.Cascade);
         builder.Property(n => n.Slug).HasMaxLength(70).IsRequired();
         builder.HasIndex(n => n.Slug).IsUnique();
+        builder.Property(n => n.CoverImagePath).HasMaxLength(300);
 
 
     }

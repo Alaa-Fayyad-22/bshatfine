@@ -1,12 +1,13 @@
 using Bshatfine.Application.Abstractions;
 using Bshatfine.Application.Dtos;
+using Bshatfine.Application.Images;
 using Bshatfine.Domain.Entities;
 using Bshatfine.Domain.Enums;
 using Bshatfine.Domain.Exceptions;
 
 namespace Bshatfine.Application.Services;
 
-public class NewsService(INewsRepository repository)
+public class NewsService(INewsRepository repository, IFileStorage storage)
 {
     // ---------- Public ----------
     public async Task<PagedResult<NewsDto>> GetPublishedAsync(string lang, int page, int pageSize, CancellationToken ct)
@@ -17,7 +18,7 @@ public class NewsService(INewsRepository repository)
         var (items, total) = await repository.GetPublishedAsync(page, pageSize, ct);
 
         return new PagedResult<NewsDto>(
-            items.Select(n => n.ToDto(language)).ToList(),
+            items.Select(n => n.ToDto(language, storage)).ToList(),
             page,
             pageSize,
             total);
@@ -27,15 +28,14 @@ public class NewsService(INewsRepository repository)
     {
         var language = ParseLanguage(lang);
         var news = await repository.GetPublishedByIdAsync(id, ct);
-        return news?.ToDto(language);
+        return news?.ToDto(language, storage);
     }
-
 
     public async Task<NewsDto?> GetPublishedBySlugAsync(string lang, string slug, CancellationToken ct)
     {
         var language = ParseLanguage(lang);
         var news = await repository.GetPublishedBySlugAsync(slug, ct);
-        return news?.ToDto(language);
+        return news?.ToDto(language, storage);
     }
 
     // ---------- Admin ----------
@@ -46,7 +46,7 @@ public class NewsService(INewsRepository repository)
         var (items, total) = await repository.GetAllAsync(page, pageSize, ct);
 
         return new PagedResult<AdminNewsDto>(
-            items.Select(n => n.ToAdminDto()).ToList(),
+            items.Select(n => n.ToAdminDto(storage)).ToList(),
             page,
             pageSize,
             total);
@@ -55,7 +55,7 @@ public class NewsService(INewsRepository repository)
     public async Task<AdminNewsDto?> GetByIdForAdminAsync(Guid id, CancellationToken ct)
     {
         var news = await repository.GetByIdAsync(id, ct);
-        return news?.ToAdminDto();
+        return news?.ToAdminDto(storage);
     }
 
     public async Task<AdminNewsDto> CreateAsync(CreateNewsRequest request, CancellationToken ct)
@@ -63,13 +63,13 @@ public class NewsService(INewsRepository repository)
         var translations = RequireTranslations(request.Translations);
 
         var news = News.CreateDraft(
-    translations
-        .Select(t => (ParseLanguage(t.Language), t.Title, t.Body))
-        .ToList());
+            translations
+                .Select(t => (ParseLanguage(t.Language), t.Title, t.Body))
+                .ToList());
 
         repository.Add(news);
         await repository.SaveChangesAsync(ct);
-        return news.ToAdminDto();
+        return news.ToAdminDto(storage);
     }
 
     public Task<AdminNewsDto?> UpdateAsync(Guid id, UpdateNewsRequest request, CancellationToken ct)
@@ -103,6 +103,64 @@ public class NewsService(INewsRepository repository)
     public Task<AdminNewsDto?> ArchiveAsync(Guid id, CancellationToken ct) =>
         ChangeAsync(id, news => news.Archive(), ct);
 
+    public async Task<AdminNewsDto?> SetCoverImageAsync(Guid id, Stream content, long length, CancellationToken ct)
+    {
+        if (length == 0)
+            throw new DomainException("The image file is empty.");
+        if (length > ImageValidator.MaxBytes)
+            throw new DomainException("The image must be 5 MB or smaller.");
+
+        var news = await repository.GetByIdAsync(id, ct);
+        if (news is null)
+            return null;
+
+        // Read the upload into memory (max 5 MB), then inspect its first bytes
+        using var buffer = new MemoryStream();
+        await content.CopyToAsync(buffer, ct);
+        if (buffer.Length > ImageValidator.MaxBytes)
+            throw new DomainException("The image must be 5 MB or smaller.");
+
+        var header = buffer.GetBuffer().AsSpan(0, (int)Math.Min(buffer.Length, 12));
+        var extension = ImageValidator.DetectExtension(header)
+            ?? throw new DomainException("Only JPEG, PNG or WebP images are allowed.");
+
+        buffer.Position = 0;
+        var newKey = await storage.SaveAsync(buffer, "news", extension, ct);
+        var oldKey = news.CoverImagePath;
+
+        try
+        {
+            news.SetCoverImage(newKey);
+            await repository.SaveChangesAsync(ct);
+        }
+        catch
+        {
+            await storage.DeleteAsync(newKey, ct); // don't leave an orphan file behind
+            throw;
+        }
+
+        if (oldKey is not null)
+            await storage.DeleteAsync(oldKey, ct);
+
+        return news.ToAdminDto(storage);
+    }
+
+    public async Task<AdminNewsDto?> RemoveCoverImageAsync(Guid id, CancellationToken ct)
+    {
+        var news = await repository.GetByIdAsync(id, ct);
+        if (news is null)
+            return null;
+
+        var oldKey = news.CoverImagePath;
+        news.RemoveCoverImage();
+        await repository.SaveChangesAsync(ct);
+
+        if (oldKey is not null)
+            await storage.DeleteAsync(oldKey, ct);
+
+        return news.ToAdminDto(storage);
+    }
+
     // ---------- Helpers ----------
     private async Task<AdminNewsDto?> ChangeAsync(Guid id, Action<News> change, CancellationToken ct)
     {
@@ -112,7 +170,7 @@ public class NewsService(INewsRepository repository)
 
         change(news);
         await repository.SaveChangesAsync(ct);
-        return news.ToAdminDto();
+        return news.ToAdminDto(storage);
     }
 
     // The list must exist, be non-empty, and contain no null entries

@@ -12,6 +12,7 @@ public class News
     public DateTime? UpdatedAt { get; private set; }
     public DateTime? PublishedAt { get; private set; }
     public string Slug { get; private set; } = string.Empty;
+    public string? CoverImagePath { get; private set; }
     private readonly List<NewsTranslations> _translations = [];
     public IReadOnlyCollection<NewsTranslations> Translations => _translations;
 
@@ -39,6 +40,30 @@ public class News
         UpdatedAt = DateTime.UtcNow;
 
         RefreshSlug();
+    }
+
+    public void SetCoverImage(string path)
+    {
+        if (Status == NewsStatus.Archived)
+            throw new DomainException("Archived news cannot be edited.");
+
+        if (string.IsNullOrWhiteSpace(path))
+            throw new DomainException("Cover image path is required.");
+
+        CoverImagePath = path;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void RemoveCoverImage()
+    {
+        if (Status == NewsStatus.Archived)
+            throw new DomainException("Archived news cannot be edited.");
+
+        if (CoverImagePath is null)
+            return;
+
+        CoverImagePath = null;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     private void RefreshSlug()

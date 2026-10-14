@@ -1,4 +1,5 @@
 using Bshatfine.Application.Abstractions;
+using Bshatfine.Infrastructure.Storage;
 using Bshatfine.Infrastructure.Persistence;
 using Bshatfine.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,8 @@ public static class DependencyInjection
     {
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<INewsRepository, NewsRepository>();
+
+        services.AddScoped<IFileStorage, DatabaseFileStorage>();
         return services;
     }
 }

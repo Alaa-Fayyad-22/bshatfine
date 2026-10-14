@@ -41,5 +41,19 @@ public static class AdminNewsEndpoints
             var news = await service.ArchiveAsync(id, ct);
             return news is null ? Results.NotFound() : Results.Ok(news);
         });
+
+        // ---------- Cover image ----------
+        group.MapPost("/{id:guid}/cover", async (Guid id, IFormFile file, NewsService service, CancellationToken ct) =>
+        {
+            await using var stream = file.OpenReadStream();
+            var news = await service.SetCoverImageAsync(id, stream, file.Length, ct);
+            return news is null ? Results.NotFound() : Results.Ok(news);
+        }).DisableAntiforgery();
+
+        group.MapDelete("/{id:guid}/cover", async (Guid id, NewsService service, CancellationToken ct) =>
+        {
+            var news = await service.RemoveCoverImageAsync(id, ct);
+            return news is null ? Results.NotFound() : Results.Ok(news);
+        });
     }
 }
