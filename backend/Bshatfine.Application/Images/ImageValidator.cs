@@ -2,7 +2,7 @@ namespace Bshatfine.Application.Images;
 
 public static class ImageValidator
 {
-    public const long MaxBytes = 5 * 1024 * 1024; // 5 MB
+    public const long MaxBytes = 10 * 1024 * 1024; // 10 MB
 
     // Returns the extension for a supported image, or null if the bytes aren't one.
     public static string? DetectExtension(ReadOnlySpan<byte> header)

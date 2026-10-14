@@ -7,7 +7,7 @@ using Bshatfine.Domain.Exceptions;
 
 namespace Bshatfine.Application.Services;
 
-public class NewsService(INewsRepository repository, IFileStorage storage)
+public class NewsService(INewsRepository repository, IFileStorage storage, IImageOptimizer imageOptimizer)
 {
     // ---------- Public ----------
     public async Task<PagedResult<NewsDto>> GetPublishedAsync(string lang, int page, int pageSize, CancellationToken ct)
@@ -111,7 +111,7 @@ public class NewsService(INewsRepository repository, IFileStorage storage)
         if (length == 0)
             throw new DomainException("The image file is empty.");
         if (length > ImageValidator.MaxBytes)
-            throw new DomainException("The image must be 5 MB or smaller.");
+            throw new DomainException("The image must be 10 MB or smaller.");
 
         var news = await repository.GetByIdAsync(id, ct);
         if (news is null)
@@ -121,14 +121,17 @@ public class NewsService(INewsRepository repository, IFileStorage storage)
         using var buffer = new MemoryStream();
         await content.CopyToAsync(buffer, ct);
         if (buffer.Length > ImageValidator.MaxBytes)
-            throw new DomainException("The image must be 5 MB or smaller.");
+            throw new DomainException("The image must be 10 MB or smaller.");
 
         var header = buffer.GetBuffer().AsSpan(0, (int)Math.Min(buffer.Length, 12));
         var extension = ImageValidator.DetectExtension(header)
             ?? throw new DomainException("Only JPEG, PNG or WebP images are allowed.");
 
         buffer.Position = 0;
-        var newKey = await storage.SaveAsync(buffer, "news", extension, ct);
+        await using var optimized = await imageOptimizer.OptimizeAsync(buffer, ct)
+            ?? throw new DomainException("The image could not be read. Please upload a valid JPEG, PNG or WebP image.");
+
+        var newKey = await storage.SaveAsync(optimized, "news", ".webp", ct);
         var oldKey = news.CoverImagePath;
 
         try

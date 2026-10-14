@@ -3,6 +3,7 @@ using Bshatfine.Api.Endpoints.Admin;
 using Bshatfine.Api.Errors;
 using Bshatfine.Application;
 using Bshatfine.Infrastructure;
+using Bshatfine.Infrastructure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 const string FrontendCorsPolicy = "Frontend";
@@ -16,10 +17,11 @@ var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get
 // ---------- Services ----------
 builder.Services.AddInfrastructure(connectionString);
 builder.Services.AddApplication();
-
+builder.WebHost.ConfigureKestrel(options =>
+   options.Limits.MaxRequestBodySize = 11 * 1024 * 1024); // 11 MB: the largest upload + form overhead
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
-
+builder.Services.AddExceptionHandler<BadHttpRequestExceptionHandler>();
 builder.Services.AddCors(options =>
     options.AddPolicy(FrontendCorsPolicy, policy =>
         policy.WithOrigins(allowedOrigins)
@@ -28,8 +30,11 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddOpenApi();
 
+
+
 // ---------- Pipeline ----------
 var app = builder.Build();
+await IdentitySeeder.SeedAsync(app.Services, app.Configuration);
 
 app.UseExceptionHandler();
 app.UseCors(FrontendCorsPolicy);

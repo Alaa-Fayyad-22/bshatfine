@@ -54,7 +54,8 @@ public static class AdminNewsEndpoints
             await using var stream = file.OpenReadStream();
             var news = await service.SetCoverImageAsync(id, stream, file.Length, ct);
             return news is null ? Results.NotFound() : Results.Ok(news);
-        }).DisableAntiforgery();
+        }).DisableAntiforgery()
+        .WithFormOptions(multipartBodyLengthLimit: 11 * 1024 * 1024); ;
 
         group.MapDelete("/{id:guid}/cover", async (Guid id, NewsService service, CancellationToken ct) =>
         {
