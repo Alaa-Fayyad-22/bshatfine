@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { getMe, isStaff, onAuthFailure, type AuthErrorKind, type Me } from "@/lib/auth-api";
-import { LOGIN_PATH } from "@/lib/return-to";
+import { CHOOSE_PASSWORD_PATH, LOGIN_PATH } from "@/lib/return-to";
 import { AccessDenied } from "./AccessDenied";
 
 type State =
@@ -46,10 +46,27 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     [locale],
   );
 
+  // A temporary password must be replaced before anything else in the admin
+  // works (the API answers every /api/admin call with an empty 403 until then).
+  const toChoosePassword = useCallback(() => {
+    if (leaving.current) return;
+    leaving.current = true;
+    setState({ status: "redirecting" });
+    const query = new URLSearchParams({
+      returnTo: window.location.pathname + window.location.search,
+    });
+    window.location.replace(`/${locale}${CHOOSE_PASSWORD_PATH}?${query}`);
+  }, [locale]);
+
   const check = useCallback(async () => {
     const result = await getMe();
     if (result.ok) {
-      setState(isStaff(result.data) ? { status: "ready", me: result.data } : { status: "denied" });
+      if (result.data.mustChangePassword) toChoosePassword();
+      else {
+        setState(
+          isStaff(result.data) ? { status: "ready", me: result.data } : { status: "denied" },
+        );
+      }
     } else if (result.error === "unauthorized") {
       toLogin(false);
     } else if (result.error === "forbidden") {
@@ -57,7 +74,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     } else {
       setState({ status: "error", kind: result.error });
     }
-  }, [toLogin]);
+  }, [toLogin, toChoosePassword]);
 
   // One /me call when the admin area opens.
   useEffect(() => {
@@ -66,15 +83,34 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     void check();
   }, [check]);
 
-  // An admin API call elsewhere on the page came back 401 / 403.
+  // An admin API call elsewhere on the page came back 401 / 403. A 403 has an
+  // empty body, so ask /me why: a pending password change, or really no access.
   useEffect(
     () =>
       onAuthFailure((status) => {
-        if (status === 401) toLogin(true);
-        else setState({ status: "denied" });
+        if (status === 401) return toLogin(true);
+        void getMe().then((result) => {
+          if (result.ok && result.data.mustChangePassword) toChoosePassword();
+          else setState({ status: "denied" });
+        });
       }),
-    [toLogin],
+    [toLogin, toChoosePassword],
   );
+
+  // A tab coming back into view asks the API again, so a session that an admin
+  // ended meanwhile (forced logout, disabled account) is noticed at once. There
+  // is deliberately no timer: polling would keep an idle session alive.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      void getMe().then((result) => {
+        if (!result.ok && result.error === "unauthorized") toLogin(true);
+        else if (result.ok && result.data.mustChangePassword) toChoosePassword();
+      });
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [toLogin, toChoosePassword]);
 
   // Back/forward can restore a frozen copy of the page (bfcache) with admin data
   // on it, possibly after logging out. Hide it and ask the API again.

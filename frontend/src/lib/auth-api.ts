@@ -5,6 +5,8 @@
 //
 // None of these functions throws. They return a result, so callers handle
 // every case (wrong password, lockout, offline, ...) explicitly.
+import { FALLBACK_RETRY_SECONDS, readRetryAfter } from "./rate-limit";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5246";
 
 export type Me = {
@@ -12,32 +14,59 @@ export type Me = {
   email: string;
   displayName: string;
   roles: string[];
+  mustChangePassword: boolean;
   twoFactorEnabled: boolean;
   mfaVerified: boolean;
 };
 
 // unauthorized: 401 (wrong credentials / code, or no session)
 // forbidden:    403
-// locked:       429 (too many failed attempts)
+// locked:       429, the ACCOUNT is locked after too many failed passwords
+// rateLimited:  429, too many requests from this address (`retryAfter` seconds)
 // network:      the API could not be reached at all
 // server:       5xx, or an answer we cannot understand
-// unknown:      any other status (400 ...)
+// unknown:      any other status (400 ...); `detail` is the API's message, if any
 export type AuthErrorKind =
   | "unauthorized"
   | "forbidden"
   | "locked"
+  | "rateLimited"
   | "network"
   | "server"
   | "unknown";
 
-export type AuthResult<T> = { ok: true; data: T } | { ok: false; error: AuthErrorKind };
+export type AuthResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: AuthErrorKind; retryAfter?: number; detail?: string };
 
-function kindOf(status: number): AuthErrorKind {
-  if (status === 401) return "unauthorized";
-  if (status === 403) return "forbidden";
-  if (status === 429) return "locked";
-  if (status >= 500) return "server";
-  return "unknown";
+// The account-lockout 429 and the rate-limiter 429 look alike. The lockout is
+// the only one whose message starts like this (see AuthEndpoints.TooManyAttempts).
+const LOCKOUT_DETAIL = "Too many failed attempts";
+
+async function problemDetail(res: Response): Promise<string | undefined> {
+  try {
+    const problem = await res.json();
+    return typeof problem?.detail === "string" ? problem.detail : undefined;
+  } catch {
+    return undefined; // not JSON, or an empty body
+  }
+}
+
+async function failure<T>(res: Response): Promise<AuthResult<T>> {
+  if (res.status === 429) {
+    const detail = await problemDetail(res);
+    if (detail?.startsWith(LOCKOUT_DETAIL)) return { ok: false, error: "locked" };
+    return {
+      ok: false,
+      error: "rateLimited",
+      retryAfter: readRetryAfter(res) ?? FALLBACK_RETRY_SECONDS,
+    };
+  }
+  if (res.status === 401) return { ok: false, error: "unauthorized" };
+  if (res.status === 403) return { ok: false, error: "forbidden" };
+  if (res.status >= 500) return { ok: false, error: "server" };
+  const detail = await problemDetail(res);
+  return detail ? { ok: false, error: "unknown", detail } : { ok: false, error: "unknown" };
 }
 
 async function call<T>(
@@ -57,7 +86,7 @@ async function call<T>(
   } catch {
     return { ok: false, error: "network" };
   }
-  if (!res.ok) return { ok: false, error: kindOf(res.status) };
+  if (!res.ok) return failure<T>(res);
 
   let json: unknown = null;
   if (res.status !== 204) {
@@ -98,6 +127,17 @@ export function logout(): Promise<AuthResult<{ loggedOut: true }>> {
   return call("/logout", { method: "POST" }, () => ({ loggedOut: true as const }));
 }
 
+// Ends a forced password change too. 204: the session cookie is refreshed and
+// there is no body. Both passwords are only ever in this request body.
+export function changePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<AuthResult<{ changed: true }>> {
+  return call("/change-password", { method: "POST", body: { currentPassword, newPassword } }, () => ({
+    changed: true as const,
+  }));
+}
+
 // Several callers may ask at the same moment (React Strict Mode runs effects
 // twice in development). They share one request instead of sending two.
 let pendingMe: Promise<AuthResult<Me>> | null = null;
@@ -115,6 +155,7 @@ export function getMe(): Promise<AuthResult<Me>> {
           email: j.email,
           displayName: j.displayName,
           roles: j.roles as string[],
+          mustChangePassword: j.mustChangePassword === true,
           twoFactorEnabled: j.twoFactorEnabled === true,
           mfaVerified: j.mfaVerified === true,
         }
@@ -128,6 +169,10 @@ export function getMe(): Promise<AuthResult<Me>> {
 // Staff = Admin or Editor.
 export function isStaff(me: Me): boolean {
   return me.roles.includes("Admin") || me.roles.includes("Editor");
+}
+
+export function isAdmin(me: Me): boolean {
+  return me.roles.includes("Admin");
 }
 
 // Any admin API call that comes back 401 (session ended) or 403 (no staff role)

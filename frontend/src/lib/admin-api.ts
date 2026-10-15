@@ -3,6 +3,7 @@
 // env vars with that prefix to browser code. Public pages keep using the
 // server-only API_URL in ./api.ts.
 import { reportAuthFailure } from "./auth-api";
+import { readRetryAfter } from "./rate-limit";
 
 export type NewsStatus = "Draft" | "Published" | "Archived";
 
@@ -27,29 +28,34 @@ export type AdminNewsDto = {
 export { coverUrl } from "./cover";
 
 export const COVER_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-export const COVER_MAX_BYTES = 5 * 1024 * 1024;
+export const COVER_MAX_BYTES = 10 * 1024 * 1024;
 
-export type AdminNewsPage = {
-  items: AdminNewsDto[];
+export type Paged<T> = {
+  items: T[];
   page: number;
   pageSize: number;
   totalCount: number;
   totalPages: number;
 };
 
+export type AdminNewsPage = Paged<AdminNewsDto>;
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5246";
 
 // Thrown for non-2xx answers. `detail` is the Problem Details message from the
 // API (business-rule violations are 400s with the reason in it), if any.
+// `retryAfter` is set for a 429: seconds to wait.
 export class AdminApiError extends Error {
   constructor(
     public status: number,
     public detail: string | null,
+    public retryAfter: number | null = null,
   ) {
     super(detail ?? `Request failed: ${status}`);
   }
 }
 
+// `path` starts after /api/admin.
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   // A FormData body needs the browser to set its own multipart Content-Type
   // (with the boundary), so only JSON requests get the header.
@@ -58,7 +64,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ? { ...init?.headers }
       : { "Content-Type": "application/json", ...init?.headers };
   // The session lives in an HttpOnly cookie, sent only with credentials: "include".
-  const res = await fetch(`${API_URL}/api/admin/news${path}`, {
+  const res = await fetch(`${API_URL}/api/admin${path}`, {
     ...init,
     headers,
     credentials: "include",
@@ -66,29 +72,31 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!res.ok) {
-    // 401 = session ended, 403 = not staff: the admin guard reacts to either.
+    // 401 = session ended, 403 = not staff (or password change pending): the
+    // admin guard reacts to either.
     reportAuthFailure(res.status);
     let detail: string | null = null;
     try {
       const problem = await res.json();
       if (typeof problem?.detail === "string") detail = problem.detail;
     } catch {
-      // Not JSON: fall back to the status code.
+      // Not JSON (a 403 has an empty body): fall back to the status code.
     }
-    throw new AdminApiError(res.status, detail);
+    throw new AdminApiError(res.status, detail, res.status === 429 ? readRetryAfter(res) : null);
   }
 
   return res.json();
 }
 
+// ---------- News ----------
 export function listAdminNews(page = 1, pageSize = 20): Promise<AdminNewsPage> {
-  return request(`?page=${page}&pageSize=${pageSize}`);
+  return request(`/news?page=${page}&pageSize=${pageSize}`);
 }
 
 // null when the article does not exist.
 export async function getAdminNews(id: string): Promise<AdminNewsDto | null> {
   try {
-    return await request<AdminNewsDto>(`/${encodeURIComponent(id)}`);
+    return await request<AdminNewsDto>(`/news/${encodeURIComponent(id)}`);
   } catch (e) {
     if (e instanceof AdminApiError && e.status === 404) return null;
     throw e;
@@ -96,31 +104,133 @@ export async function getAdminNews(id: string): Promise<AdminNewsDto | null> {
 }
 
 export function createNews(translations: TranslationDto[]): Promise<AdminNewsDto> {
-  return request("", { method: "POST", body: JSON.stringify({ translations }) });
+  return request("/news", { method: "POST", body: JSON.stringify({ translations }) });
 }
 
 export function updateNews(id: string, translations: TranslationDto[]): Promise<AdminNewsDto> {
-  return request(`/${encodeURIComponent(id)}`, {
+  return request(`/news/${encodeURIComponent(id)}`, {
     method: "PUT",
     body: JSON.stringify({ translations }),
   });
 }
 
 export function publishNews(id: string): Promise<AdminNewsDto> {
-  return request(`/${encodeURIComponent(id)}/publish`, { method: "POST" });
+  return request(`/news/${encodeURIComponent(id)}/publish`, { method: "POST" });
 }
 
 export function archiveNews(id: string): Promise<AdminNewsDto> {
-  return request(`/${encodeURIComponent(id)}/archive`, { method: "POST" });
+  return request(`/news/${encodeURIComponent(id)}/archive`, { method: "POST" });
+}
+
+// Archived -> Published; the API keeps the original publishedAt and slug.
+export function republishNews(id: string): Promise<AdminNewsDto> {
+  return request(`/news/${encodeURIComponent(id)}/republish`, { method: "POST" });
 }
 
 // Sends the image as multipart/form-data, field "file".
 export function uploadNewsCover(id: string, file: File): Promise<AdminNewsDto> {
   const body = new FormData();
   body.append("file", file);
-  return request(`/${encodeURIComponent(id)}/cover`, { method: "POST", body });
+  return request(`/news/${encodeURIComponent(id)}/cover`, { method: "POST", body });
 }
 
 export function removeNewsCover(id: string): Promise<AdminNewsDto> {
-  return request(`/${encodeURIComponent(id)}/cover`, { method: "DELETE" });
+  return request(`/news/${encodeURIComponent(id)}/cover`, { method: "DELETE" });
+}
+
+// ---------- Staff users (Admin only) ----------
+export const STAFF_ROLES = ["Admin", "Editor"] as const;
+export type StaffRole = (typeof STAFF_ROLES)[number];
+
+export type StaffUserDto = {
+  id: string;
+  email: string;
+  displayName: string;
+  role: StaffRole;
+  isActive: boolean;
+  isLockedOut: boolean;
+  mustChangePassword: boolean;
+  createdAt: string;
+};
+
+// The temporary password is only ever in this object. Callers hand it to the
+// one-time dialog and drop it; it is never stored.
+export type TemporaryPasswordResult = { user: StaffUserDto; temporaryPassword: string };
+
+export type UserFilter = {
+  search: string;
+  role: StaffRole | "";
+  isActive: "" | "true" | "false";
+  page: number;
+  pageSize: number;
+};
+
+export function listUsers(f: UserFilter): Promise<Paged<StaffUserDto>> {
+  const q = new URLSearchParams({ page: String(f.page), pageSize: String(f.pageSize) });
+  if (f.search.trim()) q.set("search", f.search.trim());
+  if (f.role) q.set("role", f.role);
+  if (f.isActive) q.set("isActive", f.isActive);
+  return request(`/users?${q}`);
+}
+
+export function createUser(input: {
+  email: string;
+  displayName: string;
+  role: StaffRole;
+}): Promise<TemporaryPasswordResult> {
+  return request("/users", { method: "POST", body: JSON.stringify(input) });
+}
+
+export function updateUser(
+  id: string,
+  input: { displayName: string; role: StaffRole },
+): Promise<StaffUserDto> {
+  return request(`/users/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(input) });
+}
+
+function userAction<T = StaffUserDto>(id: string, action: string): Promise<T> {
+  return request(`/users/${encodeURIComponent(id)}/${action}`, { method: "POST" });
+}
+
+export const disableUser = (id: string) => userAction(id, "disable");
+export const enableUser = (id: string) => userAction(id, "enable");
+export const forceLogoutUser = (id: string) => userAction(id, "force-logout");
+export const unlockUser = (id: string) => userAction(id, "unlock");
+export const resetUserPassword = (id: string) =>
+  userAction<TemporaryPasswordResult>(id, "reset-password");
+
+// ---------- Audit log (Admin only, read-only) ----------
+export type AuditLogDto = {
+  id: string;
+  occurredAt: string;
+  userId: string | null;
+  userEmail: string | null;
+  action: string;
+  entityType: string | null;
+  entityId: string | null;
+  // A JSON string, or null.
+  details: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+};
+
+export type AuditFilter = {
+  userEmail: string;
+  action: string;
+  entityType: string;
+  // ISO instants (UTC), or "".
+  from: string;
+  to: string;
+  page: number;
+  pageSize: number;
+};
+
+export function listAudit(f: AuditFilter): Promise<Paged<AuditLogDto>> {
+  const q = new URLSearchParams({ page: String(f.page), pageSize: String(f.pageSize) });
+  if (f.userEmail.trim()) q.set("userEmail", f.userEmail.trim());
+  if (f.action) q.set("action", f.action);
+  if (f.entityType) q.set("entityType", f.entityType);
+  if (f.from) q.set("from", f.from);
+  if (f.to) q.set("to", f.to);
+  return request(`/audit?${q}`);
 }

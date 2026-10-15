@@ -9,9 +9,50 @@ const apiUrl = new URL(
 // that is only needed when the API runs on this machine (development).
 const apiIsLocal = ["localhost", "127.0.0.1", "[::1]"].includes(apiUrl.hostname);
 
+const isDev = process.env.NODE_ENV !== "production";
+// The API host the browser talks to (fetch with the session cookie) and loads
+// cover images from. Same variable as above, so there is one place to change it.
+const apiOrigin = apiUrl.origin;
+
+// Content-Security-Policy, only what the site really needs:
+//  - scripts/styles: its own files, plus the small inline scripts and styles
+//    Next.js writes into every page. A nonce would avoid 'unsafe-inline', but a
+//    nonce needs every page rendered per request, which this site's static
+//    rendering (cacheComponents) rules out. Dev also needs 'unsafe-eval' (React
+//    debugging), production does not.
+//  - fonts: next/font self-hosts them, so 'self'.
+//  - images: its own, next/image (served from 'self' via /_next/image), data:
+//    and blob: for previews, and the API host for covers.
+//  - fetch/XHR: itself and the API. In dev also the websocket for hot reload.
+const csp = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  "style-src 'self' 'unsafe-inline'",
+  `img-src 'self' data: blob: ${apiOrigin}`,
+  "font-src 'self'",
+  `connect-src 'self' ${apiOrigin}${isDev ? " ws: wss:" : ""}`,
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  // An https API means an https site: refuse to load anything over plain http.
+  ...(!isDev && apiUrl.protocol === "https:" ? ["upgrade-insecure-requests"] : []),
+].join("; ");
+
+const securityHeaders = [
+  { key: "Content-Security-Policy", value: csp },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+  { key: "X-Frame-Options", value: "DENY" },
+];
+
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
+  },
   images: {
     remotePatterns: [
       {

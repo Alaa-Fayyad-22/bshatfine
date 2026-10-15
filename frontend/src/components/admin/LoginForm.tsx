@@ -6,7 +6,9 @@ import { useSearchParams } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { getMe, login, loginTwoFactor, type AuthErrorKind } from "@/lib/auth-api";
+import { rateProblem, type Problem as RateProblem } from "@/lib/problem";
 import { LOGIN_PATH, safeReturnTo } from "@/lib/return-to";
+import { isRateLimited, ProblemNotice } from "./ProblemNotice";
 
 type Step = "credentials" | "code";
 type Problem =
@@ -60,6 +62,9 @@ export function LoginForm() {
   const [code, setCode] = useState("");
   const [problems, setProblems] = useState<Problem[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  // Too many requests from this address: counts down, then the button comes back.
+  const [rate, setRate] = useState<RateProblem | null>(null);
+  const waiting = isRateLimited(rate);
   const sending = useRef(false); // blocks a second request even before the re-render
 
   const emailRef = useRef<HTMLInputElement>(null);
@@ -102,9 +107,15 @@ export function LoginForm() {
     setTimeout(() => focus?.focus(), 0);
   }
 
+  function limited(retryAfter: number | undefined) {
+    setRate(rateProblem(retryAfter));
+    sending.current = false;
+    setSubmitting(false);
+  }
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (sending.current) return;
+    if (sending.current || waiting) return;
 
     if (step === "credentials") {
       const missing: Problem[] = [];
@@ -127,6 +138,7 @@ export function LoginForm() {
         return;
       }
       if (result.ok) return goTo(returnTo); // stays "submitting" until the page changes
+      if (result.error === "rateLimited") return limited(result.retryAfter);
       const problem = problemFor(result.error, "credentials");
       if (problem === "invalid") {
         setPassword("");
@@ -146,6 +158,7 @@ export function LoginForm() {
     setProblems([]);
     const result = await loginTwoFactor(clean);
     if (result.ok) return goTo(returnTo);
+    if (result.error === "rateLimited") return limited(result.retryAfter);
     const problem = problemFor(result.error, "code");
     if (problem === "invalidCode") {
       setCode("");
@@ -268,7 +281,14 @@ export function LoginForm() {
                 ))}
               </div>
 
-              <button ref={submitRef} type="submit" disabled={submitting} className={primary}>
+              <ProblemNotice problem={rate} onRateDone={() => setRate(null)} />
+
+              <button
+                ref={submitRef}
+                type="submit"
+                disabled={submitting || waiting}
+                className={primary}
+              >
                 {step === "code"
                   ? submitting
                     ? t("verifying")

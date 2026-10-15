@@ -1,6 +1,7 @@
 import { routing } from "@/i18n/routing";
 
 export const LOGIN_PATH = "/admin/login";
+export const CHOOSE_PASSWORD_PATH = "/admin/choose-password";
 const MAX_LENGTH = 512;
 
 // Where to send the user after signing in. `raw` comes from the URL, so it is
@@ -29,7 +30,9 @@ export function safeReturnTo(raw: string | null | undefined, locale: string): st
   if (url.origin !== "http://returnto.invalid") return fallback;
   if (!new RegExp(`^/(?:${locales})/admin(?:/|$)`).test(url.pathname)) return fallback;
   if (url.pathname.split("/").includes("..")) return fallback;
-  if (new RegExp(`^/(?:${locales})/admin/login/?$`).test(url.pathname)) return fallback;
+  if (new RegExp(`^/(?:${locales})/admin/(?:login|choose-password)/?$`).test(url.pathname)) {
+    return fallback;
+  }
 
   return url.pathname + url.search;
 }

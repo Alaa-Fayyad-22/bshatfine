@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { listAdminNews, type AdminNewsDto, type AdminNewsPage, type NewsStatus } from "@/lib/admin-api";
+import { toProblem, type Problem } from "@/lib/problem";
+import { ProblemNotice } from "./ProblemNotice";
 import { StatusText } from "./StatusText";
 
 export const PAGE_SIZE = 20;
@@ -28,6 +30,7 @@ export function NewsTable({ page }: { page: number }) {
   const [result, setResult] = useState<{
     key: string;
     data: AdminNewsPage | null;
+    problem: Problem | null;
   } | null>(null);
 
   // Fetch in the browser; a result only counts while its key matches the
@@ -35,8 +38,8 @@ export function NewsTable({ page }: { page: number }) {
   useEffect(() => {
     let cancelled = false;
     listAdminNews(page, PAGE_SIZE).then(
-      (data) => !cancelled && setResult({ key, data }),
-      () => !cancelled && setResult({ key, data: null }),
+      (data) => !cancelled && setResult({ key, data, problem: null }),
+      (e) => !cancelled && setResult({ key, data: null, problem: toProblem(e) }),
     );
     return () => {
       cancelled = true;
@@ -55,6 +58,14 @@ export function NewsTable({ page }: { page: number }) {
       <span className="text-ink/60">{t("notPublished")}</span>
     );
 
+  if (failed && current?.problem?.kind === "rate") {
+    // Too many requests: counts down, then loads again by itself.
+    return (
+      <div className="mt-8 max-w-prose">
+        <ProblemNotice problem={current.problem} onRateDone={load} />
+      </div>
+    );
+  }
   if (failed) {
     return (
       <div role="alert" className="mt-8 max-w-prose">

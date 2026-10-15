@@ -12,12 +12,15 @@ import {
   getAdminNews,
   publishNews,
   removeNewsCover,
+  republishNews,
   updateNews,
   uploadNewsCover,
   type AdminNewsDto,
   type TranslationDto,
 } from "@/lib/admin-api";
 import { NewsCover } from "@/components/NewsCover";
+import { rateProblem, type Problem } from "@/lib/problem";
+import { isRateLimited, ProblemNotice } from "./ProblemNotice";
 import { StatusText } from "./StatusText";
 
 const MAX_TITLE = 200;
@@ -25,7 +28,7 @@ const FLASH_KEY = "admin-news-flash";
 const langs = ["ar", "en"] as const;
 type Lang = (typeof langs)[number];
 type Values = Record<Lang, { title: string; body: string }>;
-type Busy = "save" | "publish" | "archive" | "upload" | "removeCover" | null;
+type Busy = "save" | "publish" | "archive" | "republish" | "upload" | "removeCover" | null;
 type Flash = "createdOk" | "publishedOk";
 
 const empty: Values = { ar: { title: "", body: "" }, en: { title: "", body: "" } };
@@ -61,7 +64,10 @@ export function NewsForm({ id }: { id?: string }) {
   const [busy, setBusy] = useState<Busy>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  // Too many requests: counts down, and the buttons stay disabled meanwhile.
+  const [rate, setRate] = useState<Problem | null>(null);
   const [confirmArchive, setConfirmArchive] = useState(false);
+  const [confirmRepublish, setConfirmRepublish] = useState(false);
   const [confirmRemoveCover, setConfirmRemoveCover] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const tabRefs = useRef<Record<Lang, HTMLButtonElement | null>>({ ar: null, en: null });
@@ -73,6 +79,7 @@ export function NewsForm({ id }: { id?: string }) {
   }, [dirty]);
 
   const archived = article?.status === "Archived";
+  const waiting = isRateLimited(rate);
   const readOnly = archived || busy !== null;
 
   function apply(dto: AdminNewsDto) {
@@ -153,11 +160,13 @@ export function NewsForm({ id }: { id?: string }) {
   async function run(kind: Exclude<Busy, null>, action: () => Promise<void>) {
     setBusy(kind);
     setError(null);
+    setRate(null);
     setSuccess(null);
     try {
       await action();
     } catch (e) {
-      setError(describe(e));
+      if (e instanceof AdminApiError && e.status === 429) setRate(rateProblem(e.retryAfter));
+      else setError(describe(e));
     } finally {
       setBusy(null);
     }
@@ -210,6 +219,16 @@ export function NewsForm({ id }: { id?: string }) {
       apply(await archiveNews(article.id));
       setConfirmArchive(false);
       setSuccess(t("archivedOk"));
+    });
+  }
+
+  function republish() {
+    if (!article) return;
+    return run("republish", async () => {
+      // Back to Published: the API keeps the original publication date and slug.
+      apply(await republishNews(article.id));
+      setConfirmRepublish(false);
+      setSuccess(t("republishedOk"));
     });
   }
 
@@ -319,7 +338,7 @@ export function NewsForm({ id }: { id?: string }) {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        if (!readOnly) save();
+        if (!readOnly && !waiting) save();
       }}
       noValidate
       className="max-w-3xl"
@@ -397,7 +416,7 @@ export function NewsForm({ id }: { id?: string }) {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
-                  disabled={busy !== null}
+                  disabled={busy !== null || waiting}
                   aria-describedby={`${uid}-cover-hint`}
                   onClick={() => fileRef.current?.click()}
                   className={`${button} border-cedar bg-ivory text-cedar`}
@@ -407,7 +426,7 @@ export function NewsForm({ id }: { id?: string }) {
                 {article?.coverImageUrl && !confirmRemoveCover && (
                   <button
                     type="button"
-                    disabled={busy !== null}
+                    disabled={busy !== null || waiting}
                     onClick={() => setConfirmRemoveCover(true)}
                     className={`${button} border-alert-danger bg-ivory text-alert-danger`}
                   >
@@ -426,7 +445,7 @@ export function NewsForm({ id }: { id?: string }) {
                     <button
                       type="button"
                       onClick={removeCover}
-                      disabled={busy !== null}
+                      disabled={busy !== null || waiting}
                       className={`${button} border-alert-danger bg-alert-danger text-ivory`}
                     >
                       {busy === "removeCover" ? t("coverRemoving") : t("coverRemoveYes")}
@@ -434,7 +453,7 @@ export function NewsForm({ id }: { id?: string }) {
                     <button
                       type="button"
                       onClick={() => setConfirmRemoveCover(false)}
-                      disabled={busy !== null}
+                      disabled={busy !== null || waiting}
                       className={`${button} border-ink/40 bg-ivory`}
                     >
                       {t("cancel")}
@@ -545,12 +564,56 @@ export function NewsForm({ id }: { id?: string }) {
             {error}
           </p>
         )}
+        {rate && (
+          <div className="mb-4">
+            <ProblemNotice problem={rate} onRateDone={() => setRate(null)} />
+          </div>
+        )}
+
+        {archived && (
+          <div className="flex flex-wrap items-center gap-3">
+            {!confirmRepublish && (
+              <button
+                type="button"
+                onClick={() => setConfirmRepublish(true)}
+                disabled={busy !== null || waiting}
+                className={`${button} border-cedar bg-cedar text-ivory`}
+              >
+                {t("republish")}
+              </button>
+            )}
+          </div>
+        )}
+
+        {archived && confirmRepublish && (
+          <div role="alertdialog" aria-label={t("republish")} className="mt-4 max-w-prose border border-cedar p-4">
+            <p>{t("republishConfirm")}</p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={republish}
+                disabled={busy !== null || waiting}
+                className={`${button} border-cedar bg-cedar text-ivory`}
+              >
+                {busy === "republish" ? t("republishing") : t("republishYes")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmRepublish(false)}
+                disabled={busy !== null}
+                className={`${button} border-ink/40 bg-ivory`}
+              >
+                {t("cancel")}
+              </button>
+            </div>
+          </div>
+        )}
 
         {!archived && (
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="submit"
-              disabled={busy !== null}
+              disabled={busy !== null || waiting}
               className={`${button} border-cedar bg-cedar text-ivory`}
             >
               {busy === "save"
@@ -564,7 +627,7 @@ export function NewsForm({ id }: { id?: string }) {
               <button
                 type="button"
                 onClick={publish}
-                disabled={busy !== null}
+                disabled={busy !== null || waiting}
                 className={`${button} border-cedar bg-ivory text-cedar`}
               >
                 {busy === "publish" ? t("publishing") : t("publish")}
@@ -584,7 +647,7 @@ export function NewsForm({ id }: { id?: string }) {
               <button
                 type="button"
                 onClick={() => setConfirmArchive(true)}
-                disabled={busy !== null}
+                disabled={busy !== null || waiting}
                 className={`${button} border-alert-danger bg-ivory text-alert-danger`}
               >
                 {t("archive")}
@@ -600,7 +663,7 @@ export function NewsForm({ id }: { id?: string }) {
               <button
                 type="button"
                 onClick={archive}
-                disabled={busy !== null}
+                disabled={busy !== null || waiting}
                 className={`${button} border-alert-danger bg-alert-danger text-ivory`}
               >
                 {busy === "archive" ? t("archiving") : t("archiveYes")}
@@ -608,7 +671,7 @@ export function NewsForm({ id }: { id?: string }) {
               <button
                 type="button"
                 onClick={() => setConfirmArchive(false)}
-                disabled={busy !== null}
+                disabled={busy !== null || waiting}
                 className={`${button} border-ink/40 bg-ivory`}
               >
                 {t("cancel")}
