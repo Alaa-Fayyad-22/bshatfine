@@ -183,6 +183,32 @@ public class NewsService(INewsRepository repository, IFileStorage storage,
         return news.ToAdminDto(storage);
     }
 
+    // Returns false if the article doesn't exist
+    public async Task<bool> DeleteDraftAsync(Guid id, CancellationToken ct)
+    {
+        var news = await repository.GetByIdAsync(id, ct);
+        if (news is null)
+            return false;
+
+        news.EnsureCanBeDeleted();
+
+        // Remember what we need before the article is gone
+        var coverKey = news.CoverImagePath;
+        var title = news.Translations.OrderBy(t => t.Language).First().Title;
+
+        repository.Remove(news);
+        await repository.SaveChangesAsync(ct);
+
+        // Delete the photo only after the article is gone from the database
+        if (coverKey is not null)
+            await storage.DeleteAsync(coverKey, ct);
+
+        await audit.LogAsync(new AuditEvent(AuditActions.NewsDeleted, EntityType, id.ToString(),
+            Details: new { title }), ct);
+
+        return true;
+    }
+
     // ---------- Helpers ----------
     private async Task<AdminNewsDto?> ChangeAsync(Guid id, Action<News> change, string auditAction, CancellationToken ct)
     {

@@ -19,6 +19,9 @@ public static class AdminNewsEndpoints
             return news is null ? Results.NotFound() : Results.Ok(news);
         });
 
+        group.MapDelete("/{id:guid}", async (Guid id, NewsService service, CancellationToken ct) =>
+            await service.DeleteDraftAsync(id, ct) ? Results.NoContent() : Results.NotFound());
+
         group.MapPost("/", async (CreateNewsRequest request, NewsService service, CancellationToken ct) =>
         {
             var created = await service.CreateAsync(request, ct);

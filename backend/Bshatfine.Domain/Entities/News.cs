@@ -153,4 +153,10 @@ public class News
         UpdatedAt = Clock.UtcNow;
 
     }
+
+    public void EnsureCanBeDeleted()
+    {
+        if (Status != NewsStatus.Draft)
+            throw new DomainException("Only drafts can be deleted. Archive published news instead.");
+    }
 }

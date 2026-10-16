@@ -16,6 +16,7 @@ public static class AuditActions
     public const string NewsRepublished = "news.republished";
     public const string NewsCoverSet = "news.cover.set";
     public const string NewsCoverRemoved = "news.cover.removed";
+    public const string NewsDeleted = "news.deleted";
 
     // Users
     public const string UserCreated = "user.created";

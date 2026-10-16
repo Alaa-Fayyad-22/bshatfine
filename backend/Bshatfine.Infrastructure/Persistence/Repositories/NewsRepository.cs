@@ -66,4 +66,5 @@ public class NewsRepository(AppDbContext db) : INewsRepository
     public void Add(News news) => db.News.Add(news);
 
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
+    public void Remove(News news) => db.News.Remove(news);
 }
