@@ -14,18 +14,25 @@ public class NewsService(INewsRepository repository, IFileStorage storage,
     private const string EntityType = "News";
 
     // ---------- Public ----------
-    public async Task<PagedResult<NewsDto>> GetPublishedAsync(string lang, int page, int pageSize, CancellationToken ct)
+    public async Task<PagedResult<NewsSummaryDto>> GetPublishedAsync(string lang, int page, int pageSize, CancellationToken ct)
     {
         var language = ParseLanguage(lang);
         (page, pageSize) = NormalizePaging(page, pageSize);
 
-        var (items, total) = await repository.GetPublishedAsync(page, pageSize, ct);
+        var (rows, total) = await repository.GetPublishedSummariesAsync(language, page, pageSize, ct);
 
-        return new PagedResult<NewsDto>(
-            items.Select(n => n.ToDto(language, storage)).ToList(),
-            page,
-            pageSize,
-            total);
+        var items = rows
+            .Select(r => new NewsSummaryDto(
+                r.Id,
+                r.Slug,
+                r.Language.ToString().ToLowerInvariant(),
+                r.Title,
+                MakeExcerpt(r.BodyStart),
+                r.PublishedAt,
+                r.CoverImagePath is null ? null : storage.GetPublicUrl(r.CoverImagePath)))
+            .ToList();
+
+        return new PagedResult<NewsSummaryDto>(items, page, pageSize, total);
     }
 
     public async Task<NewsDto?> GetPublishedByIdAsync(string lang, Guid id, CancellationToken ct)
@@ -234,7 +241,18 @@ public class NewsService(INewsRepository repository, IFileStorage storage,
         return translations;
     }
 
-    
+    // Cut at the last whole word, and add "…" only if the body was actually longer
+    private static string MakeExcerpt(string bodyStart)
+    {
+        if (bodyStart.Length <= NewsSummaryRow.ExcerptLength)
+            return bodyStart;
+
+        var text = bodyStart[..NewsSummaryRow.ExcerptLength];
+        var lastSpace = text.LastIndexOf(' ');
+        return (lastSpace > 0 ? text[..lastSpace] : text).TrimEnd() + "…";
+    }
+
+
 
 
     // Matches only the enum NAMES, case-insensitively (ar, EN, Draft, published).

@@ -2,24 +2,49 @@ using Bshatfine.Application.Abstractions;
 using Bshatfine.Domain.Entities;
 using Bshatfine.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Bshatfine.Application.Dtos;
 
 namespace Bshatfine.Infrastructure.Persistence.Repositories;
 
 public class NewsRepository(AppDbContext db) : INewsRepository
 {
-    public async Task<(List<News> Items, int TotalCount)> GetPublishedAsync(int page, int pageSize, CancellationToken ct)
+    public async Task<(List<NewsSummaryRow> Items, int TotalCount)> GetPublishedSummariesAsync(
+    Language language, int page, int pageSize, CancellationToken ct)
     {
         var query = db.News.Where(n => n.Status == NewsStatus.Published);
 
         var total = await query.CountAsync(ct);
 
-        var items = await query
-            .Include(n => n.Translations)
-            .AsNoTracking()
+        var rows = await query
             .OrderByDescending(n => n.PublishedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(n => new
+            {
+                n.Id,
+                n.Slug,
+                n.PublishedAt,
+                n.CoverImagePath,
+                // The requested language if it exists, otherwise the other one
+                Translation = n.Translations
+                    .OrderBy(t => t.Language == language ? 0 : 1)
+                    .ThenBy(t => t.Language)
+                    .Select(t => new
+                    {
+                        t.Language,
+                        t.Title,
+                        // One extra character tells us whether the body was cut
+                        BodyStart = t.Body.Substring(0, NewsSummaryRow.ExcerptLength + 1)
+                    })
+                    .First()
+            })
             .ToListAsync(ct);
+
+        var items = rows
+            .Select(r => new NewsSummaryRow(
+                r.Id, r.Slug, r.Translation.Language, r.Translation.Title,
+                r.Translation.BodyStart, r.PublishedAt, r.CoverImagePath))
+            .ToList();
 
         return (items, total);
     }
