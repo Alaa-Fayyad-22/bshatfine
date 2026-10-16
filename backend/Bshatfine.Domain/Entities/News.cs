@@ -12,6 +12,7 @@ public class News
     public DateTime? UpdatedAt { get; private set; }
     public DateTime? PublishedAt { get; private set; }
     public string Slug { get; private set; } = string.Empty;
+    public uint Version { get; private set; }
     public string? CoverImagePath { get; private set; }
     private readonly List<NewsTranslations> _translations = [];
     public IReadOnlyCollection<NewsTranslations> Translations => _translations;

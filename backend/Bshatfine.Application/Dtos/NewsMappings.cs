@@ -38,5 +38,6 @@ public static class NewsMappings
                 t.Title,
                 t.Body))
             .ToList(),
-        news.CoverImagePath is null ? null : storage.GetPublicUrl(news.CoverImagePath));
+        news.CoverImagePath is null ? null : storage.GetPublicUrl(news.CoverImagePath),
+        news.Version);
 }

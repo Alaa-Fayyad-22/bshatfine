@@ -48,6 +48,7 @@ builder.Services.AddHsts(options =>
     options.MaxAge = TimeSpan.FromDays(365);
     options.IncludeSubDomains = true;
 });
+builder.Services.AddExceptionHandler<ConcurrencyExceptionHandler>();
 
 // ---------- Pipeline ----------
 var app = builder.Build();

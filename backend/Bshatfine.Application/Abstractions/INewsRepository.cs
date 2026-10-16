@@ -15,4 +15,5 @@ public interface INewsRepository
     void Add(News news);
     Task SaveChangesAsync(CancellationToken ct);
     void Remove(News news);
+    void SetExpectedVersion(News news, uint version);
 }

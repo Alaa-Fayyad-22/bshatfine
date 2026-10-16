@@ -93,7 +93,12 @@ public class NewsService(INewsRepository repository, IFileStorage storage,
 
     public Task<AdminNewsDto?> UpdateAsync(Guid id, UpdateNewsRequest request, CancellationToken ct)
     {
+
+
         var translations = RequireTranslations(request.Translations);
+
+        if (request.Version is not { } version)
+            throw new DomainException("The article version is required. Reload the page and try again.");
 
         return ChangeAsync(id, news =>
         {
@@ -113,7 +118,7 @@ public class NewsService(INewsRepository repository, IFileStorage storage,
 
             foreach (var t in toRemove)
                 news.RemoveTranslation(t.Language);
-        }, AuditActions.NewsUpdated, ct);
+        }, AuditActions.NewsUpdated, ct, expectedVersion: version);
     }
 
     public Task<AdminNewsDto?> PublishAsync(Guid id, CancellationToken ct) =>
@@ -217,11 +222,15 @@ public class NewsService(INewsRepository repository, IFileStorage storage,
     }
 
     // ---------- Helpers ----------
-    private async Task<AdminNewsDto?> ChangeAsync(Guid id, Action<News> change, string auditAction, CancellationToken ct)
+    private async Task<AdminNewsDto?> ChangeAsync(Guid id, Action<News> change, string auditAction,
+    CancellationToken ct, uint? expectedVersion = null)
     {
         var news = await repository.GetByIdAsync(id, ct);
         if (news is null)
             return null;
+
+        if (expectedVersion is { } version)
+            repository.SetExpectedVersion(news, version);
 
         change(news);
         await repository.SaveChangesAsync(ct);

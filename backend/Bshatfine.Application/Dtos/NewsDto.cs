@@ -10,7 +10,8 @@ public record AdminNewsDto(
     DateTime? UpdatedAt,
     DateTime? PublishedAt,
     List<NewsTranslationDto> Translations,
-    string? CoverImageUrl);
+    string? CoverImageUrl,
+    uint Version);
 
 public record NewsTranslationDto(
     string Language,
@@ -24,4 +25,4 @@ public record NewsTranslationDto(
 
 
 public record CreateNewsRequest(List<NewsTranslationDto> Translations);
-public record UpdateNewsRequest(List<NewsTranslationDto> Translations);
+public record UpdateNewsRequest(List<NewsTranslationDto> Translations, uint? Version);

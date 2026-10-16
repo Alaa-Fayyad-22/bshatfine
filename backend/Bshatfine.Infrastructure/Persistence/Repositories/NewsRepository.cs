@@ -3,6 +3,7 @@ using Bshatfine.Domain.Entities;
 using Bshatfine.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Bshatfine.Application.Dtos;
+using Bshatfine.Application.Common;
 
 namespace Bshatfine.Infrastructure.Persistence.Repositories;
 
@@ -90,6 +91,20 @@ public class NewsRepository(AppDbContext db) : INewsRepository
 
     public void Add(News news) => db.News.Add(news);
 
-    public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
+    public void SetExpectedVersion(News news, uint version) =>
+    db.Entry(news).Property(n => n.Version).OriginalValue = version;
+
+    public async Task SaveChangesAsync(CancellationToken ct)
+    {
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ConcurrencyConflictException(
+                "This article was changed by someone else. Reload it to see the latest version, then apply your changes again.");
+        }
+    }
     public void Remove(News news) => db.News.Remove(news);
 }
