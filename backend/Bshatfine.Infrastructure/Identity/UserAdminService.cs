@@ -162,11 +162,16 @@ public class UserAdminService(AppDbContext db, UserManager<AppUser> users, IAudi
         return ToDto(user, role);
     }
 
-    public async Task<TemporaryPasswordResult?> ResetPasswordAsync(Guid id, CancellationToken ct)
+    public async Task<TemporaryPasswordResult?> ResetPasswordAsync(Guid id, Guid actingUserId, CancellationToken ct)
     {
         var (user, role) = await FindStaffAsync(id);
         if (user is null || role is null)
             return null;
+
+        if (id == actingUserId)
+            throw new DomainException("Use Change password to change your own password.");
+
+
 
         var temporaryPassword = TemporaryPasswordGenerator.Generate();
         var token = await users.GeneratePasswordResetTokenAsync(user);

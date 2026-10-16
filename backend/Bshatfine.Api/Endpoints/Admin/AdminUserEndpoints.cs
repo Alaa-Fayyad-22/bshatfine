@@ -39,8 +39,8 @@ public static class AdminUserEndpoints
             await service.SetActiveAsync(id, true, ActingUserId(principal), ct) is { } user
                 ? Results.Ok(user) : Results.NotFound());
 
-        group.MapPost("/{id:guid}/reset-password", async (Guid id, IUserAdminService service, CancellationToken ct) =>
-            await service.ResetPasswordAsync(id, ct) is { } result ? Results.Ok(result) : Results.NotFound());
+        group.MapPost("/{id:guid}/reset-password", async (Guid id, ClaimsPrincipal principal, IUserAdminService service, CancellationToken ct) =>
+            await service.ResetPasswordAsync(id, ActingUserId(principal), ct) is { } result ? Results.Ok(result) : Results.NotFound());
 
         group.MapPost("/{id:guid}/force-logout", async (Guid id, ClaimsPrincipal principal,
             IUserAdminService service, CancellationToken ct) =>

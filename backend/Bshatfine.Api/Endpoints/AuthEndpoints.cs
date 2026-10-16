@@ -24,8 +24,8 @@ public static class AuthEndpoints
         var group = app.MapGroup("/api/auth");
 
         // ---------- Login, step 1: password ----------
-        group.MapPost("/login", async (LoginRequest request, UserManager<AppUser> users,
-            SignInManager<AppUser> signIn, IAuditLogger audit, CancellationToken ct) =>
+        group.MapPost("/login", async (LoginRequest request, UserManager<AppUser> users, HttpContext http,
+            SignInManager <AppUser> signIn, IAuditLogger audit, CancellationToken ct) =>
         {
             var user = await users.FindByEmailAsync(request.Email ?? string.Empty);
 
@@ -58,9 +58,15 @@ public static class AuthEndpoints
 
             if (result.IsLockedOut)
             {
-                // AUDIT
                 await audit.LogAsync(new AuditEvent(AuditActions.LoginLockedOut,
                     UserId: user.Id, UserEmail: user.Email), ct);
+
+                // Tell the client exactly how long the lock lasts
+                var lockoutEnd = await users.GetLockoutEndDateAsync(user);
+                var seconds = lockoutEnd is { } end
+                    ? Math.Max(1, (int)Math.Ceiling((end - DateTimeOffset.UtcNow).TotalSeconds))
+                    : 900;
+                http.Response.Headers.RetryAfter = seconds.ToString();
 
                 return Results.Problem(TooManyAttempts, statusCode: StatusCodes.Status429TooManyRequests);
             }

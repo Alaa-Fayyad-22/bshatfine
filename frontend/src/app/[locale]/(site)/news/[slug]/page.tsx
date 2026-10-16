@@ -18,6 +18,11 @@ export function generateStaticParams() {
   return [{ slug: SHELL_SLUG }];
 }
 
+// This page blocks on purpose (see Page below): an unknown slug must answer with
+// a real 404, which is only possible before any <Suspense> fallback streams.
+// Tell the dev-time instant-navigation check that this is intended.
+export const instant = false;
+
 // One request per render, shared by generateMetadata and the page.
 const loadArticle = cache(
   async (locale: string, slug: string): Promise<NewsDto | null | undefined> => {
