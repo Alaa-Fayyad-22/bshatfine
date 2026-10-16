@@ -9,8 +9,9 @@ public static class AdminNewsEndpoints
     {
         var group = app.MapGroup("/news");
 
-        group.MapGet("/", async (NewsService service, CancellationToken ct, int page = 1, int pageSize = 20) =>
-            Results.Ok(await service.GetAllForAdminAsync(page, pageSize, ct)));
+        group.MapGet("/", async (NewsService service, CancellationToken ct,
+            string? status, int page = 1, int pageSize = 20) =>
+            Results.Ok(await service.GetAllForAdminAsync(page, pageSize, status, ct)));
 
         group.MapGet("/{id:guid}", async (Guid id, NewsService service, CancellationToken ct) =>
         {

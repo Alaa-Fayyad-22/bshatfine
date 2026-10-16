@@ -43,18 +43,23 @@ public class NewsService(INewsRepository repository, IFileStorage storage,
     }
 
     // ---------- Admin: reading ----------
-    public async Task<PagedResult<AdminNewsDto>> GetAllForAdminAsync(int page, int pageSize, CancellationToken ct)
-    {
-        (page, pageSize) = NormalizePaging(page, pageSize);
+    public async Task<PagedResult<AdminNewsDto>> GetAllForAdminAsync(
+            int page, int pageSize, string? status, CancellationToken ct)
+            {
+                (page, pageSize) = NormalizePaging(page, pageSize);
 
-        var (items, total) = await repository.GetAllAsync(page, pageSize, ct);
+                NewsStatus? statusFilter = string.IsNullOrWhiteSpace(status)
+                    ? null
+                    : ParseEnumName<NewsStatus>(status, "status");
 
-        return new PagedResult<AdminNewsDto>(
-            items.Select(n => n.ToAdminDto(storage)).ToList(),
-            page,
-            pageSize,
-            total);
-    }
+                var (items, total) = await repository.GetAllAsync(page, pageSize, statusFilter, ct);
+
+                return new PagedResult<AdminNewsDto>(
+                    items.Select(n => n.ToAdminDto(storage)).ToList(),
+                    page,
+                    pageSize,
+                    total);
+            }
 
     public async Task<AdminNewsDto?> GetByIdForAdminAsync(Guid id, CancellationToken ct)
     {
@@ -203,16 +208,21 @@ public class NewsService(INewsRepository repository, IFileStorage storage,
         return translations;
     }
 
-    // Matches only the enum NAMES (ar, en). Enum.TryParse alone would also accept
-    // numbers such as "1", which is not a language code.
-    private static Language ParseLanguage(string? code)
+    
+
+
+    // Matches only the enum NAMES, case-insensitively (ar, EN, Draft, published).
+    // Enum.TryParse alone would also accept numbers such as "1".
+    private static TEnum ParseEnumName<TEnum>(string? value, string label) where TEnum : struct, Enum
     {
-        var name = Enum.GetNames<Language>()
-            .FirstOrDefault(n => string.Equals(n, code, StringComparison.OrdinalIgnoreCase));
+        var name = Enum.GetNames<TEnum>()
+            .FirstOrDefault(n => string.Equals(n, value, StringComparison.OrdinalIgnoreCase));
         if (name is not null)
-            return Enum.Parse<Language>(name);
-        throw new DomainException($"Unsupported language: '{code}'.");
+            return Enum.Parse<TEnum>(name);
+        throw new DomainException($"Unsupported {label}: '{value}'.");
     }
+
+    private static Language ParseLanguage(string? code) => ParseEnumName<Language>(code, "language");
 
     private static (int Page, int PageSize) NormalizePaging(int page, int pageSize) =>
         (Math.Max(page, 1), Math.Clamp(pageSize, 1, 50));

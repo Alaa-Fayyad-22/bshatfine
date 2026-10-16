@@ -24,9 +24,14 @@ public class NewsRepository(AppDbContext db) : INewsRepository
         return (items, total);
     }
 
-    public async Task<(List<News> Items, int TotalCount)> GetAllAsync(int page, int pageSize, CancellationToken ct)
+    public async Task<(List<News> Items, int TotalCount)> GetAllAsync(
+        int page, int pageSize, NewsStatus? status, CancellationToken ct)
     {
         var query = db.News.AsQueryable();
+
+        // Filter BEFORE counting and paging, so totals and pages match the filter
+        if (status is { } s)
+            query = query.Where(n => n.Status == s);
 
         var total = await query.CountAsync(ct);
 
@@ -52,13 +57,11 @@ public class NewsRepository(AppDbContext db) : INewsRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(n => n.Id == id && n.Status == NewsStatus.Published, ct);
 
-
     public Task<News?> GetPublishedBySlugAsync(string slug, CancellationToken ct) =>
-       db.News
-           .Include(n => n.Translations)
-           .AsNoTracking()
-           .FirstOrDefaultAsync(n => n.Slug == slug && n.Status == NewsStatus.Published, ct);
-
+        db.News
+            .Include(n => n.Translations)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(n => n.Slug == slug && n.Status == NewsStatus.Published, ct);
 
     public void Add(News news) => db.News.Add(news);
 
