@@ -7,6 +7,7 @@ public class NewsTranslations
 {
     // 1. Constants
     public const int TitleMaxLength = 200;
+    public const int BodyMaxLength = 20_000;
 
     // 2. Properties
     public Guid Id { get; private set; }
@@ -26,6 +27,8 @@ public class NewsTranslations
         // TODO: return a new NewsTranslations with all properties set
 
         Validate(title, body);
+        if (body.Length > BodyMaxLength)
+            throw new DomainException($"The body cannot exceed {BodyMaxLength:N0} characters.");
 
         return new NewsTranslations
         {
@@ -45,6 +48,8 @@ public class NewsTranslations
 
 
         Validate(title, body);
+        if (body.Length > BodyMaxLength)
+            throw new DomainException($"The body cannot exceed {BodyMaxLength:N0} characters.");
 
         Title = title.Trim();
         Body = body.Trim();
