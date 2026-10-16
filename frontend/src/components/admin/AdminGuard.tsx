@@ -13,6 +13,9 @@ type State =
   | { status: "error"; kind: AuthErrorKind }
   | { status: "redirecting" };
 
+const RECHECK_MS = 60_000;
+const ACTIVE_WINDOW_MS = 10 * 60_000;
+
 const UserContext = createContext<Me | null>(null);
 
 export function useAdminUser(): Me {
@@ -98,18 +101,39 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   );
 
   // A tab coming back into view asks the API again, so a session that an admin
-  // ended meanwhile (forced logout, disabled account) is noticed at once. There
-  // is deliberately no timer: polling would keep an idle session alive.
+  // ended meanwhile (forced logout, disabled account) is noticed at once. While
+  // the tab stays in view it asks once a minute, matching how often the API
+  // re-checks accounts. The API's idle timeout slides on every request, so that
+  // timer only runs while the person is actually using the page (a pointer,
+  // key or scroll event in the last ACTIVE_WINDOW_MS); an abandoned tab stops
+  // asking and its session can expire on its own.
   useEffect(() => {
-    const onVisible = () => {
-      if (document.visibilityState !== "visible") return;
+    let lastActivity = Date.now();
+    const markActive = () => {
+      lastActivity = Date.now();
+    };
+    const recheck = () => {
       void getMe().then((result) => {
         if (!result.ok && result.error === "unauthorized") toLogin(true);
         else if (result.ok && result.data.mustChangePassword) toChoosePassword();
       });
     };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") recheck();
+    };
+    const timer = setInterval(() => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastActivity > ACTIVE_WINDOW_MS) return;
+      recheck();
+    }, RECHECK_MS);
     document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
+    const activity = ["pointerdown", "keydown", "scroll"] as const;
+    for (const name of activity) window.addEventListener(name, markActive, { passive: true });
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      for (const name of activity) window.removeEventListener(name, markActive);
+    };
   }, [toLogin, toChoosePassword]);
 
   // Back/forward can restore a frozen copy of the page (bfcache) with admin data

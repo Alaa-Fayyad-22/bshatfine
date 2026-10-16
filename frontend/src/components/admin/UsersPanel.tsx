@@ -272,8 +272,8 @@ export function UsersPanel() {
                           <span className="ms-2 text-sm font-normal text-ink/70">({t("you")})</span>
                         )}
                       </td>
-                      <td dir="ltr" className="max-w-64 py-3 pe-4 text-start break-all">
-                        {u.email}
+                      <td className="max-w-64 py-3 pe-4 break-all">
+                        <bdi dir="ltr">{u.email}</bdi>
                       </td>
                       <td className="py-3 pe-4 whitespace-nowrap">{t(`role.${u.role}`)}</td>
                       <td className="py-3 pe-4 whitespace-nowrap">

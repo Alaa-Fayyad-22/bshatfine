@@ -31,6 +31,10 @@ type Values = Record<Lang, { title: string; body: string }>;
 type Busy = "save" | "publish" | "archive" | "republish" | "upload" | "removeCover" | null;
 type Flash = "createdOk" | "publishedOk";
 
+// Ref callback for an inline confirmation panel: focus it as soon as it appears.
+// Defined outside the component so React calls it only on mount.
+const focusOnMount = (el: HTMLElement | null) => el?.focus();
+
 const empty: Values = { ar: { title: "", body: "" }, en: { title: "", body: "" } };
 
 function toValues(article: AdminNewsDto): Values {
@@ -70,6 +74,22 @@ export function NewsForm({ id }: { id?: string }) {
   const [confirmRepublish, setConfirmRepublish] = useState(false);
   const [confirmRemoveCover, setConfirmRemoveCover] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  // Keyboard focus: the button that opens an inline confirmation disappears, so
+  // focus moves into the panel, back to the opener on Cancel, and to the status
+  // message once the action has happened.
+  const archiveBtnRef = useRef<HTMLButtonElement | null>(null);
+  const republishBtnRef = useRef<HTMLButtonElement | null>(null);
+  const removeCoverBtnRef = useRef<HTMLButtonElement | null>(null);
+  const statusRef = useRef<HTMLDivElement | null>(null);
+  const focusLater = (ref: { current: HTMLElement | null }) =>
+    setTimeout(() => ref.current?.focus(), 0);
+  // The status message only becomes visible (and focusable) after the render
+  // that shows it, so its focus is applied in an effect, not a timer.
+  const [statusFocus, setStatusFocus] = useState(0);
+  const focusStatus = () => setStatusFocus((n) => n + 1);
+  useEffect(() => {
+    if (statusFocus > 0) statusRef.current?.focus();
+  }, [statusFocus]);
   const tabRefs = useRef<Record<Lang, HTMLButtonElement | null>>({ ar: null, en: null });
 
   const dirty = JSON.stringify(values) !== baseline;
@@ -219,6 +239,7 @@ export function NewsForm({ id }: { id?: string }) {
       apply(await archiveNews(article.id));
       setConfirmArchive(false);
       setSuccess(t("archivedOk"));
+      focusStatus();
     });
   }
 
@@ -229,6 +250,7 @@ export function NewsForm({ id }: { id?: string }) {
       apply(await republishNews(article.id));
       setConfirmRepublish(false);
       setSuccess(t("republishedOk"));
+      focusStatus();
     });
   }
 
@@ -282,6 +304,7 @@ export function NewsForm({ id }: { id?: string }) {
       setArticle(await removeNewsCover(article.id));
       setConfirmRemoveCover(false);
       setSuccess(t("coverRemovedOk"));
+      focusStatus();
     });
   }
 
@@ -425,6 +448,7 @@ export function NewsForm({ id }: { id?: string }) {
                 </button>
                 {article?.coverImageUrl && !confirmRemoveCover && (
                   <button
+                    ref={removeCoverBtnRef}
                     type="button"
                     disabled={busy !== null || waiting}
                     onClick={() => setConfirmRemoveCover(true)}
@@ -436,9 +460,11 @@ export function NewsForm({ id }: { id?: string }) {
               </div>
               {article?.coverImageUrl && confirmRemoveCover && (
                 <div
+                  ref={focusOnMount}
+                  tabIndex={-1}
                   role="alertdialog"
                   aria-label={t("coverRemove")}
-                  className="max-w-prose border border-alert-danger p-4"
+                  className="max-w-prose border border-alert-danger p-4 outline-none"
                 >
                   <p>{t("coverRemoveConfirm")}</p>
                   <div className="mt-3 flex flex-wrap gap-3">
@@ -452,7 +478,10 @@ export function NewsForm({ id }: { id?: string }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setConfirmRemoveCover(false)}
+                      onClick={() => {
+                        setConfirmRemoveCover(false);
+                        focusLater(removeCoverBtnRef);
+                      }}
                       disabled={busy !== null || waiting}
                       className={`${button} border-ink/40 bg-ivory`}
                     >
@@ -549,7 +578,7 @@ export function NewsForm({ id }: { id?: string }) {
 
       <div className="mt-8 border-t border-hairline pt-6">
         {/* Announced to screen readers when a message appears */}
-        <div aria-live="polite" role="status" className="empty:hidden">
+        <div ref={statusRef} tabIndex={-1} aria-live="polite" role="status" className="outline-none empty:hidden">
           {success && <p className="mb-4 font-medium text-cedar">{success}</p>}
           {dirty && !archived && !success && !error && (
             <p className="mb-4 text-sm text-ink/70">{t("unsaved")}</p>
@@ -574,6 +603,7 @@ export function NewsForm({ id }: { id?: string }) {
           <div className="flex flex-wrap items-center gap-3">
             {!confirmRepublish && (
               <button
+                ref={republishBtnRef}
                 type="button"
                 onClick={() => setConfirmRepublish(true)}
                 disabled={busy !== null || waiting}
@@ -586,7 +616,13 @@ export function NewsForm({ id }: { id?: string }) {
         )}
 
         {archived && confirmRepublish && (
-          <div role="alertdialog" aria-label={t("republish")} className="mt-4 max-w-prose border border-cedar p-4">
+          <div
+            ref={focusOnMount}
+            tabIndex={-1}
+            role="alertdialog"
+            aria-label={t("republish")}
+            className="mt-4 max-w-prose border border-cedar p-4 outline-none"
+          >
             <p>{t("republishConfirm")}</p>
             <div className="mt-3 flex flex-wrap gap-3">
               <button
@@ -599,7 +635,10 @@ export function NewsForm({ id }: { id?: string }) {
               </button>
               <button
                 type="button"
-                onClick={() => setConfirmRepublish(false)}
+                onClick={() => {
+                  setConfirmRepublish(false);
+                  focusLater(republishBtnRef);
+                }}
                 disabled={busy !== null}
                 className={`${button} border-ink/40 bg-ivory`}
               >
@@ -645,6 +684,7 @@ export function NewsForm({ id }: { id?: string }) {
 
             {article?.status === "Published" && !confirmArchive && (
               <button
+                ref={archiveBtnRef}
                 type="button"
                 onClick={() => setConfirmArchive(true)}
                 disabled={busy !== null || waiting}
@@ -657,7 +697,13 @@ export function NewsForm({ id }: { id?: string }) {
         )}
 
         {article?.status === "Published" && confirmArchive && (
-          <div role="alertdialog" aria-label={t("archive")} className="mt-4 max-w-prose border border-alert-danger p-4">
+          <div
+            ref={focusOnMount}
+            tabIndex={-1}
+            role="alertdialog"
+            aria-label={t("archive")}
+            className="mt-4 max-w-prose border border-alert-danger p-4 outline-none"
+          >
             <p>{t("archiveConfirm")}</p>
             <div className="mt-3 flex flex-wrap gap-3">
               <button

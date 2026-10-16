@@ -283,8 +283,12 @@ export function AuditPanel() {
                           })}
                         </time>
                       </td>
-                      <td dir="ltr" className="max-w-56 py-3 pe-4 text-start break-all">
-                        {row.userEmail ?? <span className="text-ink/60">{t("noUser")}</span>}
+                      <td className="max-w-56 py-3 pe-4 break-all">
+                        {row.userEmail ? (
+                          <bdi dir="ltr">{row.userEmail}</bdi>
+                        ) : (
+                          <span className="text-ink/60">{t("noUser")}</span>
+                        )}
                       </td>
                       <td className="py-3 pe-4 font-medium">
                         <ActionName code={row.action} />
@@ -292,8 +296,8 @@ export function AuditPanel() {
                       <td className="py-3 pe-4">
                         <Entity type={row.entityType} id={row.entityId} />
                       </td>
-                      <td dir="ltr" className="py-3 pe-4 text-start whitespace-nowrap">
-                        {row.ipAddress ?? "—"}
+                      <td className="py-3 pe-4 whitespace-nowrap">
+                        <bdi dir="ltr">{row.ipAddress ?? "—"}</bdi>
                       </td>
                       <td className="max-w-72 py-3 text-sm">
                         <Details action={row.action} raw={row.details} />
