@@ -481,3 +481,8 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 .envcookies.txt
+admin.txt
+editor.txt
+citizen.txt
+temp.txt
+admin2.txt
