@@ -7,8 +7,8 @@ import { ArrowIcon } from "@/components/ArrowIcon";
 import { NewsCover } from "@/components/NewsCover";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { directionOf, LanguageNote } from "@/components/LanguageNote";
 import { getNews, type NewsPage } from "@/lib/api";
-import { excerpt } from "@/lib/text";
 
 const PAGE_SIZE = 10;
 
@@ -116,18 +116,15 @@ async function NewsList({
                   <time dateTime={item.publishedAt} className="text-sm text-ink/70">
                     {format.dateTime(new Date(item.publishedAt), { dateStyle: "long" })}
                   </time>
-                  <h2
-                    lang={item.language}
-                    dir="auto"
-                    className="mt-1 text-lg leading-snug font-bold md:text-xl"
-                  >
-                    <Link href={`/news/${item.slug}`} className="hover:underline">
-                      {item.title}
-                    </Link>
-                  </h2>
-                  <p lang={item.language} dir="auto" className="mt-3 max-w-prose text-ink/80">
-                    {excerpt(item.body, 160)}
-                  </p>
+                  <LanguageNote language={item.language} locale={locale} className="mt-1" />
+                  <div lang={item.language} dir={directionOf(item.language)}>
+                    <h2 className="mt-1 text-lg leading-snug font-bold md:text-xl">
+                      <Link href={`/news/${item.slug}`} className="hover:underline">
+                        {item.title}
+                      </Link>
+                    </h2>
+                    <p className="mt-3 max-w-prose text-ink/80">{item.excerpt}</p>
+                  </div>
                 </div>
               </article>
             </li>

@@ -4,9 +4,9 @@ import { useTranslations } from "next-intl";
 import { ArrowIcon } from "@/components/ArrowIcon";
 import { NewsCover } from "@/components/NewsCover";
 import { ClipReveal } from "@/components/motion/ClipReveal";
+import { directionOf, LanguageNote } from "@/components/LanguageNote";
 import { Link } from "@/i18n/navigation";
-import { getNews, type NewsDto } from "@/lib/api";
-import { excerpt } from "@/lib/text";
+import { getNews, type NewsSummaryDto } from "@/lib/api";
 import { getLocale } from "next-intl/server";
 
 // The heading renders immediately; the list streams in behind <Suspense>
@@ -38,10 +38,8 @@ export function NewsSection() {
   );
 }
 
-async function loadNews(): Promise<NewsDto[] | null> {
-  
+async function loadNews(locale: string): Promise<NewsSummaryDto[] | null> {
   try {
-    const locale = await getLocale();
     const { items } = await getNews(locale, 1, 4);
     return [...items].sort(
       (a, b) => Date.parse(b.publishedAt) - Date.parse(a.publishedAt),
@@ -55,7 +53,8 @@ async function loadNews(): Promise<NewsDto[] | null> {
 async function NewsContent() {
   const t = await getTranslations("Home.News");
   const format = await getFormatter();
-  const items = await loadNews();
+  const locale = await getLocale();
+  const items = await loadNews(locale);
 
   if (items === null) {
     return (
@@ -89,14 +88,15 @@ async function NewsContent() {
             />
           </div>
         </ClipReveal>
-        <h3 dir="auto" className="mt-6 text-2xl leading-snug font-bold md:text-3xl">
-          <Link href={`/news/${featured.slug}`} className="hover:underline">
-            {featured.title}
-          </Link>
-        </h3>
-        <p dir="auto" className="mt-3 line-clamp-3 max-w-prose text-ink/80">
-          {excerpt(featured.body)}
-        </p>
+        <div lang={featured.language} dir={directionOf(featured.language)}>
+          <h3 className="mt-6 text-2xl leading-snug font-bold md:text-3xl">
+            <Link href={`/news/${featured.slug}`} className="hover:underline">
+              {featured.title}
+            </Link>
+          </h3>
+          <p className="mt-3 line-clamp-3 max-w-prose text-ink/80">{featured.excerpt}</p>
+        </div>
+        <LanguageNote language={featured.language} locale={locale} className="mt-3" />
         <p className="mt-4">{date(featured.publishedAt)}</p>
       </article>
 
@@ -112,11 +112,16 @@ async function NewsContent() {
               </div>
               <div>
                 <p>{date(item.publishedAt)}</p>
-                <h3 dir="auto" className="mt-1 text-lg leading-snug font-semibold md:text-xl">
+                <h3
+                  lang={item.language}
+                  dir={directionOf(item.language)}
+                  className="mt-1 text-lg leading-snug font-semibold md:text-xl"
+                >
                   <Link href={`/news/${item.slug}`} className="hover:underline">
                     {item.title}
                   </Link>
                 </h3>
+                <LanguageNote language={item.language} locale={locale} className="mt-1" />
               </div>
             </li>
           ))}

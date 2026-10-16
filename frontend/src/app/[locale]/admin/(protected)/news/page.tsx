@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NewsTable } from "@/components/admin/NewsTable";
+import { NEWS_STATUSES } from "@/lib/admin-api";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 
@@ -38,7 +39,10 @@ export default async function AdminNewsPage({
 }
 
 async function Table({ searchParams }: Pick<PageProps<"/[locale]/admin/news">, "searchParams">) {
-  const raw = (await searchParams).page;
-  const n = Number(Array.isArray(raw) ? raw[0] : raw);
-  return <NewsTable page={Number.isInteger(n) && n >= 1 ? n : 1} />;
+  const { page: rawPage, status: rawStatus } = await searchParams;
+  const n = Number(Array.isArray(rawPage) ? rawPage[0] : rawPage);
+  // ?status=draft works too (the API is case-insensitive); anything unknown means "all".
+  const wanted = (Array.isArray(rawStatus) ? rawStatus[0] : rawStatus)?.toLowerCase();
+  const status = NEWS_STATUSES.find((s) => s.toLowerCase() === wanted);
+  return <NewsTable page={Number.isInteger(n) && n >= 1 ? n : 1} status={status} />;
 }

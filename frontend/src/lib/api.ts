@@ -11,10 +11,23 @@ export type NewsDto = {
   coverImageUrl: string | null;
 };
 
+// One row of the public list: a short excerpt (at most 300 characters, cut at a
+// whole word, ending in "…" when the body was longer) and no body. `language`
+// can differ from the requested one when that translation does not exist.
+export type NewsSummaryDto = {
+  id: string;
+  slug: string;
+  language: string;
+  title: string;
+  excerpt: string;
+  publishedAt: string;
+  coverImageUrl: string | null;
+};
+
 export { coverUrl } from "./cover";
 
 export type NewsPage = {
-  items: NewsDto[];
+  items: NewsSummaryDto[];
   page: number;
   pageSize: number;
   totalCount: number;

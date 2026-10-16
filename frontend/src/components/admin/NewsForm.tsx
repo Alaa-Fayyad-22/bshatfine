@@ -6,6 +6,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import {
   AdminApiError,
   archiveNews,
+  BODY_MAX,
   COVER_MAX_BYTES,
   COVER_TYPES,
   createNews,
@@ -20,10 +21,13 @@ import {
 } from "@/lib/admin-api";
 import { NewsCover } from "@/components/NewsCover";
 import { rateProblem, type Problem } from "@/lib/problem";
+import { DELETED_FLASH_KEY, DeleteNewsDialog } from "./DeleteNewsDialog";
 import { isRateLimited, ProblemNotice } from "./ProblemNotice";
 import { StatusText } from "./StatusText";
 
 const MAX_TITLE = 200;
+// From here on the body counter warns that the limit is close.
+const BODY_WARN = Math.floor(BODY_MAX * 0.9);
 const FLASH_KEY = "admin-news-flash";
 const langs = ["ar", "en"] as const;
 type Lang = (typeof langs)[number];
@@ -34,6 +38,15 @@ type Flash = "createdOk" | "publishedOk";
 // Ref callback for an inline confirmation panel: focus it as soon as it appears.
 // Defined outside the component so React calls it only on mount.
 const focusOnMount = (el: HTMLElement | null) => el?.focus();
+
+// Escape closes an inline confirmation (unless a request is running).
+// True (after swallowing the key) when Escape was pressed and cancelling is allowed.
+function escapePressed(e: KeyboardEvent<HTMLElement>, enabled: boolean): boolean {
+  if (e.key !== "Escape" || !enabled) return false;
+  e.preventDefault();
+  e.stopPropagation();
+  return true;
+}
 
 const empty: Values = { ar: { title: "", body: "" }, en: { title: "", body: "" } };
 
@@ -73,6 +86,15 @@ export function NewsForm({ id }: { id?: string }) {
   const [confirmArchive, setConfirmArchive] = useState(false);
   const [confirmRepublish, setConfirmRepublish] = useState(false);
   const [confirmRemoveCover, setConfirmRemoveCover] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  // Someone else saved this article after it was loaded (the API answered 409).
+  // What the person typed stays in the form until they choose to reload.
+  const [conflict, setConflict] = useState(false);
+  const [confirmReload, setConfirmReload] = useState(false);
+  const [reloading, setReloading] = useState(false);
+  const conflictRef = useRef<HTMLDivElement | null>(null);
+  const reloadBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [conflictFocus, setConflictFocus] = useState(0);
   const fileRef = useRef<HTMLInputElement | null>(null);
   // Keyboard focus: the button that opens an inline confirmation disappears, so
   // focus moves into the panel, back to the opener on Cancel, and to the status
@@ -90,6 +112,11 @@ export function NewsForm({ id }: { id?: string }) {
   useEffect(() => {
     if (statusFocus > 0) statusRef.current?.focus();
   }, [statusFocus]);
+  // The conflict message appears at the bottom of a long form: bring keyboard
+  // and screen reader users to it.
+  useEffect(() => {
+    if (conflictFocus > 0) conflictRef.current?.focus();
+  }, [conflictFocus]);
   const tabRefs = useRef<Record<Lang, HTMLButtonElement | null>>({ ar: null, en: null });
 
   const dirty = JSON.stringify(values) !== baseline;
@@ -102,8 +129,12 @@ export function NewsForm({ id }: { id?: string }) {
   const waiting = isRateLimited(rate);
   const readOnly = archived || busy !== null;
 
+  // Adopt an article the API returned: its fields AND its new version number,
+  // so the next save is checked against the latest state, not the one loaded.
   function apply(dto: AdminNewsDto) {
     const v = toValues(dto);
+    setConflict(false);
+    setConfirmReload(false);
     setArticle(dto);
     setValues(v);
     setBaseline(JSON.stringify(v));
@@ -186,18 +217,56 @@ export function NewsForm({ id }: { id?: string }) {
       await action();
     } catch (e) {
       if (e instanceof AdminApiError && e.status === 429) setRate(rateProblem(e.retryAfter));
-      else setError(describe(e));
+      else if (e instanceof AdminApiError && e.status === 409) {
+        // Keep everything the person typed; offer to load the saved version.
+        setConflict(true);
+        setConflictFocus((n) => n + 1);
+      } else setError(describe(e));
     } finally {
       setBusy(null);
+    }
+  }
+
+  // A body over the limit blocks saving (the API would answer 400 anyway). Says
+  // which language and jumps to its tab; returns true when saving must stop.
+  function bodyTooLong(): boolean {
+    const over = langs.find((l) => values[l].body.length > BODY_MAX);
+    if (!over) return false;
+    setSuccess(null);
+    setError(t("bodyTooLong", { language: tl(over), max: BODY_MAX }));
+    setTab(over);
+    return true;
+  }
+
+  // The latest saved version replaces the form (the person chose this, after the
+  // warning), and its new version number is what later saves are checked against.
+  async function loadLatest() {
+    if (!article) return;
+    setReloading(true);
+    try {
+      const latest = await getAdminNews(article.id);
+      if (!latest) return setLoad("notfound");
+      apply(latest);
+      setConflict(false);
+      setConfirmReload(false);
+      setError(null);
+      setSuccess(t("latestLoadedOk"));
+      focusStatus();
+    } catch (e) {
+      setConfirmReload(false);
+      setError(describe(e));
+    } finally {
+      setReloading(false);
     }
   }
 
   function save() {
     const translations = toTranslations(values);
     if (translations.length === 0) return setError(t("needContent"));
+    if (bodyTooLong()) return;
     return run("save", async () => {
       if (article) {
-        apply(await updateNews(article.id, translations));
+        apply(await updateNews(article.id, translations, article.version));
         setSuccess(t(article.status === "Published" ? "changesSavedOk" : "savedOk"));
       } else {
         const created = await createNews(translations);
@@ -209,12 +278,13 @@ export function NewsForm({ id }: { id?: string }) {
   function publish() {
     const translations = toTranslations(values);
     if (translations.length === 0) return setError(t("needContent"));
+    if (bodyTooLong()) return;
     return run("publish", async () => {
       // Save first (create, or update if edited), then publish.
       let target = article;
       const isNew = !target;
       if (!target) target = await createNews(translations);
-      else if (dirty) target = await updateNews(target.id, translations);
+      else if (dirty) target = await updateNews(target.id, translations, target.version);
       try {
         const published = await publishNews(target.id);
         if (isNew) return goToEdit(published.id, "publishedOk");
@@ -283,6 +353,7 @@ export function NewsForm({ id }: { id?: string }) {
       setSuccess(null);
       return setError(t("coverNeedContent"));
     }
+    if (bodyTooLong()) return;
     return run("upload", async () => {
       const created = await createNews(translations);
       try {
@@ -343,6 +414,15 @@ export function NewsForm({ id }: { id?: string }) {
       </div>
     );
   }
+
+  // The delete confirmation names the saved title (Arabic first, like the list).
+  const savedTitle = (language: Lang) =>
+    article?.translations.find((x) => x.language === language && x.title)?.title;
+  const deleteTitle = savedTitle("ar")
+    ? { text: savedTitle("ar")!, lang: "ar" }
+    : savedTitle("en")
+      ? { text: savedTitle("en")!, lang: "en" }
+      : null;
 
   const dateRow = (label: string, iso: string | null | undefined) =>
     iso ? (
@@ -464,6 +544,11 @@ export function NewsForm({ id }: { id?: string }) {
                   tabIndex={-1}
                   role="alertdialog"
                   aria-label={t("coverRemove")}
+                  onKeyDown={(e) => {
+                    if (!escapePressed(e, busy === null)) return;
+                    setConfirmRemoveCover(false);
+                    focusLater(removeCoverBtnRef);
+                  }}
                   className="max-w-prose border border-alert-danger p-4 outline-none"
                 >
                   <p>{t("coverRemoveConfirm")}</p>
@@ -569,9 +654,32 @@ export function NewsForm({ id }: { id?: string }) {
               rows={14}
               readOnly={readOnly}
               value={values[l].body}
+              aria-describedby={`${uid}-bodycount-${l}`}
+              aria-invalid={values[l].body.length > BODY_MAX || undefined}
               onChange={(e) => setValues((v) => ({ ...v, [l]: { ...v[l], body: e.target.value } }))}
-              className="mt-1 block w-full rounded-control border border-ink/40 bg-ivory px-3 py-2 leading-relaxed read-only:bg-sand"
+              className="mt-1 block w-full rounded-control border border-ink/40 bg-ivory px-3 py-2 leading-relaxed read-only:bg-sand aria-[invalid=true]:border-alert-danger"
             />
+            {/* The counter is not a live region (it would chatter on every key);
+                the warning below it is, and its text changes only at the limits. */}
+            <p
+              id={`${uid}-bodycount-${l}`}
+              className={`mt-1 text-sm ${
+                values[l].body.length > BODY_MAX
+                  ? "font-medium text-alert-danger"
+                  : values[l].body.length >= BODY_WARN
+                    ? "font-semibold text-ink"
+                    : "text-ink/70"
+              }`}
+            >
+              {t("chars", { count: values[l].body.length, max: BODY_MAX })}
+            </p>
+            <div aria-live="polite" className="empty:hidden">
+              {values[l].body.length > BODY_MAX ? (
+                <p className="mt-1 text-sm font-medium text-alert-danger">{t("bodyOver")}</p>
+              ) : values[l].body.length >= BODY_WARN ? (
+                <p className="mt-1 text-sm text-ink/80">{t("bodyNear")}</p>
+              ) : null}
+            </div>
           </div>
         </div>
       ))}
@@ -599,6 +707,69 @@ export function NewsForm({ id }: { id?: string }) {
           </div>
         )}
 
+        {/* Someone else saved this article first. Announced when it appears;
+            the typed text above stays untouched until the person chooses. */}
+        <div aria-live="assertive" role="alert" className="empty:hidden">
+          {conflict && (
+            <div
+              ref={conflictRef}
+              tabIndex={-1}
+              className="mb-4 border-s-4 border-alert-danger bg-sand px-4 py-3 outline-none"
+            >
+              <p className="font-medium text-alert-danger">{t("conflictTitle")}</p>
+              <p className="mt-1">{t("conflictText")}</p>
+              {!confirmReload && (
+                <button
+                  ref={reloadBtnRef}
+                  type="button"
+                  onClick={() => setConfirmReload(true)}
+                  disabled={reloading}
+                  className={`${button} mt-3 border-cedar bg-ivory text-cedar`}
+                >
+                  {t("loadLatest")}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        {conflict && confirmReload && (
+          <div
+            ref={focusOnMount}
+            tabIndex={-1}
+            role="alertdialog"
+            aria-label={t("loadLatest")}
+            onKeyDown={(e) => {
+              if (!escapePressed(e, !reloading)) return;
+              setConfirmReload(false);
+              focusLater(reloadBtnRef);
+            }}
+            className="mb-4 max-w-prose border border-alert-danger p-4 outline-none"
+          >
+            <p>{t("loadLatestConfirm")}</p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={loadLatest}
+                disabled={reloading}
+                className={`${button} border-alert-danger bg-alert-danger text-ivory`}
+              >
+                {reloading ? t("loadingLatest") : t("loadLatestYes")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfirmReload(false);
+                  focusLater(reloadBtnRef);
+                }}
+                disabled={reloading}
+                className={`${button} border-ink/40 bg-ivory`}
+              >
+                {t("cancel")}
+              </button>
+            </div>
+          </div>
+        )}
+
         {archived && (
           <div className="flex flex-wrap items-center gap-3">
             {!confirmRepublish && (
@@ -621,6 +792,11 @@ export function NewsForm({ id }: { id?: string }) {
             tabIndex={-1}
             role="alertdialog"
             aria-label={t("republish")}
+            onKeyDown={(e) => {
+              if (!escapePressed(e, busy === null)) return;
+              setConfirmRepublish(false);
+              focusLater(republishBtnRef);
+            }}
             className="mt-4 max-w-prose border border-cedar p-4 outline-none"
           >
             <p>{t("republishConfirm")}</p>
@@ -652,7 +828,7 @@ export function NewsForm({ id }: { id?: string }) {
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="submit"
-              disabled={busy !== null || waiting}
+              disabled={busy !== null || waiting || conflict}
               className={`${button} border-cedar bg-cedar text-ivory`}
             >
               {busy === "save"
@@ -666,10 +842,22 @@ export function NewsForm({ id }: { id?: string }) {
               <button
                 type="button"
                 onClick={publish}
-                disabled={busy !== null || waiting}
+                disabled={busy !== null || waiting || conflict}
                 className={`${button} border-cedar bg-ivory text-cedar`}
               >
                 {busy === "publish" ? t("publishing") : t("publish")}
+              </button>
+            )}
+
+            {/* Only drafts can be deleted; published news can only be archived. */}
+            {article?.status === "Draft" && (
+              <button
+                type="button"
+                onClick={() => setDeleting(true)}
+                disabled={busy !== null || waiting}
+                className={`${button} border-alert-danger bg-ivory text-alert-danger`}
+              >
+                {t("delete")}
               </button>
             )}
 
@@ -702,6 +890,11 @@ export function NewsForm({ id }: { id?: string }) {
             tabIndex={-1}
             role="alertdialog"
             aria-label={t("archive")}
+            onKeyDown={(e) => {
+              if (!escapePressed(e, busy === null)) return;
+              setConfirmArchive(false);
+              focusLater(archiveBtnRef);
+            }}
             className="mt-4 max-w-prose border border-alert-danger p-4 outline-none"
           >
             <p>{t("archiveConfirm")}</p>
@@ -716,7 +909,10 @@ export function NewsForm({ id }: { id?: string }) {
               </button>
               <button
                 type="button"
-                onClick={() => setConfirmArchive(false)}
+                onClick={() => {
+                  setConfirmArchive(false);
+                  focusLater(archiveBtnRef);
+                }}
                 disabled={busy !== null || waiting}
                 className={`${button} border-ink/40 bg-ivory`}
               >
@@ -726,6 +922,24 @@ export function NewsForm({ id }: { id?: string }) {
           </div>
         )}
       </div>
+
+      {article && deleting && (
+        <DeleteNewsDialog
+          id={article.id}
+          title={deleteTitle?.text ?? t("untitled")}
+          lang={deleteTitle?.lang}
+          onClose={() => setDeleting(false)}
+          onDeleted={() => {
+            try {
+              sessionStorage.setItem(DELETED_FLASH_KEY, deleteTitle?.text ?? "");
+            } catch {
+              // Ignore: the confirmation message is optional.
+            }
+            dirtyRef.current = false; // do not warn about the navigation we trigger
+            router.replace("/admin/news");
+          }}
+        />
+      )}
     </form>
   );
 }

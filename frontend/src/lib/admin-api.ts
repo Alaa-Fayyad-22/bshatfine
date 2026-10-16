@@ -5,7 +5,8 @@
 import { reportAuthFailure } from "./auth-api";
 import { readRetryAfter } from "./rate-limit";
 
-export type NewsStatus = "Draft" | "Published" | "Archived";
+export const NEWS_STATUSES = ["Draft", "Published", "Archived"] as const;
+export type NewsStatus = (typeof NEWS_STATUSES)[number];
 
 export type TranslationDto = {
   language: "ar" | "en";
@@ -23,9 +24,14 @@ export type AdminNewsDto = {
   translations: TranslationDto[];
   // Relative to the API base; turn it into a URL with coverUrl().
   coverImageUrl: string | null;
+  // Changes after every successful change to the article. Sent back with a PUT
+  // so the API can refuse a save that would overwrite someone else's edit.
+  version: number;
 };
 
 export { coverUrl } from "./cover";
+
+export const BODY_MAX = 20_000;
 
 export const COVER_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 export const COVER_MAX_BYTES = 10 * 1024 * 1024;
@@ -85,12 +91,27 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new AdminApiError(res.status, detail, res.status === 429 ? readRetryAfter(res) : null);
   }
 
+  // 204 (delete) has no body.
+  if (res.status === 204) return undefined as T;
   return res.json();
 }
 
 // ---------- News ----------
-export function listAdminNews(page = 1, pageSize = 20): Promise<AdminNewsPage> {
-  return request(`/news?page=${page}&pageSize=${pageSize}`);
+// `status` is filtered by the API before paging, so the counts are per filter.
+export function listAdminNews(
+  page = 1,
+  pageSize = 20,
+  status?: NewsStatus,
+): Promise<AdminNewsPage> {
+  const q = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  if (status) q.set("status", status);
+  return request(`/news?${q}`);
+}
+
+// Drafts only; the API answers 400 (with a reason) for anything else, and the
+// cover photo goes with the article. 204 has no body.
+export async function deleteNews(id: string): Promise<void> {
+  await request<void>(`/news/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
 // null when the article does not exist.
@@ -107,10 +128,14 @@ export function createNews(translations: TranslationDto[]): Promise<AdminNewsDto
   return request("/news", { method: "POST", body: JSON.stringify({ translations }) });
 }
 
-export function updateNews(id: string, translations: TranslationDto[]): Promise<AdminNewsDto> {
+export function updateNews(
+  id: string,
+  translations: TranslationDto[],
+  version: number,
+): Promise<AdminNewsDto> {
   return request(`/news/${encodeURIComponent(id)}`, {
     method: "PUT",
-    body: JSON.stringify({ translations }),
+    body: JSON.stringify({ translations, version }),
   });
 }
 
