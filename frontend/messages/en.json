@@ -4,14 +4,20 @@
     "description": "The official website of Bshatfine Municipality in the Chouf"
   },
   "Nav": {
-    "home": "Home",
-    "news": "News",
-    "events": "Events",
-    "services": "Services",
-    "contact": "Contact",
-    "login": "Log in",
-    "brand": "Bshatfine Municipality"
-  },
+  "home": "Home",
+  "history": "History",
+  "gallery": "Gallery",
+  "news": "News Room",
+  "services": "Services",
+  "events": "Events",
+  "careers": "Careers",
+  "council": "Council",
+  "tourism": "Tourism",
+  "achievements": "Achievements",
+  "contact": "Contact",
+  "login": "Log in",
+  "brand": "Bshatfine Municipality"
+},
   "Language": {
     "switchTo": "العربية",
     "switchLabel": "Switch to Arabic",
@@ -40,6 +46,7 @@
     "mainNav": "Main navigation",
     "menuOpen": "Open menu",
     "menuClose": "Close menu",
+    "more": "More",
     "homeLabel": "Bshatfine Municipality, home page"
   },
   "Footer": {
