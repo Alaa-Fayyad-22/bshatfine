@@ -9,6 +9,9 @@ import { useAdminUser } from "./AdminGuard";
 // `adminOnly` sections are left out of an Editor's navigation.
 const sections = [
   { key: "news", href: "/admin/news", adminOnly: false },
+  { key: "pages", href: "/admin/pages", adminOnly: false },
+  { key: "contact", href: "/admin/contact", adminOnly: true },
+  { key: "council", href: "/admin/council", adminOnly: true },
   { key: "users", href: "/admin/users", adminOnly: true },
   { key: "audit", href: "/admin/audit", adminOnly: true },
 ] as const;

@@ -73,6 +73,73 @@ export async function getNewsBySlug(locale: string, slug: string): Promise<NewsD
   return res.json();
 }
 
+// ---------- Editable pages, contact details, council ----------
+// All three are read live (no-store) behind <Suspense>, so an edit in the admin
+// shows up on the next visit. `signal` makes a dead API fail fast.
+
+export type PageDto = {
+  key: string;
+  // Can differ from the requested language (fallback).
+  language: string;
+  title: string;
+  // Markdown. Always render it with <Markdown> (raw HTML is ignored there).
+  body: string;
+  updatedAt: string | null;
+  coverImageUrl: string | null;
+};
+
+// null when the page is missing or unpublished (404); other failures throw.
+export async function getPage(key: string, locale: string): Promise<PageDto | null> {
+  const res = await fetch(`${API_URL}/api/pages/${encodeURIComponent(key)}?lang=${locale}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Failed to load page: ${res.status}`);
+  return res.json();
+}
+
+// Any field may be null (never saved, or left empty).
+export type SiteSettingsDto = {
+  phone: string | null;
+  secondaryPhone: string | null;
+  email: string | null;
+  address: string | null;
+  openingHours: string | null;
+  mapUrl: string | null;
+  facebookUrl: string | null;
+  instagramUrl: string | null;
+};
+
+// null when the API cannot be reached (the footer then simply shows no details).
+export async function getSiteSettings(locale: string): Promise<SiteSettingsDto | null> {
+  try {
+    const res = await fetch(`${API_URL}/api/site-settings?lang=${locale}`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+export type CouncilMemberDto = {
+  id: string;
+  name: string;
+  position: string;
+  photoUrl: string | null;
+};
+
+export async function getCouncil(locale: string): Promise<CouncilMemberDto[]> {
+  const res = await fetch(`${API_URL}/api/council?lang=${locale}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) throw new Error(`Failed to load council: ${res.status}`);
+  return res.json();
+}
+
 // Live (uncached) existence check, used by the proxy to answer an unknown slug
 // with a real HTTP 404. Cache Components sends the page's static shell with a
 // 200 before the page body resolves, so the page alone cannot set the status.

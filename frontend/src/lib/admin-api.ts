@@ -163,6 +163,175 @@ export function removeNewsCover(id: string): Promise<AdminNewsDto> {
   return request(`/news/${encodeURIComponent(id)}/cover`, { method: "DELETE" });
 }
 
+// ---------- Pages (Admins and Editors) ----------
+export const PAGE_KEYS = ["history", "tourism", "achievements", "services"] as const;
+export type PageKey = (typeof PAGE_KEYS)[number];
+
+export const PAGE_BODY_MAX = 50_000;
+export const PAGE_TITLE_MAX = 200;
+
+export type AdminPageDto = {
+  id: string;
+  key: PageKey;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  publishedAt: string | null;
+  translations: TranslationDto[];
+  coverImageUrl: string | null;
+  // Changes after every successful change; sent back with a PUT.
+  version: number;
+};
+
+export type AdminPageSummaryDto = {
+  key: PageKey;
+  exists: boolean;
+  isPublished: boolean;
+  arabicTitle: string | null;
+  englishTitle: string | null;
+  updatedAt: string | null;
+};
+
+export function listAdminPages(): Promise<AdminPageSummaryDto[]> {
+  return request("/pages");
+}
+
+// null when the page has not been created yet.
+export async function getAdminPage(key: PageKey): Promise<AdminPageDto | null> {
+  try {
+    return await request<AdminPageDto>(`/pages/${encodeURIComponent(key)}`);
+  } catch (e) {
+    if (e instanceof AdminApiError && e.status === 404) return null;
+    throw e;
+  }
+}
+
+export function createPage(key: PageKey, translations: TranslationDto[]): Promise<AdminPageDto> {
+  return request("/pages", { method: "POST", body: JSON.stringify({ key, translations }) });
+}
+
+export function updatePage(
+  key: PageKey,
+  translations: TranslationDto[],
+  version: number,
+): Promise<AdminPageDto> {
+  return request(`/pages/${encodeURIComponent(key)}`, {
+    method: "PUT",
+    body: JSON.stringify({ translations, version }),
+  });
+}
+
+export const publishPage = (key: PageKey): Promise<AdminPageDto> =>
+  request(`/pages/${encodeURIComponent(key)}/publish`, { method: "POST" });
+export const unpublishPage = (key: PageKey): Promise<AdminPageDto> =>
+  request(`/pages/${encodeURIComponent(key)}/unpublish`, { method: "POST" });
+
+export function uploadPageCover(key: PageKey, file: File): Promise<AdminPageDto> {
+  const body = new FormData();
+  body.append("file", file);
+  return request(`/pages/${encodeURIComponent(key)}/cover`, { method: "POST", body });
+}
+
+export const removePageCover = (key: PageKey): Promise<AdminPageDto> =>
+  request(`/pages/${encodeURIComponent(key)}/cover`, { method: "DELETE" });
+
+// ---------- Contact details (Admin only) ----------
+export type AdminSiteSettingsDto = {
+  phone: string | null;
+  secondaryPhone: string | null;
+  email: string | null;
+  addressAr: string | null;
+  addressEn: string | null;
+  openingHoursAr: string | null;
+  openingHoursEn: string | null;
+  mapUrl: string | null;
+  facebookUrl: string | null;
+  instagramUrl: string | null;
+  updatedAt: string | null;
+  // null until the very first save.
+  version: number | null;
+};
+
+export const getAdminSiteSettings = (): Promise<AdminSiteSettingsDto> => request("/site-settings");
+
+export function updateSiteSettings(
+  values: Omit<AdminSiteSettingsDto, "updatedAt" | "version">,
+  version: number | null,
+): Promise<AdminSiteSettingsDto> {
+  return request("/site-settings", { method: "PUT", body: JSON.stringify({ ...values, version }) });
+}
+
+// ---------- Council (Admin only) ----------
+export type AdminCouncilMemberDto = {
+  id: string;
+  nameAr: string;
+  nameEn: string | null;
+  positionAr: string;
+  positionEn: string | null;
+  photoUrl: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  version: number;
+};
+
+export type CouncilMemberInput = {
+  nameAr: string;
+  nameEn: string;
+  positionAr: string;
+  positionEn: string;
+};
+
+export const COUNCIL_TEXT_MAX = 150;
+
+export const listCouncil = (): Promise<AdminCouncilMemberDto[]> => request("/council");
+
+// null when the member no longer exists.
+export async function getCouncilMember(id: string): Promise<AdminCouncilMemberDto | null> {
+  try {
+    return await request<AdminCouncilMemberDto>(`/council/${encodeURIComponent(id)}`);
+  } catch (e) {
+    if (e instanceof AdminApiError && e.status === 404) return null;
+    throw e;
+  }
+}
+
+export const createCouncilMember = (input: CouncilMemberInput): Promise<AdminCouncilMemberDto> =>
+  request("/council", { method: "POST", body: JSON.stringify(input) });
+
+export const updateCouncilMember = (
+  id: string,
+  input: CouncilMemberInput,
+  version: number,
+): Promise<AdminCouncilMemberDto> =>
+  request(`/council/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: JSON.stringify({ ...input, version }),
+  });
+
+const councilAction = (id: string, action: string): Promise<AdminCouncilMemberDto> =>
+  request(`/council/${encodeURIComponent(id)}/${action}`, { method: "POST" });
+export const activateCouncilMember = (id: string) => councilAction(id, "activate");
+export const deactivateCouncilMember = (id: string) => councilAction(id, "deactivate");
+
+// `ids` is EVERY member's id in the new order. Returns the reordered list.
+export const reorderCouncil = (ids: string[]): Promise<AdminCouncilMemberDto[]> =>
+  request("/council/order", { method: "PUT", body: JSON.stringify({ ids }) });
+
+export function uploadCouncilPhoto(id: string, file: File): Promise<AdminCouncilMemberDto> {
+  const body = new FormData();
+  body.append("file", file);
+  return request(`/council/${encodeURIComponent(id)}/photo`, { method: "POST", body });
+}
+
+export const removeCouncilPhoto = (id: string): Promise<AdminCouncilMemberDto> =>
+  request(`/council/${encodeURIComponent(id)}/photo`, { method: "DELETE" });
+
+export async function deleteCouncilMember(id: string): Promise<void> {
+  await request<void>(`/council/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
 // ---------- Staff users (Admin only) ----------
 export const STAFF_ROLES = ["Admin", "Editor"] as const;
 export type StaffRole = (typeof STAFF_ROLES)[number];

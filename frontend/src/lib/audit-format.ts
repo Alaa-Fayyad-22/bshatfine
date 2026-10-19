@@ -18,6 +18,22 @@ export const AUDIT_ACTIONS = {
   "news.republished": "newsRepublished",
   "news.cover.set": "newsCoverSet",
   "news.cover.removed": "newsCoverRemoved",
+  "news.deleted": "newsDeleted",
+  "page.created": "pageCreated",
+  "page.updated": "pageUpdated",
+  "page.published": "pagePublished",
+  "page.unpublished": "pageUnpublished",
+  "page.cover.set": "pageCoverSet",
+  "page.cover.removed": "pageCoverRemoved",
+  "settings.updated": "settingsUpdated",
+  "council.member.created": "councilMemberCreated",
+  "council.member.updated": "councilMemberUpdated",
+  "council.member.activated": "councilMemberActivated",
+  "council.member.deactivated": "councilMemberDeactivated",
+  "council.member.deleted": "councilMemberDeleted",
+  "council.member.photo.set": "councilMemberPhotoSet",
+  "council.member.photo.removed": "councilMemberPhotoRemoved",
+  "council.reordered": "councilReordered",
   "user.created": "userCreated",
   "user.updated": "userUpdated",
   "user.role_changed": "userRoleChanged",
@@ -35,7 +51,7 @@ export function actionKey(code: string): (typeof AUDIT_ACTIONS)[AuditActionCode]
 }
 
 // Entity types the API writes today.
-export const AUDIT_ENTITY_TYPES = ["News", "User"] as const;
+export const AUDIT_ENTITY_TYPES = ["News", "User", "Page", "SiteSettings", "CouncilMember"] as const;
 
 export const LOGIN_FAIL_REASONS = {
   unknown_email: "unknownEmail",

@@ -32,14 +32,14 @@ export type NavItem = {
 export const navItems: readonly NavItem[] = [
   { key: "home", href: "/", status: "live", placement: "primary" },
   { key: "news", href: "/news", status: "live", placement: "primary" },
-  { key: "services", href: "/services", status: "planned", placement: "primary" },
+  { key: "services", href: "/services", status: "live", placement: "primary" },
   { key: "events", href: "/events", status: "planned", placement: "primary" },
-  { key: "council", href: "/council", status: "planned", placement: "primary" },
-  { key: "contact", href: "/contact", status: "planned", placement: "primary" },
-  { key: "history", href: "/history", status: "planned", placement: "more" },
+  { key: "council", href: "/council", status: "live", placement: "primary" },
+  { key: "contact", href: "/contact", status: "live", placement: "primary" },
+  { key: "history", href: "/history", status: "live", placement: "more" },
   { key: "gallery", href: "/gallery", status: "planned", placement: "more" },
-  { key: "tourism", href: "/tourism", status: "planned", placement: "more" },
-  { key: "achievements", href: "/achievements", status: "planned", placement: "more" },
+  { key: "tourism", href: "/tourism", status: "live", placement: "more" },
+  { key: "achievements", href: "/achievements", status: "live", placement: "more" },
   { key: "careers", href: "/careers", status: "planned", placement: "more" },
 ];
 
@@ -55,7 +55,7 @@ export const visibleNavItems = navItems.filter(
 export const primaryNavItems = visibleNavItems.filter((i) => i.placement === "primary");
 export const moreNavItems = visibleNavItems.filter((i) => i.placement === "more");
 
-export type PlannedNavKey = Exclude<NavKey, "home" | "news">;
+export type PlannedNavKey = "events" | "gallery" | "careers";
 
 // Phase 1 has staff login only, so it is not in the header (see Footer).
 export const loginHref = "/admin/login";

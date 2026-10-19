@@ -1,5 +1,5 @@
-import { createPlannedPage } from "@/lib/planned-page";
+import { createPublicPage } from "@/lib/public-page";
 
-const planned = createPlannedPage("services");
-export const generateMetadata = planned.generateMetadata;
-export default planned.Page;
+const route = createPublicPage("services");
+export const generateMetadata = route.generateMetadata;
+export default route.Page;

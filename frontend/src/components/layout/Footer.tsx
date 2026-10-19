@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import { useTranslations } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { loginHref, visibleNavItems } from "@/config/navigation";
-import { contact } from "@/lib/site";
+import { getSiteSettings } from "@/lib/api";
 
 export function Footer() {
   const t = useTranslations("Footer");
@@ -15,31 +17,10 @@ export function Footer() {
           <p className="mt-2 max-w-xs text-ivory/75">{t("about")}</p>
         </div>
 
-        <div>
-          <h2 className="text-base font-semibold">{t("contactTitle")}</h2>
-          <dl className="mt-3 grid gap-3 text-ivory/80">
-            <div>
-              <dt className="text-sm text-ivory/60">{t("addressLabel")}</dt>
-              <dd>{t("address")}</dd>
-            </div>
-            <div>
-              <dt className="text-sm text-ivory/60">{t("phoneLabel")}</dt>
-              <dd>
-                <a
-                  href={contact.phoneHref}
-                  dir="ltr"
-                  className="inline-flex min-h-11 items-center underline-offset-4 hover:underline"
-                >
-                  {contact.phoneDisplay}
-                </a>
-              </dd>
-            </div>
-            <div>
-              <dt className="text-sm text-ivory/60">{t("hoursLabel")}</dt>
-              <dd>{t("hours")}</dd>
-            </div>
-          </dl>
-        </div>
+        {/* Contact details come from the API (live), so they stream in. */}
+        <Suspense fallback={<div />}>
+          <FooterContact />
+        </Suspense>
 
         <nav aria-label={t("linksTitle")}>
           <h2 className="text-base font-semibold">{t("linksTitle")}</h2>
@@ -74,5 +55,79 @@ export function Footer() {
         </div>
       </div>
     </footer>
+  );
+}
+
+const linkClass =
+  "inline-flex min-h-11 items-center underline-offset-4 hover:text-ivory hover:underline";
+
+// "tel:" links want digits and a leading +, without spaces or punctuation.
+const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
+
+// The saved contact details; every empty field is hidden, and the whole column
+// is left out when nothing is saved (or the API cannot be reached).
+async function FooterContact() {
+  const t = await getTranslations("Footer");
+  const s = await getSiteSettings(await getLocale());
+  if (!s) return null;
+
+  const phones = [s.phone, s.secondaryPhone].filter((p): p is string => !!p);
+  const social = [
+    { label: t("facebook"), href: s.facebookUrl },
+    { label: t("instagram"), href: s.instagramUrl },
+  ].filter((p): p is { label: string; href: string } => !!p.href);
+  if (phones.length === 0 && !s.email && !s.address && !s.openingHours && social.length === 0) {
+    return null;
+  }
+
+  const row = (label: string, children: React.ReactNode) => (
+    <div>
+      <dt className="text-sm text-ivory/60">{label}</dt>
+      <dd>{children}</dd>
+    </div>
+  );
+
+  return (
+    <div>
+      <h2 className="text-base font-semibold">{t("contactTitle")}</h2>
+      <dl className="mt-3 grid gap-3 text-ivory/80">
+        {s.address && row(t("addressLabel"), <span className="whitespace-pre-line">{s.address}</span>)}
+        {phones.length > 0 &&
+          row(
+            t("phoneLabel"),
+            <ul>
+              {phones.map((p) => (
+                <li key={p}>
+                  <a href={telHref(p)} dir="ltr" className={`${linkClass} [unicode-bidi:isolate]`}>
+                    {p}
+                  </a>
+                </li>
+              ))}
+            </ul>,
+          )}
+        {s.email &&
+          row(
+            t("emailLabel"),
+            <a href={`mailto:${s.email}`} dir="ltr" className={`${linkClass} break-all`}>
+              {s.email}
+            </a>,
+          )}
+        {s.openingHours && row(t("hoursLabel"), <span className="whitespace-pre-line">{s.openingHours}</span>)}
+        {social.length > 0 &&
+          row(
+            t("followUs"),
+            <ul className="flex flex-wrap gap-x-5">
+              {social.map((item) => (
+                <li key={item.label}>
+                  <a href={item.href} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                    {item.label}
+                    <span className="sr-only"> {t("newTab")}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>,
+          )}
+      </dl>
+    </div>
   );
 }
