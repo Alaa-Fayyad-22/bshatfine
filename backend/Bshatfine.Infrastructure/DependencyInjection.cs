@@ -51,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<INewsRepository, NewsRepository>();
         services.AddScoped<IPageRepository, PageRepository>();
         services.AddScoped<ISiteSettingsRepository, SiteSettingsRepository>();
+        services.AddScoped<ICouncilRepository, CouncilRepository>();
         services.AddScoped<IFileStorage, DatabaseFileStorage>();
         services.AddSingleton<IImageOptimizer, SkiaImageOptimizer>();
         services.AddHttpContextAccessor();

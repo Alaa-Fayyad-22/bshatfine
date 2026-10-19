@@ -89,5 +89,6 @@ admin.MapAdminNewsEndpoints();
 admin.MapAdminPageEndpoints();
 admin.MapAdminSiteSettingsEndpoints();
 admin.MapAdminAuditEndpoints();
+admin.MapAdminCouncilEndpoints();
 
 app.Run();

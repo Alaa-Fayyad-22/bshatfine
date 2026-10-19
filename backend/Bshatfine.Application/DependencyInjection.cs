@@ -12,6 +12,7 @@ public static class DependencyInjection
         services.AddScoped<PageService>();
         services.AddScoped<CoverImageService>();
         services.AddScoped<SiteSettingsService>();
+        services.AddScoped<CouncilService>();
         return services;
     }
 }

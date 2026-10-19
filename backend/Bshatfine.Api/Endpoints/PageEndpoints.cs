@@ -17,5 +17,10 @@ public static class PageEndpoints
         app.MapGet("/api/site-settings", async (SiteSettingsService service, CancellationToken ct, string lang = "ar") =>
     Results.Ok(await service.GetPublicAsync(lang, ct)))
     .AllowAnonymous();
+
+
+        app.MapGet("/api/council", async (CouncilService service, CancellationToken ct, string lang = "ar") =>
+    Results.Ok(await service.GetPublicAsync(lang, ct)))
+    .AllowAnonymous();
     }
 }

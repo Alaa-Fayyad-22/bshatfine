@@ -18,6 +18,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
     public DbSet<Page> Pages => Set<Page>();
     public DbSet<SiteSettings> SiteSettings => Set<SiteSettings>();
+    public DbSet<CouncilMember> CouncilMembers => Set<CouncilMember>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -41,4 +41,14 @@ public static class AuditActions
 
     // Site settings
     public const string SiteSettingsUpdated = "settings.updated";
+
+    // Council
+    public const string CouncilMemberCreated = "council.member.created";
+    public const string CouncilMemberUpdated = "council.member.updated";
+    public const string CouncilMemberActivated = "council.member.activated";
+    public const string CouncilMemberDeactivated = "council.member.deactivated";
+    public const string CouncilMemberDeleted = "council.member.deleted";
+    public const string CouncilMemberPhotoSet = "council.member.photo.set";
+    public const string CouncilMemberPhotoRemoved = "council.member.photo.removed";
+    public const string CouncilReordered = "council.reordered";
 }
