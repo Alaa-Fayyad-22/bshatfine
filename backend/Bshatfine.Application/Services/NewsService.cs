@@ -1,4 +1,5 @@
 using Bshatfine.Application.Abstractions;
+using Bshatfine.Application.Common;
 using Bshatfine.Application.Dtos;
 using Bshatfine.Application.Images;
 using Bshatfine.Application.Security;
@@ -9,7 +10,7 @@ using Bshatfine.Domain.Exceptions;
 namespace Bshatfine.Application.Services;
 
 public class NewsService(INewsRepository repository, IFileStorage storage,
-    IImageOptimizer imageOptimizer, IAuditLogger audit)
+    CoverImageService coverImages, IAuditLogger audit)
 {
     private const string EntityType = "News";
 
@@ -51,22 +52,22 @@ public class NewsService(INewsRepository repository, IFileStorage storage,
 
     // ---------- Admin: reading ----------
     public async Task<PagedResult<AdminNewsDto>> GetAllForAdminAsync(
-            int page, int pageSize, string? status, CancellationToken ct)
-            {
-                (page, pageSize) = NormalizePaging(page, pageSize);
+        int page, int pageSize, string? status, CancellationToken ct)
+    {
+        (page, pageSize) = NormalizePaging(page, pageSize);
 
-                NewsStatus? statusFilter = string.IsNullOrWhiteSpace(status)
-                    ? null
-                    : ParseEnumName<NewsStatus>(status, "status");
+        NewsStatus? statusFilter = string.IsNullOrWhiteSpace(status)
+            ? null
+            : EnumParsing.ParseName<NewsStatus>(status, "status");
 
-                var (items, total) = await repository.GetAllAsync(page, pageSize, statusFilter, ct);
+        var (items, total) = await repository.GetAllAsync(page, pageSize, statusFilter, ct);
 
-                return new PagedResult<AdminNewsDto>(
-                    items.Select(n => n.ToAdminDto(storage)).ToList(),
-                    page,
-                    pageSize,
-                    total);
-            }
+        return new PagedResult<AdminNewsDto>(
+            items.Select(n => n.ToAdminDto(storage)).ToList(),
+            page,
+            pageSize,
+            total);
+    }
 
     public async Task<AdminNewsDto?> GetByIdForAdminAsync(Guid id, CancellationToken ct)
     {
@@ -93,12 +94,10 @@ public class NewsService(INewsRepository repository, IFileStorage storage,
 
     public Task<AdminNewsDto?> UpdateAsync(Guid id, UpdateNewsRequest request, CancellationToken ct)
     {
-
-
-        var translations = RequireTranslations(request.Translations);
-
         if (request.Version is not { } version)
             throw new DomainException("The article version is required. Reload the page and try again.");
+
+        var translations = RequireTranslations(request.Translations);
 
         return ChangeAsync(id, news =>
         {
@@ -132,30 +131,12 @@ public class NewsService(INewsRepository repository, IFileStorage storage,
 
     public async Task<AdminNewsDto?> SetCoverImageAsync(Guid id, Stream content, long length, CancellationToken ct)
     {
-        if (length == 0)
-            throw new DomainException("The image file is empty.");
-        if (length > ImageValidator.MaxBytes)
-            throw new DomainException("The image must be 10 MB or smaller.");
-
         var news = await repository.GetByIdAsync(id, ct);
         if (news is null)
             return null;
 
-        // Read the upload into memory (max 10 MB), then inspect its first bytes
-        using var buffer = new MemoryStream();
-        await content.CopyToAsync(buffer, ct);
-        if (buffer.Length > ImageValidator.MaxBytes)
-            throw new DomainException("The image must be 10 MB or smaller.");
-
-        var header = buffer.GetBuffer().AsSpan(0, (int)Math.Min(buffer.Length, 12));
-        _ = ImageValidator.DetectExtension(header)
-            ?? throw new DomainException("Only JPEG, PNG or WebP images are allowed.");
-
-        buffer.Position = 0;
-        await using var optimized = await imageOptimizer.OptimizeAsync(buffer, ct)
-            ?? throw new DomainException("The image could not be read. Please upload a valid JPEG, PNG or WebP image.");
-
-        var newKey = await storage.SaveAsync(optimized, "news", ".webp", ct);
+        // Validate, convert to WebP and store (shared with pages and, later, the council)
+        var newKey = await coverImages.SaveAsync(content, length, "news", ct);
         var oldKey = news.CoverImagePath;
 
         try
@@ -223,7 +204,7 @@ public class NewsService(INewsRepository repository, IFileStorage storage,
 
     // ---------- Helpers ----------
     private async Task<AdminNewsDto?> ChangeAsync(Guid id, Action<News> change, string auditAction,
-    CancellationToken ct, uint? expectedVersion = null)
+        CancellationToken ct, uint? expectedVersion = null)
     {
         var news = await repository.GetByIdAsync(id, ct);
         if (news is null)
@@ -261,21 +242,7 @@ public class NewsService(INewsRepository repository, IFileStorage storage,
         return (lastSpace > 0 ? text[..lastSpace] : text).TrimEnd() + "…";
     }
 
-
-
-
-    // Matches only the enum NAMES, case-insensitively (ar, EN, Draft, published).
-    // Enum.TryParse alone would also accept numbers such as "1".
-    private static TEnum ParseEnumName<TEnum>(string? value, string label) where TEnum : struct, Enum
-    {
-        var name = Enum.GetNames<TEnum>()
-            .FirstOrDefault(n => string.Equals(n, value, StringComparison.OrdinalIgnoreCase));
-        if (name is not null)
-            return Enum.Parse<TEnum>(name);
-        throw new DomainException($"Unsupported {label}: '{value}'.");
-    }
-
-    private static Language ParseLanguage(string? code) => ParseEnumName<Language>(code, "language");
+    private static Language ParseLanguage(string? code) => EnumParsing.ParseName<Language>(code, "language");
 
     private static (int Page, int PageSize) NormalizePaging(int page, int pageSize) =>
         (Math.Max(page, 1), Math.Clamp(pageSize, 1, 50));

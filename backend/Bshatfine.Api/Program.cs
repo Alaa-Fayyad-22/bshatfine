@@ -77,6 +77,7 @@ if (app.Environment.IsDevelopment())
 app.MapNewsEndpoints();
 app.MapFileEndpoints();
 app.MapAuthEndpoints();
+app.MapPageEndpoints();
 
 // Staff only: everything under /api/admin inherits this protection
 var admin = app.MapGroup("/api/admin")
@@ -85,6 +86,7 @@ var admin = app.MapGroup("/api/admin")
 
 admin.MapAdminUserEndpoints();
 admin.MapAdminNewsEndpoints();
+admin.MapAdminPageEndpoints();
 
 admin.MapAdminAuditEndpoints();
 

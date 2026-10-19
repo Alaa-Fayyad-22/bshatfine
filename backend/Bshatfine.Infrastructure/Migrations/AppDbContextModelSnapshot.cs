@@ -96,6 +96,76 @@ namespace Bshatfine.Infrastructure.Migrations
                     b.ToTable("NewsTranslations", (string)null);
                 });
 
+            modelBuilder.Entity("Bshatfine.Domain.Entities.Page", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CoverImagePath")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("Pages", (string)null);
+                });
+
+            modelBuilder.Entity("Bshatfine.Domain.Entities.PageTranslation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<Guid>("PageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PageId", "Language")
+                        .IsUnique();
+
+                    b.ToTable("PageTranslations", (string)null);
+                });
+
             modelBuilder.Entity("Bshatfine.Infrastructure.Audit.AuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -408,6 +478,15 @@ namespace Bshatfine.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Bshatfine.Domain.Entities.PageTranslation", b =>
+                {
+                    b.HasOne("Bshatfine.Domain.Entities.Page", null)
+                        .WithMany("Translations")
+                        .HasForeignKey("PageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -460,6 +539,11 @@ namespace Bshatfine.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("Bshatfine.Domain.Entities.News", b =>
+                {
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("Bshatfine.Domain.Entities.Page", b =>
                 {
                     b.Navigation("Translations");
                 });
