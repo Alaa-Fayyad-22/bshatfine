@@ -11,6 +11,7 @@ public static class DependencyInjection
         services.AddScoped<NewsService>();
         services.AddScoped<PageService>();
         services.AddScoped<CoverImageService>();
+        services.AddScoped<SiteSettingsService>();
         return services;
     }
 }

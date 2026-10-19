@@ -87,7 +87,7 @@ var admin = app.MapGroup("/api/admin")
 admin.MapAdminUserEndpoints();
 admin.MapAdminNewsEndpoints();
 admin.MapAdminPageEndpoints();
-
+admin.MapAdminSiteSettingsEndpoints();
 admin.MapAdminAuditEndpoints();
 
 app.Run();

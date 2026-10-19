@@ -13,5 +13,9 @@ public static class PageEndpoints
             await service.GetPublishedAsync(key, lang, ct) is { } page
                 ? Results.Ok(page)
                 : Results.NotFound());
+
+        app.MapGet("/api/site-settings", async (SiteSettingsService service, CancellationToken ct, string lang = "ar") =>
+    Results.Ok(await service.GetPublicAsync(lang, ct)))
+    .AllowAnonymous();
     }
 }
