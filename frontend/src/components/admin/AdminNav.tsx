@@ -34,7 +34,7 @@ export function AdminNav() {
                   href={href}
                   aria-current={active ? "page" : undefined}
                   className={`flex min-h-11 items-center rounded-control px-3 font-medium ${
-                    active ? "bg-ivory text-cedar" : "hover:bg-ivory/60"
+                    active ? "bg-paper text-pine" : "hover:bg-paper/60"
                   }`}
                 >
                   {t(`nav.${key}`)}

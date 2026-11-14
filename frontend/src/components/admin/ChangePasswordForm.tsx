@@ -10,9 +10,9 @@ import { isRateLimited, ProblemNotice } from "./ProblemNotice";
 type Missing = "currentRequired" | "newRequired" | "confirmRequired" | "mismatch";
 
 const field =
-  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-ivory px-3 py-2 aria-[invalid=true]:border-alert-danger";
+  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-paper px-3 py-2 aria-[invalid=true]:border-alert-danger";
 const primary =
-  "inline-flex min-h-11 w-full items-center justify-center rounded-control border border-cedar bg-cedar px-5 font-semibold text-ivory disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto";
+  "inline-flex min-h-11 w-full items-center justify-center rounded-control border border-pine bg-pine px-5 font-semibold text-paper disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto";
 
 // Used twice: on the "Choose your password" page (a temporary password must be
 // replaced; `onChanged` continues to the admin) and on the normal "Change
@@ -118,7 +118,7 @@ export function ChangePasswordForm({
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5">
-      <div id={rulesId} className="border-s-4 border-gold bg-sand px-4 py-3 text-base">
+      <div id={rulesId} className="border-s-4 border-gold bg-stone px-4 py-3 text-base">
         <p className="font-semibold">{t("rulesTitle")}</p>
         <ul className="mt-1 list-disc ps-5">
           <li>{t("ruleLength")}</li>
@@ -186,7 +186,7 @@ export function ChangePasswordForm({
         {missing.map((m) => (
           <p
             key={m}
-            className="border-s-4 border-alert-danger bg-sand px-4 py-3 text-alert-danger"
+            className="border-s-4 border-alert-danger bg-stone px-4 py-3 text-alert-danger"
           >
             <span className="sr-only">{ta("errorLabel")}: </span>
             {t(m)}
@@ -196,7 +196,7 @@ export function ChangePasswordForm({
       <ProblemNotice problem={problem} onRateDone={() => setProblem(null)} />
       <div aria-live="polite" role="status" className="empty:hidden">
         {done && (
-          <p className="border-s-4 border-cedar bg-sand px-4 py-3 font-medium text-cedar">
+          <p className="border-s-4 border-pine bg-stone px-4 py-3 font-medium text-pine">
             {t("changedOk")}
           </p>
         )}

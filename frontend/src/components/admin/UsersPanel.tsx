@@ -23,7 +23,7 @@ const PAGE_SIZE = 20;
 const SEARCH_DELAY_MS = 350;
 
 const control =
-  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-ivory px-3 py-2";
+  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-paper px-3 py-2";
 
 // The one-time password and who it is for. Lives in state only while its dialog
 // is open; closing the dialog sets this back to null.
@@ -124,7 +124,7 @@ export function UsersPanel() {
             setNotice(null);
             setCreating(true);
           }}
-          className="inline-flex min-h-11 items-center rounded-control bg-cedar px-5 font-semibold text-ivory"
+          className="inline-flex min-h-11 items-center rounded-control bg-pine px-5 font-semibold text-paper"
         >
           {t("new")}
         </button>
@@ -132,7 +132,7 @@ export function UsersPanel() {
 
       <div aria-live="polite" role="status" className="empty:hidden">
         {notice && (
-          <p className="mt-4 border-s-4 border-cedar bg-sand px-4 py-3 font-medium text-cedar">
+          <p className="mt-4 border-s-4 border-pine bg-stone px-4 py-3 font-medium text-pine">
             {notice}
           </p>
         )}
@@ -265,7 +265,7 @@ export function UsersPanel() {
                 </thead>
                 <tbody>
                   {data.items.map((u) => (
-                    <tr key={u.id} className="border-b border-hairline align-top">
+                    <tr key={u.id} className="border-b border-line align-top">
                       <td className="max-w-56 py-3 pe-4 font-medium break-words">
                         {u.displayName}
                         {u.id === me.id && (

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { Problem } from "@/lib/problem";
 
-const box = "border-s-4 border-alert-danger bg-sand px-4 py-3 text-alert-danger";
+const box = "border-s-4 border-alert-danger bg-stone px-4 py-3 text-alert-danger";
 
 // "Too many requests, try again in N seconds", counting down. Screen readers get
 // the starting sentence once (the live region is announced when it appears); the

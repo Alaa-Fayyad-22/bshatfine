@@ -20,7 +20,7 @@ import { isRateLimited, ProblemNotice } from "./ProblemNotice";
 const PAGE_SIZE = 25;
 
 const control =
-  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-ivory px-3 py-2";
+  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-paper px-3 py-2";
 const emptyFilter = { userEmail: "", action: "", entityType: "", from: "", to: "" };
 type Draft = typeof emptyFilter;
 
@@ -194,7 +194,7 @@ export function AuditPanel() {
         <div className="flex flex-wrap items-end gap-4">
           <button
             type="submit"
-            className="inline-flex min-h-11 items-center rounded-control border border-cedar bg-cedar px-5 font-semibold text-ivory"
+            className="inline-flex min-h-11 items-center rounded-control border border-pine bg-pine px-5 font-semibold text-paper"
           >
             {t("apply")}
           </button>
@@ -211,7 +211,7 @@ export function AuditPanel() {
           {rangeError && (
             <p
               id={`${uid}-range`}
-              className="border-s-4 border-alert-danger bg-sand px-4 py-3 text-alert-danger"
+              className="border-s-4 border-alert-danger bg-stone px-4 py-3 text-alert-danger"
             >
               {t("rangeError")}
             </p>
@@ -274,7 +274,7 @@ export function AuditPanel() {
                 </thead>
                 <tbody>
                   {data.items.map((row) => (
-                    <tr key={row.id} className="border-b border-hairline align-top">
+                    <tr key={row.id} className="border-b border-line align-top">
                       <td className="py-3 pe-4 whitespace-nowrap">
                         <time dateTime={when(row.occurredAt).toISOString()}>
                           {format.dateTime(when(row.occurredAt), {

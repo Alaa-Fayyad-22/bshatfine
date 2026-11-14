@@ -1,23 +1,40 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, IBM_Plex_Sans_Arabic } from "next/font/google";
+import { Amiri, Cormorant_Garamond, IBM_Plex_Sans_Arabic, Jost } from "next/font/google";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { getDirection, routing } from "@/i18n/routing";
 import "../globals.css";
 
-// next/font self-hosts the font files and exposes them as CSS variables,
-// which globals.css then uses depending on the page language.
-const plexArabic = IBM_Plex_Sans_Arabic({
-  variable: "--font-plex-arabic",
-  subsets: ["arabic", "latin"],
-  weight: ["400", "500", "600", "700"],
+// next/font self-hosts the font files (no request to Google, no CSP change) and
+// exposes them as CSS variables; globals.css picks the pair for each language.
+// English: Cormorant Garamond (headings) and Jost (text), as in the design.
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  style: ["normal", "italic"],
   display: "swap",
 });
 
-const plexLatin = IBM_Plex_Sans({
-  variable: "--font-plex-latin",
+const jost = Jost({
+  variable: "--font-jost",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// Arabic: Amiri where the design uses the serif, IBM Plex Sans Arabic where it
+// uses Jost. Arabic glyphs only, so Latin words keep the two fonts above.
+const amiri = Amiri({
+  variable: "--font-amiri",
+  subsets: ["arabic"],
+  weight: ["400", "700"],
+  display: "swap",
+});
+
+const plexArabic = IBM_Plex_Sans_Arabic({
+  variable: "--font-plex-arabic",
+  subsets: ["arabic"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
 });
@@ -52,13 +69,13 @@ export default async function LocaleLayout({
     <html
       lang={locale}
       dir={getDirection(locale)}
-      className={`${plexArabic.variable} ${plexLatin.variable}`}
+      className={`${cormorant.variable} ${jost.variable} ${amiri.variable} ${plexArabic.variable}`}
     >
       <body className="flex min-h-dvh flex-col">
         <NextIntlClientProvider>
           <a
             href="#main"
-            className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[60] focus:rounded-control focus:bg-ivory focus:px-4 focus:py-3 focus:font-semibold"
+            className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-[60] focus:rounded-control focus:bg-paper focus:px-4 focus:py-3 focus:font-semibold"
           >
             {t("toContent")}
           </a>

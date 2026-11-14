@@ -24,7 +24,7 @@ export default async function AdminLayout({
   return (
     <AdminGuard>
       <div className="flex flex-1 flex-col md:flex-row">
-        <aside className="border-b border-hairline bg-sand p-4 md:w-60 md:shrink-0 md:border-e md:border-b-0 md:p-6">
+        <aside className="border-b border-line bg-stone p-4 md:w-60 md:shrink-0 md:border-e md:border-b-0 md:p-6">
           <div className="flex flex-col gap-4 md:sticky md:top-6 md:gap-8">
             <p className="text-lg font-bold">
               {tn("brand")}

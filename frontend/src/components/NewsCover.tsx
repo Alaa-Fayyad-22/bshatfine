@@ -1,8 +1,12 @@
 import Image from "next/image";
 import { coverUrl } from "@/lib/cover";
 
-// Fills its (relatively positioned) parent. Shows the article's cover with the
-// title as alt text, or the placeholder (decorative, so no alt) without one.
+// The picture shown for an article or page that has no cover of its own.
+export const DEFAULT_COVER = "/images/festival.jpg";
+
+// Fills its (relatively positioned) parent. Shows the cover with the title as
+// alt text, or the default photo (decorative, so no alt) without one. Used by
+// the admin forms; the public pages place their images directly.
 export function NewsCover({
   coverImageUrl,
   title,
@@ -17,7 +21,7 @@ export function NewsCover({
   const src = coverUrl(coverImageUrl);
   return (
     <Image
-      src={src ?? "/images/news-placeholder.jpg"}
+      src={src ?? DEFAULT_COVER}
       alt={src ? title : ""}
       fill
       sizes={sizes}

@@ -131,8 +131,8 @@ export function NewsTable({ page, status }: { page: number; status?: NewsStatus 
             aria-current={active ? "true" : undefined}
             className={`inline-flex min-h-11 items-center rounded-control border px-4 text-base font-medium ${
               active
-                ? "border-cedar bg-cedar text-ivory"
-                : "border-hairline bg-ivory hover:border-cedar"
+                ? "border-pine bg-pine text-paper"
+                : "border-line bg-paper hover:border-pine"
             }`}
           >
             {f ? ts(f) : t("all")}
@@ -151,7 +151,7 @@ export function NewsTable({ page, status }: { page: number; status?: NewsStatus 
       className="outline-none empty:hidden"
     >
       {notice && (
-        <p className="mt-4 border-s-4 border-cedar bg-sand px-4 py-3 font-medium text-cedar">
+        <p className="mt-4 border-s-4 border-pine bg-stone px-4 py-3 font-medium text-pine">
           {notice}
         </p>
       )}
@@ -238,7 +238,7 @@ export function NewsTable({ page, status }: { page: number; status?: NewsStatus 
                 {items.map((item) => {
                   const title = displayTitle(item);
                   return (
-                    <tr key={item.id} className="border-b border-hairline">
+                    <tr key={item.id} className="border-b border-line">
                       <td className="max-w-80 py-3 pe-4 font-medium">
                         <span lang={title?.lang} className="line-clamp-2">
                           {title?.text ?? t("untitled")}

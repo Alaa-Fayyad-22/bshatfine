@@ -8,7 +8,7 @@ import { Modal, useModalClose } from "./Modal";
 import { isRateLimited, ProblemNotice } from "./ProblemNotice";
 
 const field =
-  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-ivory px-3 py-2 aria-[invalid=true]:border-alert-danger";
+  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-paper px-3 py-2 aria-[invalid=true]:border-alert-danger";
 const button =
   "inline-flex min-h-11 items-center justify-center rounded-control border px-5 font-semibold disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -131,7 +131,7 @@ function Form({ onCreated }: { onCreated: (result: TemporaryPasswordResult) => v
         {missing.map((m) => (
           <p
             key={m}
-            className="border-s-4 border-alert-danger bg-sand px-4 py-3 text-alert-danger"
+            className="border-s-4 border-alert-danger bg-stone px-4 py-3 text-alert-danger"
           >
             {t(m === "email" ? "emailRequired" : "nameRequired")}
           </p>
@@ -143,7 +143,7 @@ function Form({ onCreated }: { onCreated: (result: TemporaryPasswordResult) => v
         <button
           type="submit"
           disabled={busy || isRateLimited(problem)}
-          className={`${button} border-cedar bg-cedar text-ivory`}
+          className={`${button} border-pine bg-pine text-paper`}
         >
           {busy ? t("creating") : t("submit")}
         </button>
@@ -151,7 +151,7 @@ function Form({ onCreated }: { onCreated: (result: TemporaryPasswordResult) => v
           type="button"
           onClick={close}
           disabled={busy}
-          className={`${button} border-ink/40 bg-ivory`}
+          className={`${button} border-ink/40 bg-paper`}
         >
           {tf("cancel")}
         </button>

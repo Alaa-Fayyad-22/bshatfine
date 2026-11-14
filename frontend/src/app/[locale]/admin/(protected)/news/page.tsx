@@ -25,7 +25,7 @@ export default async function AdminNewsPage({
         <h1 className="text-2xl font-bold md:text-3xl">{t("title")}</h1>
         <Link
           href="/admin/news/new"
-          className="inline-flex min-h-11 items-center rounded-control bg-cedar px-5 font-semibold text-ivory"
+          className="inline-flex min-h-11 items-center rounded-control bg-pine px-5 font-semibold text-paper"
         >
           {t("new")}
         </Link>

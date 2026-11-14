@@ -3,11 +3,11 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
-import { ArrowIcon } from "@/components/ArrowIcon";
-import { NewsCover } from "@/components/NewsCover";
-import { ClipReveal } from "@/components/motion/ClipReveal";
+import { directionOf, LanguageNote } from "@/components/LanguageNote";
+import { DEFAULT_COVER } from "@/components/NewsCover";
+import { Hero } from "@/components/site/Hero";
 import { Link } from "@/i18n/navigation";
-import { getDirection, routing } from "@/i18n/routing";
+import { routing } from "@/i18n/routing";
 import { coverUrl, getNewsBySlug, type NewsDto } from "@/lib/api";
 
 // Cache Components needs at least one param to prerender the route shell. This
@@ -42,10 +42,10 @@ export async function generateMetadata({
 }: PageProps<"/[locale]/news/[slug]">): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
-  const t = await getTranslations({ locale, namespace: "Nav" });
+  const t = await getTranslations({ locale, namespace: "Meta" });
   const article = await loadArticle(locale, slug);
   if (article) {
-    const title = `${article.title} | ${t("brand")}`;
+    const title = t("pages.article", { title: article.title });
     const cover = coverUrl(article.coverImageUrl);
     // Absolute URLs, so shared links show the photo. Without a cover the
     // site-wide defaults apply.
@@ -57,7 +57,15 @@ export async function generateMetadata({
       }),
     };
   }
-  return { title: `${t("news")} | ${t("brand")}` };
+  return { title: t("pages.news") };
+}
+
+// The hero title shrinks in two steps for long headlines, so it never overflows.
+function titleSize(title: string): string | undefined {
+  const length = Array.from(title).length;
+  if (length > 80) return "xlong";
+  if (length > 28) return "long";
+  return undefined;
 }
 
 // The article is fetched here, before any <Suspense> boundary (and with no
@@ -69,77 +77,83 @@ export default async function Page({ params }: PageProps<"/[locale]/news/[slug]"
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const t = await getTranslations("News");
+  const tn = await getTranslations("Nav");
   const article = await loadArticle(locale, slug);
   if (article === null) notFound();
 
-  return (
-    <div className="section-y">
-      <div className="page-container">
-        <Link
-          href="/news"
-          className="inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 hover:underline"
-        >
-          <ArrowIcon className="size-5 -scale-x-100 rtl:scale-x-100" />
-          {t("back")}
-        </Link>
-        {article === undefined ? (
-          <p role="status" className="mt-12 max-w-prose text-ink/80">
-            {t("articleError")}
-          </p>
-        ) : (
-          <Article locale={locale} article={article} />
-        )}
-      </div>
-    </div>
+  const crumbs = [{ label: tn("news"), href: "/news" }];
+  const back = (
+    <Link className="tlink" href="/news" style={{ alignSelf: "flex-start" }}>
+      {t("back")}
+    </Link>
   );
-}
+  const column = { maxWidth: 760, display: "flex", flexDirection: "column", gap: 22 } as const;
 
-// Text direction of the returned language ("auto" if it is not one we know).
-function directionOf(language: string): "rtl" | "ltr" | "auto" {
-  return hasLocale(routing.locales, language) ? getDirection(language) : "auto";
-}
+  // API down: the News hero and a message, never a broken page.
+  if (article === undefined) {
+    return (
+      <>
+        <Hero
+          image={DEFAULT_COVER}
+          alt={t("hero.alt")}
+          crumbs={crumbs}
+          kicker={t("hero.kicker")}
+          title={t("hero.title")}
+        />
+        <section className="section">
+          <div className="wrap">
+            <div style={column}>
+              <p role="status" className="lead">
+                {t("articleError")}
+              </p>
+              {back}
+            </div>
+          </div>
+        </section>
+      </>
+    );
+  }
 
-async function Article({ locale, article }: { locale: string; article: NewsDto }) {
-  const t = await getTranslations("News");
   const format = await getFormatter();
-
-  const differs = article.language !== locale;
+  const cover = coverUrl(article.coverImageUrl);
   const paragraphs = article.body.split(/\n{2,}/).filter((p) => p.trim() !== "");
 
   return (
-    <article className="mt-8 md:mt-12">
-      {differs && (
-        <p role="note" className="mb-6 text-sm text-ink/70">
-          {hasLocale(routing.locales, article.language)
-            ? t("onlyIn", { language: t(`languages.${article.language}`) })
-            : t("onlyInOther")}
-        </p>
-      )}
-      <div lang={article.language} dir={directionOf(article.language)}>
-        <time dateTime={article.publishedAt} className="text-sm text-ink/70">
-          {format.dateTime(new Date(article.publishedAt), { dateStyle: "long" })}
-        </time>
-        <h1 className="mt-2 max-w-3xl text-2xl leading-tight font-bold md:text-3xl">
-          {article.title}
-        </h1>
-        <ClipReveal className="mt-8 max-w-3xl">
-          <div className="relative aspect-[3/2] overflow-hidden rounded-card bg-sand">
-            <NewsCover
-              coverImageUrl={article.coverImageUrl}
-              title={article.title}
-              sizes="(min-width: 768px) 48rem, 100vw"
-              preload
-            />
-          </div>
-        </ClipReveal>
-        <div className="mt-8 max-w-prose space-y-5">
-          {paragraphs.map((p, i) => (
-            <p key={i} className="whitespace-pre-line">
-              {p.trim()}
-            </p>
-          ))}
+    <>
+      <Hero
+        image={cover ?? DEFAULT_COVER}
+        alt={cover ? article.title : t("defaultCoverAlt")}
+        crumbs={crumbs}
+        kicker={
+          <time dateTime={article.publishedAt}>
+            {format.dateTime(new Date(article.publishedAt), { dateStyle: "long" })}
+          </time>
+        }
+        title={article.title}
+        titleClassName={titleSize(article.title)}
+        titleLang={article.language}
+        titleDir={directionOf(article.language)}
+      />
+
+      <section className="section">
+        <div className="wrap">
+          <article style={column}>
+            <LanguageNote language={article.language} locale={locale} />
+            <div
+              lang={article.language}
+              dir={directionOf(article.language)}
+              style={{ display: "flex", flexDirection: "column", gap: 22 }}
+            >
+              {paragraphs.map((p, i) => (
+                <p key={i} className="lead" style={{ whiteSpace: "pre-line" }}>
+                  {p.trim()}
+                </p>
+              ))}
+            </div>
+            {back}
+          </article>
         </div>
-      </div>
-    </article>
+      </section>
+    </>
   );
 }

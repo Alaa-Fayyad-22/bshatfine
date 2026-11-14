@@ -18,7 +18,7 @@ export function UserStatus({ user }: { user: StaffUserDto }) {
   return (
     <span className="flex flex-col gap-0.5">
       {user.isActive ? (
-        <Item dot="bg-cedar">{t("active")}</Item>
+        <Item dot="bg-pine">{t("active")}</Item>
       ) : (
         <Item dot="bg-ink/40">{t("disabled")}</Item>
       )}

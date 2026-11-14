@@ -1,14 +1,16 @@
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
-import { AlertBar } from "@/components/layout/AlertBar";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
-import { ScrollProgress } from "@/components/motion/ScrollProgress";
+import { Reveal } from "@/components/site/Reveal";
+import { Toast } from "@/components/site/Toast";
 import { routing } from "@/i18n/routing";
 
-// Public-site chrome. The admin area (../admin) lives outside this route group
-// so it does not get the public header, alert bar or footer.
+// Public-site chrome. Everything inside `.site` follows the approved design
+// (see globals.css). The header lies on top of the hero photo that every public
+// page starts with. The admin area (../admin) lives outside this route group,
+// so it gets none of this.
 export default async function SiteLayout({
   children,
   params,
@@ -19,14 +21,12 @@ export default async function SiteLayout({
   setRequestLocale(locale);
 
   return (
-    <>
-      <ScrollProgress />
-      <AlertBar />
+    <div className="site">
       <Header />
-      <main id="main" className="flex-1">
-        {children}
-      </main>
+      <main id="main">{children}</main>
       <Footer />
-    </>
+      <Toast />
+      <Reveal />
+    </div>
   );
 }

@@ -1,24 +1,25 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { hasLocale } from "next-intl";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
-import { ArrowIcon } from "@/components/ArrowIcon";
-import { NewsCover } from "@/components/NewsCover";
+import { directionOf, LanguageNote } from "@/components/LanguageNote";
+import { DEFAULT_COVER } from "@/components/NewsCover";
+import { Hero } from "@/components/site/Hero";
+import { Notices } from "@/components/site/Notices";
+import { photoSrc } from "@/components/site/Photo";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { directionOf, LanguageNote } from "@/components/LanguageNote";
-import { getNews, type NewsPage } from "@/lib/api";
+import { coverUrl, getNews, type NewsPage } from "@/lib/api";
+import { pageMetadata } from "@/lib/site-meta";
 
 const PAGE_SIZE = 10;
 
 export async function generateMetadata({
   params,
 }: PageProps<"/[locale]/news">): Promise<Metadata> {
-  const { locale } = await params;
-  if (!hasLocale(routing.locales, locale)) return {};
-  const t = await getTranslations({ locale, namespace: "Nav" });
-  return { title: `${t("news")} | ${t("brand")}` };
+  return pageMetadata((await params).locale, "news");
 }
 
 export default async function Page({ params, searchParams }: PageProps<"/[locale]/news">) {
@@ -26,19 +27,37 @@ export default async function Page({ params, searchParams }: PageProps<"/[locale
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
   const t = await getTranslations("News");
+  const tn = await getTranslations("Nav");
 
-  // The heading and intro are static; only the list depends on ?page=N, so it
-  // streams in behind <Suspense>.
+  // The frame is static; only the list depends on ?page=N, so it streams in
+  // behind <Suspense>.
   return (
-    <div className="section-y">
-      <div className="page-container">
-        <h1 className="text-4xl font-bold md:text-5xl">{t("title")}</h1>
-        <p className="mt-4 max-w-prose text-ink/80">{t("intro")}</p>
-        <Suspense fallback={<ListSkeleton label={t("loading")} />}>
-          <NewsList locale={locale} searchParams={searchParams} />
-        </Suspense>
-      </div>
-    </div>
+    <>
+      <Hero
+        image={photoSrc("festival")}
+        alt={t("hero.alt")}
+        crumbs={[{ label: tn("news") }]}
+        kicker={t("hero.kicker")}
+        title={t("hero.title")}
+      />
+
+      <section className="section">
+        <div className="wrap split">
+          <div className="main">
+            <Suspense
+              fallback={
+                <p role="status" className="lead">
+                  {t("loading")}
+                </p>
+              }
+            >
+              <NewsList locale={locale} searchParams={searchParams} />
+            </Suspense>
+          </div>
+          <Notices locale={locale} count={4} style={{ alignSelf: "flex-start" }} />
+        </div>
+      </section>
+    </>
   );
 }
 
@@ -70,7 +89,7 @@ async function NewsList({
 
   if (result === null) {
     return (
-      <p role="status" className="mt-12 max-w-prose text-ink/80">
+      <p role="status" className="lead">
         {t("error")}
       </p>
     );
@@ -81,101 +100,70 @@ async function NewsList({
   // Asked for a page past the end: say so and point back to page 1.
   if (page > Math.max(totalPages, 1)) {
     return (
-      <div role="status" className="mt-12 max-w-prose text-ink/80">
-        <p>{t("pageOutOfRange")}</p>
-        <Link
-          href="/news"
-          className="mt-3 inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
-        >
+      <div role="status" style={{ display: "flex", flexDirection: "column", gap: 22 }}>
+        <p className="lead">{t("pageOutOfRange")}</p>
+        <Link className="tlink" href="/news" style={{ alignSelf: "flex-start" }}>
           {t("goToFirst")}
         </Link>
       </div>
     );
   }
 
-  const hasNext = page < totalPages;
-  const hasPrevious = page > 1;
+  if (items.length === 0) return <p className="lead">{t("empty")}</p>;
 
   return (
     <>
-      {items.length === 0 ? (
-        <p className="mt-12 max-w-prose text-ink/80">{t("empty")}</p>
-      ) : (
-        <ul className="mt-10 border-t border-hairline md:mt-14">
-          {items.map((item) => (
-            <li key={item.id} className="border-b border-hairline py-8">
-              <article className="grid gap-6 sm:grid-cols-[12rem_1fr] sm:gap-8">
-                <div className="relative aspect-[3/2] overflow-hidden rounded-card bg-sand">
-                  <NewsCover
-                    coverImageUrl={item.coverImageUrl}
-                    title={item.title}
-                    sizes="(min-width: 640px) 12rem, 100vw"
-                  />
-                </div>
-                <div>
-                  <time dateTime={item.publishedAt} className="text-sm text-ink/70">
+      <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))" }}>
+        {items.map((item) => {
+          const cover = coverUrl(item.coverImageUrl);
+          return (
+            <article key={item.id} data-reveal>
+              <Link className="pcard" href={`/news/${item.slug}`}>
+                {/* The article's cover (title as alt text) or the default photo. */}
+                <Image
+                  src={cover ?? DEFAULT_COVER}
+                  alt={cover ? item.title : t("defaultCoverAlt")}
+                  width={840}
+                  height={560}
+                  sizes="(max-width: 700px) 100vw, 440px"
+                  style={{ height: 260 }}
+                />
+                <span className="label">
+                  <time dateTime={item.publishedAt}>
                     {format.dateTime(new Date(item.publishedAt), { dateStyle: "long" })}
                   </time>
-                  <LanguageNote language={item.language} locale={locale} className="mt-1" />
-                  <div lang={item.language} dir={directionOf(item.language)}>
-                    <h2 className="mt-1 text-lg leading-snug font-bold md:text-xl">
-                      <Link href={`/news/${item.slug}`} className="hover:underline">
-                        {item.title}
-                      </Link>
-                    </h2>
-                    <p className="mt-3 max-w-prose text-ink/80">{item.excerpt}</p>
-                  </div>
-                </div>
-              </article>
-            </li>
-          ))}
-        </ul>
-      )}
+                </span>
+                <span className="t" lang={item.language} dir={directionOf(item.language)}>
+                  {item.title}
+                </span>
+                <LanguageNote language={item.language} locale={locale} />
+                <span className="tlink">{t("read")}</span>
+              </Link>
+            </article>
+          );
+        })}
+      </div>
 
       {totalPages > 1 && (
-        <nav
-          aria-label={t("pagination")}
-          className="mt-10 flex items-center justify-between gap-6"
-        >
-          {hasPrevious ? (
+        <nav className="filters" style={{ margin: "36px 0 0" }} aria-label={t("pagination")}>
+          {page > 1 && (
             <Link
               href={page - 1 === 1 ? "/news" : { pathname: "/news", query: { page: page - 1 } }}
               rel="prev"
-              className="inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 hover:underline"
             >
-              <ArrowIcon className="size-5 -scale-x-100 rtl:scale-x-100" />
               {t("previous")}
             </Link>
-          ) : (
-            <span />
           )}
-          <span className="text-sm text-ink/70">{t("page", { page, total: totalPages })}</span>
-          {hasNext ? (
-            <Link
-              href={{ pathname: "/news", query: { page: page + 1 } }}
-              rel="next"
-              className="inline-flex min-h-11 items-center gap-2 font-semibold underline-offset-4 hover:underline"
-            >
+          <span className="now" aria-current="page">
+            {t("page", { page, total: totalPages })}
+          </span>
+          {page < totalPages && (
+            <Link href={{ pathname: "/news", query: { page: page + 1 } }} rel="next">
               {t("next")}
-              <ArrowIcon className="size-5" />
             </Link>
-          ) : (
-            <span />
           )}
         </nav>
       )}
     </>
-  );
-}
-
-function ListSkeleton({ label }: { label: string }) {
-  return (
-    <div role="status" aria-label={label} className="mt-10 border-t border-hairline md:mt-14">
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="border-b border-hairline py-8">
-          <div className="h-32 animate-pulse rounded-card bg-sand motion-reduce:animate-none" />
-        </div>
-      ))}
-    </div>
   );
 }

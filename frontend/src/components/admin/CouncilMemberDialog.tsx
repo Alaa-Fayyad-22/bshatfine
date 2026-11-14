@@ -269,13 +269,13 @@ function Body({
       {text("nameEn", t("nameEn"), "en")}
       {text("positionEn", t("positionEn"), "en")}
 
-      <section aria-labelledby={`${uid}-photo`} className="border-t border-hairline pt-4">
+      <section aria-labelledby={`${uid}-photo`} className="border-t border-line pt-4">
         <h3 id={`${uid}-photo`} className="font-medium">
           {t("photoTitle")}
         </h3>
         {member ? (
           <div className="mt-3 flex flex-wrap items-start gap-4">
-            <div className="relative aspect-[4/5] w-32 shrink-0 overflow-hidden rounded-card bg-sand">
+            <div className="relative aspect-[4/5] w-32 shrink-0 overflow-hidden rounded-card bg-stone">
               {photo ? (
                 <Image src={photo} alt={t("photoOf", { name: member.nameAr })} fill sizes="8rem" className="object-cover" />
               ) : (
@@ -284,7 +284,7 @@ function Body({
                 </span>
               )}
               {(busy === "upload" || busy === "removePhoto") && (
-                <p role="status" className="absolute inset-0 grid place-items-center bg-ivory/80 px-2 text-center text-sm font-medium">
+                <p role="status" className="absolute inset-0 grid place-items-center bg-paper/80 px-2 text-center text-sm font-medium">
                   {busy === "upload" ? t("photoUploading") : t("photoRemoving")}
                 </p>
               )}
@@ -330,11 +330,11 @@ function Body({
       </section>
 
       <div aria-live="polite" role="status" className="empty:hidden">
-        {success && <p className="font-medium text-cedar">{success}</p>}
+        {success && <p className="font-medium text-pine">{success}</p>}
         {dirty && !success && !error && <p className="text-sm text-ink/70">{tf("unsaved")}</p>}
       </div>
       {error && (
-        <p role="alert" className="border-s-4 border-alert-danger bg-sand px-4 py-3 text-alert-danger">
+        <p role="alert" className="border-s-4 border-alert-danger bg-stone px-4 py-3 text-alert-danger">
           <span className="sr-only">{tf("errorTitle")}: </span>
           {error}
         </p>

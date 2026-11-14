@@ -40,9 +40,9 @@ function problemFor(error: AuthErrorKind, step: Step): Problem {
 }
 
 const field =
-  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-ivory px-3 py-2 aria-[invalid=true]:border-alert-danger";
+  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-paper px-3 py-2 aria-[invalid=true]:border-alert-danger";
 const primary =
-  "inline-flex min-h-11 w-full items-center justify-center rounded-control border border-cedar bg-cedar px-5 font-semibold text-ivory disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-11 w-full items-center justify-center rounded-control border border-pine bg-pine px-5 font-semibold text-paper disabled:cursor-not-allowed disabled:opacity-50";
 
 export function LoginForm() {
   const t = useTranslations("Admin.auth");
@@ -199,7 +199,7 @@ export function LoginForm() {
             </p>
 
             {expired && (
-              <p role="status" className="mt-6 border-s-4 border-alert-warn bg-sand px-4 py-3">
+              <p role="status" className="mt-6 border-s-4 border-alert-warn bg-stone px-4 py-3">
                 {t("expired")}
               </p>
             )}
@@ -273,7 +273,7 @@ export function LoginForm() {
                 {problems.map((p) => (
                   <p
                     key={p}
-                    className="border-s-4 border-alert-danger bg-sand px-4 py-3 text-alert-danger"
+                    className="border-s-4 border-alert-danger bg-stone px-4 py-3 text-alert-danger"
                   >
                     <span className="sr-only">{t("errorLabel")}: </span>
                     {t(p)}
@@ -312,7 +312,7 @@ export function LoginForm() {
           </>
         )}
 
-        <div className="mt-8 flex flex-wrap items-center gap-x-6 border-t border-hairline pt-4">
+        <div className="mt-8 flex flex-wrap items-center gap-x-6 border-t border-line pt-4">
           <Link
             href={{ pathname: LOGIN_PATH, query: switchQuery }}
             locale={other}

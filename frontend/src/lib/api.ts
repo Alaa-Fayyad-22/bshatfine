@@ -111,7 +111,9 @@ export type SiteSettingsDto = {
   instagramUrl: string | null;
 };
 
-// null when the API cannot be reached (the footer then simply shows no details).
+// null when the API cannot be reached (the pages then simply show no details).
+// Pages should call getSettings() from ./site-settings, which shares one
+// request between the parts of a page that need it.
 export async function getSiteSettings(locale: string): Promise<SiteSettingsDto | null> {
   try {
     const res = await fetch(`${API_URL}/api/site-settings?lang=${locale}`, {

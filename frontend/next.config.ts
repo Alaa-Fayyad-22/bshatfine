@@ -53,6 +53,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  // Old addresses whose content moved: the village history is told on Discover,
+  // and the council members are on the Municipality page. Permanent (308), and
+  // the language prefix is kept.
+  async redirects() {
+    return [
+      { source: "/:locale(ar|en)/history", destination: "/:locale/discover", permanent: true },
+      { source: "/:locale(ar|en)/council", destination: "/:locale/municipality", permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       {

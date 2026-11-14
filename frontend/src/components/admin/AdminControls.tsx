@@ -4,13 +4,13 @@ import { useRef, useState } from "react";
 
 export const adminButton =
   "inline-flex min-h-11 items-center justify-center rounded-control border px-5 font-semibold disabled:cursor-not-allowed disabled:opacity-50";
-export const primaryButton = `${adminButton} border-cedar bg-cedar text-ivory`;
-export const outlineButton = `${adminButton} border-cedar bg-ivory text-cedar`;
-export const neutralButton = `${adminButton} border-ink/40 bg-ivory`;
-export const dangerButton = `${adminButton} border-alert-danger bg-alert-danger text-ivory`;
-export const dangerOutlineButton = `${adminButton} border-alert-danger bg-ivory text-alert-danger`;
+export const primaryButton = `${adminButton} border-pine bg-pine text-paper`;
+export const outlineButton = `${adminButton} border-pine bg-paper text-pine`;
+export const neutralButton = `${adminButton} border-ink/40 bg-paper`;
+export const dangerButton = `${adminButton} border-alert-danger bg-alert-danger text-paper`;
+export const dangerOutlineButton = `${adminButton} border-alert-danger bg-paper text-alert-danger`;
 export const inputClass =
-  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-ivory px-3 py-2 read-only:bg-sand aria-[invalid=true]:border-alert-danger";
+  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-paper px-3 py-2 read-only:bg-stone aria-[invalid=true]:border-alert-danger";
 
 // Ref callback: focus an element as soon as it appears.
 export const focusOnMount = (el: HTMLElement | null) => el?.focus();
@@ -56,7 +56,7 @@ export function ConfirmPanel({
         onCancel();
       }}
       className={`mt-4 max-w-prose border p-4 outline-none ${
-        tone === "danger" ? "border-alert-danger" : "border-cedar"
+        tone === "danger" ? "border-alert-danger" : "border-pine"
       }`}
     >
       <p>{message}</p>
@@ -111,7 +111,7 @@ export function ConflictNotice({
         <div
           ref={focusOnMount}
           tabIndex={-1}
-          className="mb-4 border-s-4 border-alert-danger bg-sand px-4 py-3 outline-none"
+          className="mb-4 border-s-4 border-alert-danger bg-stone px-4 py-3 outline-none"
         >
           <p className="font-medium text-alert-danger">{title}</p>
           <p className="mt-1">{text}</p>

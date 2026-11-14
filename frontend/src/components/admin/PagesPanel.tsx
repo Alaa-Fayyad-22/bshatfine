@@ -60,14 +60,14 @@ export function PagesPanel() {
       )}
 
       {current?.pages && (
-        <ul className="mt-8 border-t border-hairline">
+        <ul className="mt-8 border-t border-line">
           {current.pages.map((p) => {
             const name = tn(p.key);
             const title = p.arabicTitle ?? p.englishTitle;
             return (
               <li
                 key={p.key}
-                className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-hairline py-5"
+                className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-line py-5"
               >
                 <div className="min-w-0">
                   <h2 className="text-lg font-bold">{name}</h2>
@@ -85,7 +85,7 @@ export function PagesPanel() {
                       <span
                         aria-hidden
                         className={`size-2 shrink-0 rounded-full ${
-                          !p.exists ? "bg-ink/30" : p.isPublished ? "bg-cedar" : "bg-alert-warn"
+                          !p.exists ? "bg-ink/30" : p.isPublished ? "bg-pine" : "bg-alert-warn"
                         }`}
                       />
                       {!p.exists ? t("notCreated") : p.isPublished ? t("published") : t("draft")}

@@ -1,133 +1,130 @@
 import { Suspense } from "react";
 import { useTranslations } from "next-intl";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getLocale } from "next-intl/server";
+import { Photo } from "@/components/site/Photo";
+import { SiteForm } from "@/components/site/SiteForm";
+import { loginHref } from "@/config/navigation";
 import { Link } from "@/i18n/navigation";
-import { loginHref, visibleNavItems } from "@/config/navigation";
-import { getSiteSettings } from "@/lib/api";
+import { telHref } from "@/lib/site-meta";
+import { getSettings } from "@/lib/site-settings";
 
+// The dark footer of the approved design: logo and contact line, two link
+// columns, the newsletter form and the legal line.
 export function Footer() {
   const t = useTranslations("Footer");
   const tn = useTranslations("Nav");
+  const th = useTranslations("Header");
+  const tf = useTranslations("Forms");
 
   return (
-    <footer className="on-cedar bg-cedar text-ivory">
-      <div className="page-container grid gap-10 py-14 text-base md:grid-cols-[1.2fr_1.5fr_1fr] md:gap-12">
-        <div>
-          <p className="text-lg font-semibold">{tn("brand")}</p>
-          <p className="mt-2 max-w-xs text-ivory/75">{t("about")}</p>
-        </div>
-
-        {/* Contact details come from the API (live), so they stream in. */}
-        <Suspense fallback={<div />}>
-          <FooterContact />
-        </Suspense>
-
-        <nav aria-label={t("linksTitle")}>
-          <h2 className="text-base font-semibold">{t("linksTitle")}</h2>
-          <ul className="mt-3 text-ivory/80">
-            {visibleNavItems
-              .filter((i) => i.key !== "home")
-              .map((item) => (
-                <li key={item.key}>
-                  <Link
-                    href={item.href}
-                    className="inline-flex min-h-11 min-w-11 items-center underline-offset-4 hover:underline"
-                  >
-                    {tn(item.key)}
-                  </Link>
-                </li>
-              ))}
-          </ul>
-        </nav>
-      </div>
-
-      <div className="border-t border-ivory/15">
-        <div className="page-container flex flex-wrap items-center justify-between gap-x-6 py-2 text-sm text-ivory/60">
-          <p className="py-3">{t("rights")}</p>
-          {/* Phase 1 has staff login only, so it stays a discreet footer link.
-              In Phase 2 (citizen accounts) it moves to the header. */}
-          <Link
-            href={loginHref}
-            className="inline-flex min-h-11 items-center underline-offset-4 hover:text-ivory hover:underline"
+    <footer className="dark">
+      <div className="wrap">
+        <div className="fcols">
+          <div className="fcol" style={{ flex: "1 1 280px", maxWidth: 360 }}>
+            <Photo
+              name="logoWhite"
+              alt={th("logoAlt")}
+              sizes="208px"
+              style={{ height: 88, width: "auto", alignSelf: "flex-start" }}
+            />
+            {/* Contact details come from the API (live), so they stream in. */}
+            <Suspense fallback={<Details hall={t("hall")} />}>
+              <SavedDetails hall={t("hall")} />
+            </Suspense>
+          </div>
+          <div className="fcol" style={{ flex: "1 1 150px" }}>
+            <span className="label">{t("village")}</span>
+            <Link href="/discover">{tn("discover")}</Link>
+            <Link href="/events">{tn("events")}</Link>
+            <Link href="/news">{tn("news")}</Link>
+          </div>
+          <div className="fcol" style={{ flex: "1 1 150px" }}>
+            <span className="label">{t("municipality")}</span>
+            <Link href="/municipality">{t("council")}</Link>
+            <Link href="/services">{t("servicesForms")}</Link>
+            <Link href="/report">{t("report")}</Link>
+            <Link href="/contact">{tn("contact")}</Link>
+          </div>
+          <SiteForm
+            className="fcol"
+            style={{ flex: "1 1 280px", maxWidth: 360 }}
+            doneStyle={{ borderColor: "var(--gold)", color: "var(--gold)", padding: "12px 14px" }}
+            message={tf("comingSoon")}
           >
-            {tn("login")}
-          </Link>
+            <span className="label">{t("newsByEmail")}</span>
+            <label htmlFor="nl-email">{t("newsletterText")}</label>
+            <div className="nl">
+              <input id="nl-email" type="email" placeholder={t("emailPlaceholder")} required />
+              <button type="submit">{t("subscribe")}</button>
+            </div>
+          </SiteForm>
+        </div>
+        <div className="legal">
+          <span>{t("rights")}</span>
+          {/* Phase 1 has staff login only, so it stays a discreet footer link. */}
+          <span>
+            <Link href={loginHref}>{tn("login")}</Link>
+          </span>
         </div>
       </div>
     </footer>
   );
 }
 
-const linkClass =
-  "inline-flex min-h-11 items-center underline-offset-4 hover:text-ivory hover:underline";
-
-// "tel:" links want digits and a leading +, without spaces or punctuation.
-const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
-
-// The saved contact details; every empty field is hidden, and the whole column
-// is left out when nothing is saved (or the API cannot be reached).
-async function FooterContact() {
-  const t = await getTranslations("Footer");
-  const s = await getSiteSettings(await getLocale());
-  if (!s) return null;
-
-  const phones = [s.phone, s.secondaryPhone].filter((p): p is string => !!p);
-  const social = [
-    { label: t("facebook"), href: s.facebookUrl },
-    { label: t("instagram"), href: s.instagramUrl },
-  ].filter((p): p is { label: string; href: string } => !!p.href);
-  if (phones.length === 0 && !s.email && !s.address && !s.openingHours && social.length === 0) {
-    return null;
-  }
-
-  const row = (label: string, children: React.ReactNode) => (
-    <div>
-      <dt className="text-sm text-ivory/60">{label}</dt>
-      <dd>{children}</dd>
-    </div>
-  );
-
+async function SavedDetails({ hall }: { hall: string }) {
+  const s = await getSettings(await getLocale());
   return (
-    <div>
-      <h2 className="text-base font-semibold">{t("contactTitle")}</h2>
-      <dl className="mt-3 grid gap-3 text-ivory/80">
-        {s.address && row(t("addressLabel"), <span className="whitespace-pre-line">{s.address}</span>)}
-        {phones.length > 0 &&
-          row(
-            t("phoneLabel"),
-            <ul>
-              {phones.map((p) => (
-                <li key={p}>
-                  <a href={telHref(p)} dir="ltr" className={`${linkClass} [unicode-bidi:isolate]`}>
-                    {p}
-                  </a>
-                </li>
-              ))}
-            </ul>,
+    <Details
+      hall={hall}
+      address={s?.address}
+      phone={s?.phone}
+      email={s?.email}
+      hours={s?.openingHours}
+    />
+  );
+}
+
+// Up to three lines: address, phone · email, opening hours. A missing value is
+// simply left out (no brackets); without a saved address the first line names
+// the Municipal Hall, as in the design.
+function Details({
+  hall,
+  address,
+  phone,
+  email,
+  hours,
+}: {
+  hall: string;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  hours?: string | null;
+}) {
+  return (
+    <p style={{ margin: "8px 0 0", lineHeight: 1.8, whiteSpace: "pre-line" }}>
+      {address || hall}
+      {(phone || email) && (
+        <>
+          <br />
+          {phone && (
+            <a href={telHref(phone)} dir="ltr" style={{ unicodeBidi: "isolate" }}>
+              {phone}
+            </a>
           )}
-        {s.email &&
-          row(
-            t("emailLabel"),
-            <a href={`mailto:${s.email}`} dir="ltr" className={`${linkClass} break-all`}>
-              {s.email}
-            </a>,
+          {phone && email && " · "}
+          {email && (
+            <a href={`mailto:${email}`} dir="ltr" style={{ overflowWrap: "anywhere" }}>
+              {email}
+            </a>
           )}
-        {s.openingHours && row(t("hoursLabel"), <span className="whitespace-pre-line">{s.openingHours}</span>)}
-        {social.length > 0 &&
-          row(
-            t("followUs"),
-            <ul className="flex flex-wrap gap-x-5">
-              {social.map((item) => (
-                <li key={item.label}>
-                  <a href={item.href} target="_blank" rel="noopener noreferrer" className={linkClass}>
-                    {item.label}
-                    <span className="sr-only"> {t("newTab")}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>,
-          )}
-      </dl>
-    </div>
+        </>
+      )}
+      {hours && (
+        <>
+          <br />
+          {hours}
+        </>
+      )}
+    </p>
   );
 }

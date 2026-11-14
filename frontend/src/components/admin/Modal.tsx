@@ -38,7 +38,7 @@ export function Modal({
       ref={ref}
       aria-labelledby={titleId}
       onClose={onClose}
-      className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-card border border-hairline bg-ivory p-5 text-ink backdrop:bg-ink/50 md:p-6"
+      className="m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-card border border-line bg-paper p-5 text-ink backdrop:bg-ink/50 md:p-6"
     >
       <ModalContext.Provider value={() => ref.current?.close()}>
         <h2 id={titleId} className="text-xl font-bold">

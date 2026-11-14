@@ -3,7 +3,7 @@ import type { NewsStatus } from "@/lib/admin-api";
 
 const dot: Record<NewsStatus, string> = {
   Draft: "bg-alert-warn",
-  Published: "bg-cedar",
+  Published: "bg-pine",
   Archived: "bg-ink/40",
 };
 

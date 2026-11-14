@@ -1,23 +1,39 @@
 {
   "Meta": {
-    "title": "Bshatfine Municipality",
-    "description": "The official website of Bshatfine Municipality in the Chouf"
+    "title": "Bchatfine Municipality",
+    "description": "The official website of Bchatfine Municipality in the Chouf",
+    "pages": {
+      "discover": "Discover · Bchatfine",
+      "municipality": "Municipality · Bchatfine",
+      "services": "Services & forms · Bchatfine",
+      "report": "Report an issue · Bchatfine",
+      "news": "News & notices · Bchatfine",
+      "events": "Events · Bchatfine",
+      "contact": "Contact · Bchatfine",
+      "tourism": "Tourism · Bchatfine",
+      "achievements": "Achievements · Bchatfine",
+      "gallery": "Gallery · Bchatfine",
+      "careers": "Careers · Bchatfine",
+      "article": "{title} · Bchatfine"
+    }
   },
   "Nav": {
-  "home": "Home",
-  "history": "History",
-  "gallery": "Gallery",
-  "news": "News Room",
-  "services": "Services",
-  "events": "Events",
-  "careers": "Careers",
-  "council": "Council",
-  "tourism": "Tourism",
-  "achievements": "Achievements",
-  "contact": "Contact",
-  "login": "Log in",
-  "brand": "Bshatfine Municipality"
-},
+    "home": "Home",
+    "discover": "Discover",
+    "municipality": "Municipality",
+    "services": "Services",
+    "news": "News",
+    "events": "Events",
+    "contact": "Contact",
+    "report": "Report",
+    "history": "History",
+    "tourism": "Tourism",
+    "achievements": "Achievements",
+    "gallery": "Gallery",
+    "careers": "Careers",
+    "login": "Staff login",
+    "brand": "Bchatfine Municipality"
+  },
   "Language": {
     "switchTo": "العربية",
     "switchLabel": "Switch to Arabic",
@@ -29,86 +45,440 @@
     "backHome": "Back to home"
   },
   "NotFound": {
-    "title": "Page not found",
+    "kicker": "Page",
+    "title": "not found",
     "text": "We could not find the page you were looking for. Its address may have changed.",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "imageAlt": "Aerial view of Bchatfine"
   },
   "Skip": {
     "toContent": "Skip to content"
   },
-  "Alert": {
-    "label": "Municipality notice",
-    "warning": "Notice",
-    "danger": "Urgent",
-    "details": "Details"
-  },
   "Header": {
-    "mainNav": "Main navigation",
-    "menuOpen": "Open menu",
-    "menuClose": "Close menu",
-    "more": "More",
-    "homeLabel": "Bshatfine Municipality, home page"
+    "mainNav": "Main",
+    "menu": "Menu",
+    "logoAlt": "Bchatfine Municipality – بلدية بشتفين"
+  },
+  "Forms": {
+    "comingSoon": "This online service is coming soon. Please call or email the municipality.",
+    "downloadSoon": "Coming soon: this form cannot be downloaded yet."
   },
   "Footer": {
-    "about": "Bshatfine Municipality, Chouf District, Mount Lebanon.",
-    "contactTitle": "Contact",
-    "addressLabel": "Address",
-    "phoneLabel": "Phone",
-    "emailLabel": "Email",
-    "hoursLabel": "Office hours",
-    "followUs": "Follow us",
-    "facebook": "Facebook",
-    "instagram": "Instagram",
-    "newTab": "(opens in a new tab)",
-    "linksTitle": "Links",
-    "rights": "© Bshatfine Municipality"
+    "hall": "Municipal Hall, Bchatfine",
+    "village": "The village",
+    "municipality": "Municipality",
+    "council": "Council",
+    "servicesForms": "Services & forms",
+    "report": "Report an issue",
+    "newsByEmail": "News by email",
+    "newsletterText": "Notices, events and village news, once a week.",
+    "emailPlaceholder": "Your email address",
+    "subscribe": "Subscribe",
+    "rights": "© 2026 Bchatfine Municipality"
+  },
+  "Notices": {
+    "label": "Official notices",
+    "all": "All notices",
+    "sample": {
+      "water": { "meta": "[Date] · Water", "title": "Water supply cut in [neighbourhood], [time]" },
+      "fees": { "meta": "[Date] · Fees", "title": "2026 municipal fees are now due" },
+      "roads": { "meta": "[Date] · Roads", "title": "[Road] closed for works this week" },
+      "council": { "meta": "[Date] · Council", "title": "Council meeting open to residents" }
+    }
+  },
+  "Mayor": {
+    "label": "A word from the mayor",
+    "name": "[Mayor’s name]",
+    "role": "Mayor of Bchatfine"
+  },
+  "SampleEvents": {
+    "day": "[Day]",
+    "dd": "[DD]",
+    "month": "[Month]",
+    "time": "[Time]",
+    "place": "[Place]",
+    "hall": "Municipal Hall",
+    "details": "Details",
+    "items": {
+      "independence": { "title": "Independence Day gathering", "tag": "Community" },
+      "health": { "title": "Free health check day", "tag": "Health" },
+      "market": { "title": "Holiday market in the square", "tag": "Market" },
+      "cleanup": { "title": "Clean-up day for the pine walk", "tag": "Environment" },
+      "council": { "title": "Open council session", "tag": "Council" }
+    }
   },
   "Home": {
-    "Hero": {
-      "subtitle": "Services, news and official notices for the people of Bshatfine in the Chouf, in one place.",
-      "cta": "Online services"
+    "hero": {
+      "alt": "Bchatfine’s houses spread over the hillside at golden hour",
+      "kicker": "Welcome to",
+      "title": "Bchatfine",
+      "text": "A mountain village of pine, stone and red-tiled roofs, cared for together.",
+      "cta": "Discover the village"
     },
-    "Services": {
-      "title": "Municipal services",
-      "items": {
-        "permits": {
-          "number": "01",
-          "title": "Building permits",
-          "text": "Apply for a building or renovation permit and follow your application."
+    "quick": {
+      "label": "Quick access",
+      "forms": "Forms & permits",
+      "report": "Report an issue",
+      "notices": "Official notices",
+      "events": "Events",
+      "emergency": "Emergency:",
+      "emergencyPlaceholder": "[___]"
+    },
+    "discover": {
+      "kicker": "Discover",
+      "title": "the village",
+      "lead": "Stone gates, quiet lanes under umbrella pines and evenings that end in gold over the valley. Take your time.",
+      "all": "All places",
+      "cards": {
+        "gate": {
+          "alt": "Stone archway and wooden gate under the carved Bchatfine sign",
+          "label": "Heritage",
+          "title": "The stone gate"
         },
-        "certificates": {
-          "number": "02",
-          "title": "Certificates and statements",
-          "text": "Request a residence statement or a certificate issued by the municipality."
+        "sunset": {
+          "alt": "Sunset over the valley framed by pine trees",
+          "label": "Viewpoints",
+          "title": "Sunset over the valley"
         },
-        "fees": {
-          "number": "03",
-          "title": "Municipal fees",
-          "text": "See the fees due on your property and how to pay them."
+        "street": {
+          "alt": "Village road lined with umbrella pines",
+          "label": "Walks",
+          "title": "Under the pines"
         },
-        "requests": {
-          "number": "04",
-          "title": "Complaints and requests",
-          "text": "Report a problem with a road, street lighting or cleaning."
+        "festival": {
+          "alt": "Residents gathered in the village street for a celebration",
+          "label": "Village life",
+          "title": "Days we celebrate"
         }
       }
     },
-    "News": {
-      "title": "Latest news",
-      "all": "All news",
-      "empty": "No news has been published yet.",
-      "error": "We could not load the news right now. Please try again shortly.",
-      "loading": "Loading news"
+    "statement": {
+      "alt": "Bchatfine glowing in the evening light",
+      "quote": "“Between the pines and the valley, a village that keeps its stones and its stories.”"
     },
-    "About": {
-      "title": "About Bshatfine",
-      "text": "Bshatfine is a village in the Chouf District of Mount Lebanon, home to residents and families living near and far. The municipality looks after its daily affairs, from building permits and certificates to cleaning and roads, and publishes its news, notices and event dates here.",
-      "imageAlt": "View of the Chouf hills around Bshatfine"
+    "service": {
+      "kicker": "Your municipality",
+      "title": "at your service",
+      "lead": "Everyday procedures, the people who represent you, and the work under way across the village.",
+      "cards": {
+        "services": {
+          "alt": "A street in Bchatfine",
+          "title": "Services & forms",
+          "text": "Certificates, permits, municipal clearance and fees, with the papers each one needs.",
+          "link": "See services"
+        },
+        "council": {
+          "alt": "Bchatfine municipal council group photo",
+          "title": "The council",
+          "text": "The mayor, members and committees, meeting dates and published decisions.",
+          "link": "Meet the council"
+        },
+        "projects": {
+          "alt": "Aerial view of Bchatfine’s roads and houses",
+          "title": "Projects",
+          "text": "Roads, lighting, water and green spaces: what is done, and what is under way.",
+          "link": "Follow the projects"
+        }
+      }
+    },
+    "coming": {
+      "kicker": "Coming",
+      "title": "up in Bchatfine"
+    },
+    "mayor": {
+      "alt": "Members of the Bchatfine municipal council",
+      "quote": "“[A short message from the mayor to residents, the diaspora and visitors.]”",
+      "link": "Meet the council"
+    },
+    "wall": {
+      "kicker": "Follow us",
+      "title": "#LoveBchatfine",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "alts": {
+        "sunset": "Sunset over the valley",
+        "gate": "The stone gate",
+        "festival": "A village celebration",
+        "street": "Pine-lined street",
+        "aerial": "Aerial view of the village",
+        "golden": "The village at golden hour"
+      }
+    }
+  },
+  "Discover": {
+    "hero": {
+      "alt": "Sunset over the valley framed by pine trees",
+      "kicker": "Discover",
+      "title": "the village"
+    },
+    "story": {
+      "kicker": "The village story",
+      "placeholderTitle": "[A short history of Bchatfine: its first families, its stone houses and red roofs, and how the village grew.]",
+      "placeholderBody": "[Two or three paragraphs written with the village’s elders and archives: where the name comes from, the old quarter, the families, and the events that shaped Bchatfine.]"
+    },
+    "glance": {
+      "label": "At a glance",
+      "altitude": "Altitude",
+      "altitudeValue": "[___ m]",
+      "beirut": "From Beirut",
+      "beirutValue": "[___ km]",
+      "district": "District",
+      "districtValue": "[___]",
+      "residents": "Residents",
+      "residentsValue": "[___]",
+      "link": "How to get here"
+    },
+    "places": {
+      "kicker": "Places",
+      "title": "to see",
+      "filtersLabel": "Filter places",
+      "filters": {
+        "all": "All",
+        "heritage": "Heritage",
+        "nature": "Nature",
+        "life": "Village life"
+      },
+      "items": {
+        "gate": {
+          "alt": "The stone gate of Bchatfine",
+          "title": "The stone gate",
+          "text": "A pointed stone arch and wooden doors under the carved village sign. [Add its story.]"
+        },
+        "sunset": {
+          "alt": "Sunset viewpoint",
+          "title": "Sunset viewpoint",
+          "text": "Pines frame the valley as the sun goes down. [Add the exact spot.]"
+        },
+        "street": {
+          "alt": "Road under umbrella pines",
+          "title": "Walk under the pines",
+          "text": "Quiet roads shaded by tall umbrella pines and old stone walls."
+        },
+        "aerial": {
+          "alt": "Aerial view of the old quarter",
+          "title": "The old quarter",
+          "text": "Red-tiled roofs climbing the hillside. [Add landmarks to visit.]"
+        },
+        "festival": {
+          "alt": "Village celebration",
+          "title": "The village square",
+          "text": "Where Bchatfine gathers for feasts and celebrations."
+        },
+        "golden": {
+          "alt": "Golden hour over the village",
+          "title": "Golden hour panorama",
+          "text": "The whole village in evening light, seen from above."
+        }
+      }
+    },
+    "before": {
+      "kicker": "Before",
+      "title": "you come",
+      "steps": {
+        "here": { "num": "i", "title": "Getting here", "text": "[Driving directions from Beirut and the nearest towns.]" },
+        "eat": { "num": "ii", "title": "Where to eat", "text": "[Local restaurants and cafés, listed with their consent.]" },
+        "stay": { "num": "iii", "title": "Where to stay", "text": "[Guesthouses and rentals in and around the village.]" }
+      }
+    }
+  },
+  "Municipality": {
+    "hero": {
+      "alt": "Bchatfine municipal council",
+      "kicker": "Your",
+      "title": "municipality"
+    },
+    "mayorQuote": "“[The mayor’s message: priorities for the term and an invitation to residents to take part.]”",
+    "meetings": {
+      "label": "Council meetings",
+      "text": "The council meets <ph>[every ___]</ph> at the Municipal Hall. Residents may attend open sessions.",
+      "link": "Ask the council"
+    },
+    "council": {
+      "kicker": "The",
+      "title": "municipal council",
+      "lead": "The members of the municipal council, with their roles.",
+      "loading": "Loading council members",
+      "error": "We could not load the council members right now. Please try again shortly."
+    },
+    "projects": {
+      "kicker": "Our",
+      "title": "projects",
+      "filtersLabel": "Filter projects",
+      "filters": {
+        "all": "All",
+        "done": "Completed",
+        "on": "Ongoing",
+        "plan": "Planned"
+      },
+      "cols": {
+        "project": "Project",
+        "area": "Area",
+        "status": "Status",
+        "year": "Year"
+      },
+      "year": "[Year]",
+      "items": {
+        "road": { "title": "Road rehabilitation", "text": "[Street or neighbourhood]", "area": "Roads" },
+        "lighting": { "title": "Solar street lighting", "text": "[Number] lights across the village", "area": "Lighting" },
+        "water": { "title": "Water network maintenance", "text": "[Details]", "area": "Water" },
+        "garden": { "title": "Public garden", "text": "[Location]", "area": "Green spaces" },
+        "waste": { "title": "Waste sorting points", "text": "[Details]", "area": "Environment" }
+      },
+      "note": "Sample projects for layout only."
+    },
+    "docs": {
+      "kicker": "Decisions",
+      "title": "& documents",
+      "date": "[Date]",
+      "pdf": "PDF",
+      "items": {
+        "decision": "Council decision no. [__]: [subject]",
+        "budget": "2026 municipal budget",
+        "minutes": "Minutes of the open session"
+      }
+    }
+  },
+  "Services": {
+    "hero": {
+      "alt": "Street in Bchatfine",
+      "kicker": "Services",
+      "title": "& forms",
+      "report": "Report an issue"
+    },
+    "how": {
+      "kicker": "How",
+      "title": "to apply",
+      "steps": {
+        "download": { "num": "i", "title": "Download", "text": "Choose the form you need below." },
+        "prepare": { "num": "ii", "title": "Prepare", "text": "Fill it in and gather the papers listed." },
+        "submit": { "num": "iii", "title": "Submit", "text": "Hand it in at the Municipal Hall, or send it by email." },
+        "follow": { "num": "iv", "title": "Follow up", "text": "Quote your reference number when you call." }
+      }
+    },
+    "forms": {
+      "kicker": "All",
+      "title": "forms",
+      "filtersLabel": "Filter forms",
+      "filters": {
+        "all": "All",
+        "cert": "Certificates",
+        "permit": "Permits",
+        "fees": "Fees"
+      },
+      "cols": {
+        "form": "Form",
+        "type": "Type",
+        "papers": "Papers required",
+        "fee": "Fee",
+        "download": "Download"
+      },
+      "types": {
+        "cert": "Certificate",
+        "permit": "Permit",
+        "fees": "Fees"
+      },
+      "fee": "[___]",
+      "download": "Download",
+      "items": {
+        "residence": { "title": "Residence certificate", "other": "إفادة سكن", "papers": "ID card, [___]" },
+        "clearance": { "title": "Municipal clearance", "other": "براءة ذمة", "papers": "Property details, [___]" },
+        "building": { "title": "Building permit application", "other": "طلب رخصة بناء", "papers": "Plans, title deed, [___]" },
+        "occupation": { "title": "Public property occupation", "other": "إشغال الأملاك العامة", "papers": "Site sketch, [___]" },
+        "rent": { "title": "Rent contract registration", "other": "تسجيل عقد إيجار", "papers": "Signed contract, IDs" },
+        "instalment": { "title": "Fee instalment request", "other": "طلب تقسيط رسوم", "papers": "Fee statement, [___]" },
+        "objection": { "title": "Objection to municipal fees", "other": "اعتراض على الرسوم", "papers": "Fee notice, supporting papers" }
+      },
+      "note": "Forms, papers and fees to be confirmed by the municipality."
+    },
+    "fix": {
+      "kicker": "Something",
+      "title": "needs fixing?",
+      "lead": "A broken street light, a pothole, an overflowing bin: tell us with a photo and the location, and follow it until it’s fixed.",
+      "button": "Report an issue"
+    }
+  },
+  "Report": {
+    "hero": {
+      "alt": "Bchatfine at golden hour",
+      "kicker": "Report",
+      "title": "an issue"
+    },
+    "form": {
+      "about": "What is it about?",
+      "category": "Category",
+      "categories": {
+        "roads": "Roads",
+        "lighting": "Lighting",
+        "waste": "Waste",
+        "water": "Water",
+        "other": "Other"
+      },
+      "location": "Location",
+      "locationPlaceholder": "Street, landmark or neighbourhood",
+      "description": "Description",
+      "descriptionPlaceholder": "What is the problem, and since when?",
+      "photo": "Photo (optional)",
+      "name": "Your name (optional)",
+      "phone": "Phone (optional)",
+      "send": "Send report"
+    },
+    "recent": {
+      "label": "Recent reports",
+      "light": "Street light, [location]",
+      "pothole": "Pothole, [location]",
+      "bin": "Bin overflowing, [location]",
+      "resolved": "Resolved",
+      "inProgress": "In progress",
+      "received": "Received"
+    },
+    "emergency": "For emergencies, call <ph>{phone}</ph> instead.",
+    "emergencyPlaceholder": "[___]"
+  },
+  "Events": {
+    "hero": {
+      "alt": "Village celebration",
+      "kicker": "What’s on",
+      "title": "in Bchatfine"
+    },
+    "note": "Sample events for layout only.",
+    "host": {
+      "kicker": "Hosting",
+      "title": "an event?",
+      "lead": "Share it with the village. The municipality will review and publish it.",
+      "name": "Event name",
+      "date": "Date",
+      "place": "Place",
+      "contact": "Your phone or email",
+      "send": "Send"
+    }
+  },
+  "Pages": {
+    "loading": "Loading page",
+    "preparingTitle": "This page is being prepared",
+    "preparingText": "We are still working on this content. Please check back soon.",
+    "error": "We could not load this page right now. Please try again shortly.",
+    "tourism": {
+      "alt": "Sunset over the valley framed by pine trees",
+      "kicker": "Tourism",
+      "title": "in Bchatfine"
+    },
+    "achievements": {
+      "alt": "Bchatfine glowing in the evening light",
+      "kicker": "Our",
+      "title": "achievements"
+    },
+    "planned": {
+      "alt": "Aerial view of Bchatfine"
     }
   },
   "News": {
-    "title": "News",
-    "intro": "Announcements and updates from Bshatfine Municipality, newest first.",
+    "hero": {
+      "alt": "Residents gathered in the village street",
+      "kicker": "News",
+      "title": "& notices"
+    },
+    "defaultCoverAlt": "Residents gathered in the village street",
+    "read": "Read",
     "loading": "Loading news",
     "empty": "No news has been published yet.",
     "pageOutOfRange": "This page does not exist. There are fewer pages of news than that.",
@@ -127,32 +497,41 @@
       "en": "English"
     }
   },
-  "Pages": {
-    "loading": "Loading page",
-    "updated": "Last updated {date}",
-    "preparingTitle": "This page is being prepared",
-    "preparingText": "We are still working on this content. Please check back soon.",
-    "error": "We could not load this page right now. Please try again shortly."
-  },
   "Contact": {
-    "intro": "You can reach the municipality using the details below.",
+    "hero": {
+      "alt": "Aerial view of Bchatfine",
+      "kicker": "Contact",
+      "title": "us"
+    },
     "loading": "Loading contact details",
-    "error": "We could not load the contact details right now. Please try again shortly.",
+    "hall": "Municipal Hall",
+    "country": "Bchatfine, Lebanon",
     "phone": "Phone",
-    "secondaryPhone": "Second phone",
     "email": "Email",
-    "address": "Address",
-    "hours": "Office hours",
-    "map": "View on map",
+    "hours": "Opening hours",
+    "map": "Open in Google Maps",
     "newTab": "(opens in a new tab)",
-    "social": "Follow us",
-    "facebook": "Facebook",
-    "instagram": "Instagram"
-  },
-  "Council": {
-    "intro": "The members of the municipal council.",
-    "loading": "Loading council members",
-    "error": "We could not load the council members right now. Please try again shortly."
+    "form": {
+      "kicker": "Write",
+      "title": "to the municipality",
+      "name": "Full name",
+      "contact": "Email or phone",
+      "subject": "Subject",
+      "subjects": {
+        "general": "General question",
+        "forms": "Forms and permits",
+        "fees": "Fees",
+        "suggestion": "Suggestion",
+        "media": "Media"
+      },
+      "message": "Message",
+      "send": "Send message"
+    },
+    "statement": {
+      "alt": "Sunset over the valley",
+      "quote": "“Come and see Bchatfine for yourself.”",
+      "link": "Plan your visit"
+    }
   },
   "Admin": {
     "title": "Administration",

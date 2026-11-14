@@ -24,6 +24,13 @@ public static class RateLimitingSetup
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
             foreach (var proxy in config.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [])
                 options.KnownProxies.Add(IPAddress.Parse(proxy));
+            // Behind a hosting platform's proxy (e.g. Railway), the proxy addresses aren't fixed.
+            // Only enable this when the app can ONLY be reached through that proxy.
+            if (config.GetValue<bool>("ReverseProxy:TrustAllProxies"))
+            {
+                options.KnownIPNetworks.Clear();
+                options.KnownProxies.Clear();
+            }
         });
 
         services.AddRateLimiter(options =>

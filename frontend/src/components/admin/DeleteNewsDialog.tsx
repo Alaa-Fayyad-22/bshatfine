@@ -108,7 +108,7 @@ function Body({
           type="button"
           onClick={confirm}
           disabled={locked}
-          className={`${button} border-alert-danger bg-alert-danger text-ivory`}
+          className={`${button} border-alert-danger bg-alert-danger text-paper`}
         >
           {busy ? t("deleting") : t("yes")}
         </button>
@@ -117,7 +117,7 @@ function Body({
           type="button"
           onClick={close}
           disabled={busy}
-          className={`${button} border-ink/40 bg-ivory`}
+          className={`${button} border-ink/40 bg-paper`}
         >
           {t("cancel")}
         </button>

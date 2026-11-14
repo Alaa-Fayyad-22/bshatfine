@@ -1,21 +1,18 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { PageContent } from "@/components/PageContent";
+import { setRequestLocale } from "next-intl/server";
+import { PageContent, type EditablePageKey } from "@/components/PageContent";
 import { routing } from "@/i18n/routing";
+import { pageMetadata } from "@/lib/site-meta";
 
 type Props = { params: Promise<{ locale: string }> };
 
-export type PageKey = "history" | "tourism" | "achievements" | "services";
-
-// The route of one editable page (see messages "Nav" for its name).
-export function createPublicPage(key: PageKey) {
+// The route of one editable page shown on its own address (tourism,
+// achievements). The "history" page is shown on /discover instead.
+export function createPublicPage(key: EditablePageKey) {
   async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { locale } = await params;
-    if (!hasLocale(routing.locales, locale)) return {};
-    const t = await getTranslations({ locale, namespace: "Nav" });
-    return { title: `${t(key)} | ${t("brand")}` };
+    return pageMetadata((await params).locale, key);
   }
 
   async function Page({ params }: Props) {

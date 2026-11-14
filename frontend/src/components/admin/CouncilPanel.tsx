@@ -116,7 +116,7 @@ export function CouncilPanel() {
       <p className="mt-2 max-w-prose text-ink/80">{t("intro")}</p>
 
       <div aria-live="polite" role="status" className="empty:hidden">
-        {notice && <p className="mt-6 font-medium text-cedar">{notice}</p>}
+        {notice && <p className="mt-6 font-medium text-pine">{notice}</p>}
         {members === null && !loadProblem && <p className="mt-8 text-ink/70">{t("loading")}</p>}
       </div>
       {problem && (
@@ -140,19 +140,19 @@ export function CouncilPanel() {
       {members && members.length === 0 && <p className="mt-8 text-ink/80">{t("empty")}</p>}
 
       {members && members.length > 0 && (
-        <ul ref={listRef} aria-label={t("listLabel")} className="mt-8 border-t border-hairline">
+        <ul ref={listRef} aria-label={t("listLabel")} className="mt-8 border-t border-line">
           {members.map((m, i) => {
             const busy = busyId !== null;
             const waiting = isRateLimited(problem);
             const photo = coverUrl(m.photoUrl);
             return (
-              <li key={m.id} className="border-b border-hairline py-5">
+              <li key={m.id} className="border-b border-line py-5">
                 <div className="flex gap-4">
-                  <div className="relative size-16 shrink-0 overflow-hidden rounded-card bg-sand">
+                  <div className="relative size-16 shrink-0 overflow-hidden rounded-card bg-stone">
                     {photo ? (
                       <Image src={photo} alt="" fill sizes="4rem" className="object-cover" />
                     ) : (
-                      <span aria-hidden className="absolute inset-0 grid place-items-center text-lg font-semibold text-cedar/60">
+                      <span aria-hidden className="absolute inset-0 grid place-items-center text-lg font-semibold text-pine/60">
                         {initials(m.nameAr)}
                       </span>
                     )}
@@ -171,7 +171,7 @@ export function CouncilPanel() {
                       {m.nameEn ? `${m.nameEn} · ${m.positionEn ?? ""}` : <span className="text-ink/60">{t("noEnglish")}</span>}
                     </p>
                     <p className="mt-2 inline-flex items-center gap-2 text-sm font-medium">
-                      <span aria-hidden className={`size-2 shrink-0 rounded-full ${m.isActive ? "bg-cedar" : "bg-ink/30"}`} />
+                      <span aria-hidden className={`size-2 shrink-0 rounded-full ${m.isActive ? "bg-pine" : "bg-ink/30"}`} />
                       {m.isActive ? t("active") : t("inactive")}
                     </p>
                   </div>
@@ -182,7 +182,7 @@ export function CouncilPanel() {
                     disabled={busy}
                     aria-label={t("editLabel", { name: m.nameAr })}
                     onClick={() => setDialog(m.id)}
-                    className={`${smallButton} border-cedar bg-ivory text-cedar`}
+                    className={`${smallButton} border-pine bg-paper text-pine`}
                   >
                     {t("edit")}
                   </button>
@@ -192,7 +192,7 @@ export function CouncilPanel() {
                     disabled={busy || waiting || i === 0}
                     aria-label={t("moveUpLabel", { name: m.nameAr })}
                     onClick={() => move(i, "up")}
-                    className={`${smallButton} border-ink/40 bg-ivory`}
+                    className={`${smallButton} border-ink/40 bg-paper`}
                   >
                     {t("moveUp")}
                   </button>
@@ -202,7 +202,7 @@ export function CouncilPanel() {
                     disabled={busy || waiting || i === members.length - 1}
                     aria-label={t("moveDownLabel", { name: m.nameAr })}
                     onClick={() => move(i, "down")}
-                    className={`${smallButton} border-ink/40 bg-ivory`}
+                    className={`${smallButton} border-ink/40 bg-paper`}
                   >
                     {t("moveDown")}
                   </button>
@@ -211,7 +211,7 @@ export function CouncilPanel() {
                     disabled={busy || waiting}
                     aria-label={t(m.isActive ? "deactivateLabel" : "activateLabel", { name: m.nameAr })}
                     onClick={() => toggle(m)}
-                    className={`${smallButton} border-ink/40 bg-ivory`}
+                    className={`${smallButton} border-ink/40 bg-paper`}
                   >
                     {m.isActive ? t("deactivate") : t("activate")}
                   </button>
@@ -220,7 +220,7 @@ export function CouncilPanel() {
                     disabled={busy || waiting}
                     aria-label={t("deleteLabel", { name: m.nameAr })}
                     onClick={() => setDeleting(m)}
-                    className={`${smallButton} border-alert-danger bg-ivory text-alert-danger`}
+                    className={`${smallButton} border-alert-danger bg-paper text-alert-danger`}
                   >
                     {t("delete")}
                   </button>

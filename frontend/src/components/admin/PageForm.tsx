@@ -378,7 +378,7 @@ function Editor({ pageKey }: { pageKey: PageKey }) {
             <span
               aria-hidden
               className={`size-2 shrink-0 rounded-full ${
-                !page ? "bg-ink/30" : published ? "bg-cedar" : "bg-alert-warn"
+                !page ? "bg-ink/30" : published ? "bg-pine" : "bg-alert-warn"
               }`}
             />
             {!page ? tp("notCreated") : published ? tp("published") : tp("draft")}
@@ -389,12 +389,12 @@ function Editor({ pageKey }: { pageKey: PageKey }) {
         {dateRow(t("published"), page?.publishedAt)}
       </dl>
 
-      <section aria-labelledby={`${uid}-cover-title`} className="mt-8 border-t border-hairline pt-6">
+      <section aria-labelledby={`${uid}-cover-title`} className="mt-8 border-t border-line pt-6">
         <h2 id={`${uid}-cover-title`} className="font-medium">
           {tf("coverTitle")}
         </h2>
         <div className="mt-3 grid max-w-xl gap-4">
-          <div className="relative aspect-[3/2] overflow-hidden rounded-card bg-sand">
+          <div className="relative aspect-[3/2] overflow-hidden rounded-card bg-stone">
             {page?.coverImageUrl ? (
               <NewsCover
                 coverImageUrl={page.coverImageUrl}
@@ -407,7 +407,7 @@ function Editor({ pageKey }: { pageKey: PageKey }) {
               </p>
             )}
             {(busy === "upload" || busy === "removeCover") && (
-              <p role="status" className="absolute inset-0 grid place-items-center bg-ivory/80 font-medium">
+              <p role="status" className="absolute inset-0 grid place-items-center bg-paper/80 font-medium">
                 {busy === "upload" ? tf("coverUploading") : tf("coverRemoving")}
               </p>
             )}
@@ -463,7 +463,7 @@ function Editor({ pageKey }: { pageKey: PageKey }) {
         </div>
       </section>
 
-      <div role="tablist" aria-label={tf("languagesLabel")} className="mt-8 flex gap-1 border-b border-hairline">
+      <div role="tablist" aria-label={tf("languagesLabel")} className="mt-8 flex gap-1 border-b border-line">
         {langs.map((l) => {
           const selected = tab === l;
           const filled = values[l].title.trim() && values[l].body.trim();
@@ -482,7 +482,7 @@ function Editor({ pageKey }: { pageKey: PageKey }) {
               onClick={() => setTab(l)}
               onKeyDown={onTabKey}
               className={`-mb-px min-h-11 border-b-2 px-4 font-medium ${
-                selected ? "border-cedar text-cedar" : "border-transparent hover:text-cedar"
+                selected ? "border-pine text-pine" : "border-transparent hover:text-pine"
               }`}
             >
               {tl(l)}
@@ -542,7 +542,7 @@ function Editor({ pageKey }: { pageKey: PageKey }) {
                   aria-describedby={`${uid}-md-${l} ${uid}-bodycount-${l}`}
                   aria-invalid={bodyLen > PAGE_BODY_MAX || undefined}
                   onChange={(e) => setValues((v) => ({ ...v, [l]: { ...v[l], body: e.target.value } }))}
-                  className="mt-2 block w-full rounded-control border border-ink/40 bg-ivory px-3 py-2 leading-relaxed read-only:bg-sand aria-[invalid=true]:border-alert-danger"
+                  className="mt-2 block w-full rounded-control border border-ink/40 bg-paper px-3 py-2 leading-relaxed read-only:bg-stone aria-[invalid=true]:border-alert-danger"
                 />
                 {/* The counter is not a live region (it would chatter on every
                     key); the warning below it is, and changes only at the limits. */}
@@ -576,7 +576,7 @@ function Editor({ pageKey }: { pageKey: PageKey }) {
               <div
                 lang={l}
                 dir={l === "ar" ? "rtl" : "ltr"}
-                className="mt-1 min-h-40 rounded-card border border-hairline bg-ivory p-5"
+                className="mt-1 min-h-40 rounded-card border border-line bg-paper p-5"
               >
                 {values[l].title.trim() || values[l].body.trim() ? (
                   <>
@@ -594,13 +594,13 @@ function Editor({ pageKey }: { pageKey: PageKey }) {
         );
       })}
 
-      <div className="mt-8 border-t border-hairline pt-6">
+      <div className="mt-8 border-t border-line pt-6">
         <div ref={statusRef} tabIndex={-1} aria-live="polite" role="status" className="outline-none empty:hidden">
-          {success && <p className="mb-4 font-medium text-cedar">{success}</p>}
+          {success && <p className="mb-4 font-medium text-pine">{success}</p>}
           {dirty && !success && !error && <p className="mb-4 text-sm text-ink/70">{tf("unsaved")}</p>}
         </div>
         {error && (
-          <p role="alert" className="mb-4 border-s-4 border-alert-danger bg-sand px-4 py-3 text-alert-danger">
+          <p role="alert" className="mb-4 border-s-4 border-alert-danger bg-stone px-4 py-3 text-alert-danger">
             <span className="sr-only">{tf("errorTitle")}: </span>
             {error}
           </p>
@@ -654,7 +654,7 @@ function Editor({ pageKey }: { pageKey: PageKey }) {
           )}
 
           {published && (
-            <Link href={`/${pageKey}`} className="inline-flex min-h-11 items-center rounded-control border border-ink/40 bg-ivory px-5 font-semibold">
+            <Link href={`/${pageKey}`} className="inline-flex min-h-11 items-center rounded-control border border-ink/40 bg-paper px-5 font-semibold">
               {tf("viewPublic")}
             </Link>
           )}

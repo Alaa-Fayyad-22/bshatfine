@@ -9,19 +9,11 @@ export function directionOf(language: string): "rtl" | "ltr" | "auto" {
 
 // "Available in English only" note, shown when an item came back in another
 // language than the page's. Renders nothing when the languages match.
-export async function LanguageNote({
-  language,
-  locale,
-  className = "",
-}: {
-  language: string;
-  locale: string;
-  className?: string;
-}) {
+export async function LanguageNote({ language, locale }: { language: string; locale: string }) {
   if (language === locale) return null;
   const t = await getTranslations("News");
   return (
-    <p role="note" className={`text-sm text-ink/70 ${className}`}>
+    <p role="note" className="lead" style={{ fontSize: 14 }}>
       {hasLocale(routing.locales, language)
         ? t("onlyIn", { language: t(`languages.${language}`) })
         : t("onlyInOther")}

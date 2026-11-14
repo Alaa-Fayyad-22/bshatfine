@@ -244,7 +244,7 @@ export function ContactForm() {
     );
   };
 
-  const group = "mt-8 border-t border-hairline pt-6";
+  const group = "mt-8 border-t border-line pt-6";
 
   return (
     <form
@@ -293,13 +293,13 @@ export function ContactForm() {
         </div>
       </fieldset>
 
-      <div className="mt-8 border-t border-hairline pt-6">
+      <div className="mt-8 border-t border-line pt-6">
         <div ref={statusRef} tabIndex={-1} aria-live="polite" role="status" className="outline-none empty:hidden">
-          {success && <p className="mb-4 font-medium text-cedar">{success}</p>}
+          {success && <p className="mb-4 font-medium text-pine">{success}</p>}
           {dirty && !success && !error && <p className="mb-4 text-sm text-ink/70">{tf("unsaved")}</p>}
         </div>
         {error && (
-          <p role="alert" className="mb-4 border-s-4 border-alert-danger bg-sand px-4 py-3 text-alert-danger">
+          <p role="alert" className="mb-4 border-s-4 border-alert-danger bg-stone px-4 py-3 text-alert-danger">
             <span className="sr-only">{tf("errorTitle")}: </span>
             {error}
           </p>

@@ -33,7 +33,7 @@ export function LogoutButton({ className }: { className?: string }) {
         disabled={state === "busy"}
         className={
           className ??
-          "inline-flex min-h-11 items-center justify-center rounded-control border border-cedar bg-ivory px-4 font-semibold text-cedar disabled:cursor-not-allowed disabled:opacity-50"
+          "inline-flex min-h-11 items-center justify-center rounded-control border border-pine bg-paper px-4 font-semibold text-pine disabled:cursor-not-allowed disabled:opacity-50"
         }
       >
         {state === "busy" ? t("loggingOut") : t("logout")}

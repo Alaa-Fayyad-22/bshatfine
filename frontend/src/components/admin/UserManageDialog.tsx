@@ -22,7 +22,7 @@ import { UserStatus } from "./UserStatus";
 type Action = "disable" | "enable" | "resetPassword" | "forceLogout" | "unlock";
 
 const field =
-  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-ivory px-3 py-2 read-only:bg-sand disabled:bg-sand aria-[invalid=true]:border-alert-danger";
+  "mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-paper px-3 py-2 read-only:bg-stone disabled:bg-stone aria-[invalid=true]:border-alert-danger";
 const button =
   "inline-flex min-h-11 items-center justify-center rounded-control border px-5 font-semibold disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -180,7 +180,7 @@ function Body({
       </div>
 
       {isSelf && (
-        <p role="note" className="border-s-4 border-gold bg-sand px-4 py-3 text-base">
+        <p role="note" className="border-s-4 border-gold bg-stone px-4 py-3 text-base">
           {t("selfNote")}
         </p>
       )}
@@ -228,7 +228,7 @@ function Body({
         <button
           type="submit"
           disabled={locked || !dirty}
-          className={`${button} border-cedar bg-cedar text-ivory`}
+          className={`${button} border-pine bg-pine text-paper`}
         >
           {busy === "save" ? t("saving") : t("save")}
         </button>
@@ -239,7 +239,7 @@ function Body({
         tabIndex={-1}
         role="group"
         aria-labelledby={`${uid}-actions`}
-        className="border-t border-hairline pt-5 outline-none"
+        className="border-t border-line pt-5 outline-none"
       >
         <h3 id={`${uid}-actions`} className="font-semibold">
           {t("actionsTitle")}
@@ -255,8 +255,8 @@ function Body({
                     type="button"
                     disabled={locked}
                     onClick={() => ask(action)}
-                    className={`${button} bg-ivory ${
-                      danger ? "border-alert-danger text-alert-danger" : "border-cedar text-cedar"
+                    className={`${button} bg-paper ${
+                      danger ? "border-alert-danger text-alert-danger" : "border-pine text-pine"
                     }`}
                   >
                     {t(`action.${action}`)}
@@ -278,7 +278,7 @@ function Body({
                 type="button"
                 onClick={onConfirm}
                 disabled={locked}
-                className={`${button} border-alert-danger bg-alert-danger text-ivory`}
+                className={`${button} border-alert-danger bg-alert-danger text-paper`}
               >
                 {busy === confirm ? t("working") : t(`yes.${confirm}`)}
               </button>
@@ -289,7 +289,7 @@ function Body({
                   setTimeout(() => actionsRef.current?.focus(), 0);
                 }}
                 disabled={busy !== null}
-                className={`${button} border-ink/40 bg-ivory`}
+                className={`${button} border-ink/40 bg-paper`}
               >
                 {tf("cancel")}
               </button>
@@ -300,15 +300,15 @@ function Body({
 
       <div aria-live="polite" role="status" className="empty:hidden">
         {message && (
-          <p className="border-s-4 border-cedar bg-sand px-4 py-3 font-medium text-cedar">
+          <p className="border-s-4 border-pine bg-stone px-4 py-3 font-medium text-pine">
             {message}
           </p>
         )}
       </div>
       <ProblemNotice problem={problem} onRateDone={() => setProblem(null)} />
 
-      <div className="border-t border-hairline pt-4">
-        <button type="button" onClick={close} className={`${button} border-ink/40 bg-ivory`}>
+      <div className="border-t border-line pt-4">
+        <button type="button" onClick={close} className={`${button} border-ink/40 bg-paper`}>
           {t("close")}
         </button>
       </div>

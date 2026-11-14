@@ -45,7 +45,7 @@ function Body({ email, password }: { email: string; password: string }) {
 
   return (
     <div className="mt-4 space-y-4">
-      <p role="note" className="border-s-4 border-alert-warn bg-sand px-4 py-3">
+      <p role="note" className="border-s-4 border-alert-warn bg-stone px-4 py-3">
         <strong className="block">{t("warningTitle")}</strong>
         {t("warningBody")}
       </p>
@@ -61,7 +61,7 @@ function Body({ email, password }: { email: string; password: string }) {
           <dd>
             <code
               dir="ltr"
-              className="block rounded-control border border-ink/40 bg-sand px-3 py-2 text-start font-mono text-lg break-all select-all"
+              className="block rounded-control border border-ink/40 bg-stone px-3 py-2 text-start font-mono text-lg break-all select-all"
             >
               {password}
             </code>
@@ -69,18 +69,18 @@ function Body({ email, password }: { email: string; password: string }) {
         </div>
       </dl>
       <div aria-live="polite" role="status" className="empty:hidden">
-        {copy === "copied" && <p className="font-medium text-cedar">{t("copied")}</p>}
+        {copy === "copied" && <p className="font-medium text-pine">{t("copied")}</p>}
         {copy === "failed" && <p className="text-alert-danger">{t("copyFailed")}</p>}
       </div>
       <div className="flex flex-wrap gap-3">
         <button
           type="button"
           onClick={onCopy}
-          className={`${button} border-cedar bg-ivory text-cedar`}
+          className={`${button} border-pine bg-paper text-pine`}
         >
           {t("copy")}
         </button>
-        <button type="button" onClick={close} className={`${button} border-cedar bg-cedar text-ivory`}>
+        <button type="button" onClick={close} className={`${button} border-pine bg-pine text-paper`}>
           {t("done")}
         </button>
       </div>

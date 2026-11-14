@@ -58,7 +58,7 @@ export function ChoosePassword() {
             {ta("checking")}
           </p>
         )}
-        <div className="mt-8 flex flex-wrap items-center gap-x-6 border-t border-hairline pt-4">
+        <div className="mt-8 flex flex-wrap items-center gap-x-6 border-t border-line pt-4">
           <LogoutButton />
           <LocaleSwitcher />
         </div>

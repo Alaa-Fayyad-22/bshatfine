@@ -472,17 +472,17 @@ export function NewsForm({ id }: { id?: string }) {
       )}
 
       {archived && (
-        <p role="note" className="mt-6 border-s-4 border-alert-warn bg-sand px-4 py-3">
+        <p role="note" className="mt-6 border-s-4 border-alert-warn bg-stone px-4 py-3">
           {t("archivedNote")}
         </p>
       )}
 
-      <section aria-labelledby={`${uid}-cover-title`} className="mt-8 border-t border-hairline pt-6">
+      <section aria-labelledby={`${uid}-cover-title`} className="mt-8 border-t border-line pt-6">
         <h2 id={`${uid}-cover-title`} className="font-medium">
           {t("coverTitle")}
         </h2>
         <div className="mt-3 grid max-w-xl gap-4">
-          <div className="relative aspect-[3/2] overflow-hidden rounded-card bg-sand">
+          <div className="relative aspect-[3/2] overflow-hidden rounded-card bg-stone">
             {article?.coverImageUrl ? (
               <NewsCover
                 coverImageUrl={article.coverImageUrl}
@@ -497,7 +497,7 @@ export function NewsForm({ id }: { id?: string }) {
             {(busy === "upload" || busy === "removeCover") && (
               <p
                 role="status"
-                className="absolute inset-0 grid place-items-center bg-ivory/80 font-medium"
+                className="absolute inset-0 grid place-items-center bg-paper/80 font-medium"
               >
                 {busy === "upload" ? t("coverUploading") : t("coverRemoving")}
               </p>
@@ -522,7 +522,7 @@ export function NewsForm({ id }: { id?: string }) {
                   disabled={busy !== null || waiting}
                   aria-describedby={`${uid}-cover-hint`}
                   onClick={() => fileRef.current?.click()}
-                  className={`${button} border-cedar bg-ivory text-cedar`}
+                  className={`${button} border-pine bg-paper text-pine`}
                 >
                   {article?.coverImageUrl ? t("coverReplace") : t("coverChoose")}
                 </button>
@@ -532,7 +532,7 @@ export function NewsForm({ id }: { id?: string }) {
                     type="button"
                     disabled={busy !== null || waiting}
                     onClick={() => setConfirmRemoveCover(true)}
-                    className={`${button} border-alert-danger bg-ivory text-alert-danger`}
+                    className={`${button} border-alert-danger bg-paper text-alert-danger`}
                   >
                     {t("coverRemove")}
                   </button>
@@ -557,7 +557,7 @@ export function NewsForm({ id }: { id?: string }) {
                       type="button"
                       onClick={removeCover}
                       disabled={busy !== null || waiting}
-                      className={`${button} border-alert-danger bg-alert-danger text-ivory`}
+                      className={`${button} border-alert-danger bg-alert-danger text-paper`}
                     >
                       {busy === "removeCover" ? t("coverRemoving") : t("coverRemoveYes")}
                     </button>
@@ -568,7 +568,7 @@ export function NewsForm({ id }: { id?: string }) {
                         focusLater(removeCoverBtnRef);
                       }}
                       disabled={busy !== null || waiting}
-                      className={`${button} border-ink/40 bg-ivory`}
+                      className={`${button} border-ink/40 bg-paper`}
                     >
                       {t("cancel")}
                     </button>
@@ -583,7 +583,7 @@ export function NewsForm({ id }: { id?: string }) {
       <div
         role="tablist"
         aria-label={t("languagesLabel")}
-        className="mt-8 flex gap-1 border-b border-hairline"
+        className="mt-8 flex gap-1 border-b border-line"
       >
         {langs.map((l) => {
           const selected = tab === l;
@@ -603,7 +603,7 @@ export function NewsForm({ id }: { id?: string }) {
               onClick={() => setTab(l)}
               onKeyDown={onTabKey}
               className={`-mb-px min-h-11 border-b-2 px-4 font-medium ${
-                selected ? "border-cedar text-cedar" : "border-transparent hover:text-cedar"
+                selected ? "border-pine text-pine" : "border-transparent hover:text-pine"
               }`}
             >
               {tl(l)}
@@ -637,7 +637,7 @@ export function NewsForm({ id }: { id?: string }) {
               value={values[l].title}
               aria-describedby={`${uid}-count-${l}`}
               onChange={(e) => setValues((v) => ({ ...v, [l]: { ...v[l], title: e.target.value } }))}
-              className="mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-ivory px-3 py-2 read-only:bg-sand"
+              className="mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-paper px-3 py-2 read-only:bg-stone"
             />
             <p id={`${uid}-count-${l}`} className="mt-1 text-sm text-ink/70">
               {t("chars", { count: values[l].title.length, max: MAX_TITLE })}
@@ -657,7 +657,7 @@ export function NewsForm({ id }: { id?: string }) {
               aria-describedby={`${uid}-bodycount-${l}`}
               aria-invalid={values[l].body.length > BODY_MAX || undefined}
               onChange={(e) => setValues((v) => ({ ...v, [l]: { ...v[l], body: e.target.value } }))}
-              className="mt-1 block w-full rounded-control border border-ink/40 bg-ivory px-3 py-2 leading-relaxed read-only:bg-sand aria-[invalid=true]:border-alert-danger"
+              className="mt-1 block w-full rounded-control border border-ink/40 bg-paper px-3 py-2 leading-relaxed read-only:bg-stone aria-[invalid=true]:border-alert-danger"
             />
             {/* The counter is not a live region (it would chatter on every key);
                 the warning below it is, and its text changes only at the limits. */}
@@ -684,10 +684,10 @@ export function NewsForm({ id }: { id?: string }) {
         </div>
       ))}
 
-      <div className="mt-8 border-t border-hairline pt-6">
+      <div className="mt-8 border-t border-line pt-6">
         {/* Announced to screen readers when a message appears */}
         <div ref={statusRef} tabIndex={-1} aria-live="polite" role="status" className="outline-none empty:hidden">
-          {success && <p className="mb-4 font-medium text-cedar">{success}</p>}
+          {success && <p className="mb-4 font-medium text-pine">{success}</p>}
           {dirty && !archived && !success && !error && (
             <p className="mb-4 text-sm text-ink/70">{t("unsaved")}</p>
           )}
@@ -695,7 +695,7 @@ export function NewsForm({ id }: { id?: string }) {
         {error && (
           <p
             role="alert"
-            className="mb-4 border-s-4 border-alert-danger bg-sand px-4 py-3 text-alert-danger"
+            className="mb-4 border-s-4 border-alert-danger bg-stone px-4 py-3 text-alert-danger"
           >
             <span className="sr-only">{t("errorTitle")}: </span>
             {error}
@@ -714,7 +714,7 @@ export function NewsForm({ id }: { id?: string }) {
             <div
               ref={conflictRef}
               tabIndex={-1}
-              className="mb-4 border-s-4 border-alert-danger bg-sand px-4 py-3 outline-none"
+              className="mb-4 border-s-4 border-alert-danger bg-stone px-4 py-3 outline-none"
             >
               <p className="font-medium text-alert-danger">{t("conflictTitle")}</p>
               <p className="mt-1">{t("conflictText")}</p>
@@ -724,7 +724,7 @@ export function NewsForm({ id }: { id?: string }) {
                   type="button"
                   onClick={() => setConfirmReload(true)}
                   disabled={reloading}
-                  className={`${button} mt-3 border-cedar bg-ivory text-cedar`}
+                  className={`${button} mt-3 border-pine bg-paper text-pine`}
                 >
                   {t("loadLatest")}
                 </button>
@@ -751,7 +751,7 @@ export function NewsForm({ id }: { id?: string }) {
                 type="button"
                 onClick={loadLatest}
                 disabled={reloading}
-                className={`${button} border-alert-danger bg-alert-danger text-ivory`}
+                className={`${button} border-alert-danger bg-alert-danger text-paper`}
               >
                 {reloading ? t("loadingLatest") : t("loadLatestYes")}
               </button>
@@ -762,7 +762,7 @@ export function NewsForm({ id }: { id?: string }) {
                   focusLater(reloadBtnRef);
                 }}
                 disabled={reloading}
-                className={`${button} border-ink/40 bg-ivory`}
+                className={`${button} border-ink/40 bg-paper`}
               >
                 {t("cancel")}
               </button>
@@ -778,7 +778,7 @@ export function NewsForm({ id }: { id?: string }) {
                 type="button"
                 onClick={() => setConfirmRepublish(true)}
                 disabled={busy !== null || waiting}
-                className={`${button} border-cedar bg-cedar text-ivory`}
+                className={`${button} border-pine bg-pine text-paper`}
               >
                 {t("republish")}
               </button>
@@ -797,7 +797,7 @@ export function NewsForm({ id }: { id?: string }) {
               setConfirmRepublish(false);
               focusLater(republishBtnRef);
             }}
-            className="mt-4 max-w-prose border border-cedar p-4 outline-none"
+            className="mt-4 max-w-prose border border-pine p-4 outline-none"
           >
             <p>{t("republishConfirm")}</p>
             <div className="mt-3 flex flex-wrap gap-3">
@@ -805,7 +805,7 @@ export function NewsForm({ id }: { id?: string }) {
                 type="button"
                 onClick={republish}
                 disabled={busy !== null || waiting}
-                className={`${button} border-cedar bg-cedar text-ivory`}
+                className={`${button} border-pine bg-pine text-paper`}
               >
                 {busy === "republish" ? t("republishing") : t("republishYes")}
               </button>
@@ -816,7 +816,7 @@ export function NewsForm({ id }: { id?: string }) {
                   focusLater(republishBtnRef);
                 }}
                 disabled={busy !== null}
-                className={`${button} border-ink/40 bg-ivory`}
+                className={`${button} border-ink/40 bg-paper`}
               >
                 {t("cancel")}
               </button>
@@ -829,7 +829,7 @@ export function NewsForm({ id }: { id?: string }) {
             <button
               type="submit"
               disabled={busy !== null || waiting || conflict}
-              className={`${button} border-cedar bg-cedar text-ivory`}
+              className={`${button} border-pine bg-pine text-paper`}
             >
               {busy === "save"
                 ? t("saving")
@@ -843,7 +843,7 @@ export function NewsForm({ id }: { id?: string }) {
                 type="button"
                 onClick={publish}
                 disabled={busy !== null || waiting || conflict}
-                className={`${button} border-cedar bg-ivory text-cedar`}
+                className={`${button} border-pine bg-paper text-pine`}
               >
                 {busy === "publish" ? t("publishing") : t("publish")}
               </button>
@@ -855,7 +855,7 @@ export function NewsForm({ id }: { id?: string }) {
                 type="button"
                 onClick={() => setDeleting(true)}
                 disabled={busy !== null || waiting}
-                className={`${button} border-alert-danger bg-ivory text-alert-danger`}
+                className={`${button} border-alert-danger bg-paper text-alert-danger`}
               >
                 {t("delete")}
               </button>
@@ -864,7 +864,7 @@ export function NewsForm({ id }: { id?: string }) {
             {article?.status === "Published" && (
               <Link
                 href={`/news/${article.slug}`}
-                className={`${button} border-ink/40 bg-ivory`}
+                className={`${button} border-ink/40 bg-paper`}
               >
                 {t("viewPublic")}
               </Link>
@@ -876,7 +876,7 @@ export function NewsForm({ id }: { id?: string }) {
                 type="button"
                 onClick={() => setConfirmArchive(true)}
                 disabled={busy !== null || waiting}
-                className={`${button} border-alert-danger bg-ivory text-alert-danger`}
+                className={`${button} border-alert-danger bg-paper text-alert-danger`}
               >
                 {t("archive")}
               </button>
@@ -903,7 +903,7 @@ export function NewsForm({ id }: { id?: string }) {
                 type="button"
                 onClick={archive}
                 disabled={busy !== null || waiting}
-                className={`${button} border-alert-danger bg-alert-danger text-ivory`}
+                className={`${button} border-alert-danger bg-alert-danger text-paper`}
               >
                 {busy === "archive" ? t("archiving") : t("archiveYes")}
               </button>
@@ -914,7 +914,7 @@ export function NewsForm({ id }: { id?: string }) {
                   focusLater(archiveBtnRef);
                 }}
                 disabled={busy !== null || waiting}
-                className={`${button} border-ink/40 bg-ivory`}
+                className={`${button} border-ink/40 bg-paper`}
               >
                 {t("cancel")}
               </button>
