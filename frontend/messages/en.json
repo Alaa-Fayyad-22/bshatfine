@@ -219,11 +219,11 @@
     "glance": {
       "label": "At a glance",
       "altitude": "Altitude",
-      "altitudeValue": "[___ m]",
+      "altitudeValue": "[455 m]",
       "beirut": "From Beirut",
-      "beirutValue": "[___ km]",
+      "beirutValue": "[38 km]",
       "district": "District",
-      "districtValue": "[___]",
+      "districtValue": "[Chouf]",
       "residents": "Residents",
       "residentsValue": "[___]",
       "link": "How to get here"

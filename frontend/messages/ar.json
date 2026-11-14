@@ -219,11 +219,11 @@
     "glance": {
       "label": "في لمحة",
       "altitude": "الارتفاع",
-      "altitudeValue": "[___ م]",
+      "altitudeValue": "[٤٥٥ م]",
       "beirut": "عن بيروت",
-      "beirutValue": "[___ كلم]",
+      "beirutValue": "[٣٨ كلم]",
       "district": "القضاء",
-      "districtValue": "[___]",
+      "districtValue": "[الشوف]",
       "residents": "عدد السكان",
       "residentsValue": "[___]",
       "link": "كيف تصل إلينا"
