@@ -219,13 +219,13 @@
     "glance": {
       "label": "في لمحة",
       "altitude": "الارتفاع",
-      "altitudeValue": "[٤٥٥ م]",
+      "altitudeValue": "٤٥٥ م",
       "beirut": "عن بيروت",
-      "beirutValue": "[٣٨ كلم]",
+      "beirutValue": "٣٨ كلم",
       "district": "القضاء",
-      "districtValue": "[الشوف]",
+      "districtValue": "الشوف",
       "residents": "عدد السكان",
-      "residentsValue": "[___]",
+      "residentsValue": "___",
       "link": "كيف تصل إلينا"
     },
     "places": {
