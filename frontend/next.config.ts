@@ -1,18 +1,20 @@
 import type { NextConfig } from "next";
 
-// Cover images are served by the API (GET /api/files/{id}); next/image may only
-// load them from that host. Same variables as src/lib/cover.ts.
-const apiUrl = new URL(
-  process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? "http://localhost:5246",
-);
-// Next refuses to optimize images from private addresses unless told otherwise;
-// that is only needed when the API runs on this machine (development).
-const apiIsLocal = ["localhost", "127.0.0.1", "[::1]"].includes(apiUrl.hostname);
+// The API, as the Next.js SERVER reaches it (never sent to the browser). The
+// browser only ever talks to this site's own origin: /api/* is forwarded here
+// by the rewrite below, so the session cookie is first-party and there is no
+// cross-origin request (no CORS, Retry-After readable) behind any public URL.
+// Same variable as src/lib/api.ts.
+const apiInternalUrl = (process.env.API_INTERNAL_URL ?? "http://localhost:5246").replace(/\/+$/, "");
+
+// The public address of the site, when known (see src/lib/site-url.ts).
+const siteUrl =
+  process.env.SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : undefined);
 
 const isDev = process.env.NODE_ENV !== "production";
-// The API host the browser talks to (fetch with the session cookie) and loads
-// cover images from. Same variable as above, so there is one place to change it.
-const apiOrigin = apiUrl.origin;
 
 // Content-Security-Policy, only what the site really needs:
 //  - scripts/styles: its own files, plus the small inline scripts and styles
@@ -21,22 +23,23 @@ const apiOrigin = apiUrl.origin;
 //    rendering (cacheComponents) rules out. Dev also needs 'unsafe-eval' (React
 //    debugging), production does not.
 //  - fonts: next/font self-hosts them, so 'self'.
-//  - images: its own, next/image (served from 'self' via /_next/image), data:
-//    and blob: for previews, and the API host for covers.
-//  - fetch/XHR: itself and the API. In dev also the websocket for hot reload.
+//  - images: its own (photos, /_next/image, API files via /api/files), data:
+//    and blob: for previews in the admin forms.
+//  - fetch/XHR: only this origin (the API is behind /api). In dev also the
+//    websocket for hot reload.
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: ${apiOrigin}`,
+  "img-src 'self' data: blob:",
   "font-src 'self'",
-  `connect-src 'self' ${apiOrigin}${isDev ? " ws: wss:" : ""}`,
+  `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  // An https API means an https site: refuse to load anything over plain http.
-  ...(!isDev && apiUrl.protocol === "https:" ? ["upgrade-insecure-requests"] : []),
+  // Served over https (tunnel, Vercel): refuse to load anything over plain http.
+  ...(!isDev && siteUrl?.startsWith("https:") ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
 const securityHeaders = [
@@ -50,6 +53,13 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: {
+    // Next.js buffers a request body before forwarding it through the /api
+    // rewrite and silently cuts it at this size (default 10 MB). Uploads go up
+    // to 10 MB plus the multipart wrapper, so allow what the API accepts (its
+    // own limit is 11 MB, see backend Program.cs).
+    proxyClientMaxBodySize: "11mb",
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
@@ -62,16 +72,22 @@ const nextConfig: NextConfig = {
       { source: "/:locale(ar|en)/council", destination: "/:locale/municipality", permanent: true },
     ];
   },
+  async rewrites() {
+    return {
+      // Before anything else, so /api/* can never be taken for a page (such as
+      // the [locale] route). The request and response pass through as they are:
+      // method, body, cookies, Set-Cookie, Retry-After, Cache-Control.
+      beforeFiles: [{ source: "/api/:path*", destination: `${apiInternalUrl}/api/:path*` }],
+    };
+  },
   images: {
-    remotePatterns: [
-      {
-        protocol: apiUrl.protocol.replace(":", "") as "http" | "https",
-        hostname: apiUrl.hostname,
-        port: apiUrl.port,
-        pathname: "/api/files/**",
-      },
+    // Only the site's own photos and the files the API serves (covers, council
+    // photos), both same-origin paths. /api/files/* reaches the API through the
+    // rewrite above, so no remote host needs to be allowed.
+    localPatterns: [
+      { pathname: "/images/**", search: "" },
+      { pathname: "/api/files/**", search: "" },
     ],
-    dangerouslyAllowLocalIP: apiIsLocal,
   },
   turbopack: {
     // Normally `createNextIntlPlugin()` from "next-intl/plugin" adds this alias.

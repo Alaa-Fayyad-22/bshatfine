@@ -9,6 +9,7 @@ import { Hero } from "@/components/site/Hero";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { coverUrl, getNewsBySlug, type NewsDto } from "@/lib/api";
+import { siteUrl } from "@/lib/site-url";
 
 // Cache Components needs at least one param to prerender the route shell. This
 // placeholder only produces the shell; real slugs render on demand.
@@ -46,9 +47,12 @@ export async function generateMetadata({
   const article = await loadArticle(locale, slug);
   if (article) {
     const title = t("pages.article", { title: article.title });
-    const cover = coverUrl(article.coverImageUrl);
-    // Absolute URLs, so shared links show the photo. Without a cover the
-    // site-wide defaults apply.
+    const path = coverUrl(article.coverImageUrl);
+    // Shared links need the photo's absolute address, so only when the site's
+    // public address is known (SITE_URL, or Vercel). Otherwise the site-wide
+    // defaults apply.
+    const base = siteUrl();
+    const cover = path && base ? new URL(path, base).toString() : null;
     return {
       title,
       ...(cover && {

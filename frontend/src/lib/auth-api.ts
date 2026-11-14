@@ -3,11 +3,13 @@
 // stores a token, a password or any session data: every call just sends the
 // cookie along with `credentials: "include"`.
 //
+// The address is relative (/api/auth/...): the browser only talks to this
+// site's own origin and next.config.ts forwards /api/* to the API, so the
+// session cookie is first-party.
+//
 // None of these functions throws. They return a result, so callers handle
 // every case (wrong password, lockout, offline, ...) explicitly.
 import { FALLBACK_RETRY_SECONDS, readRetryAfter } from "./rate-limit";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5246";
 
 export type Me = {
   id: string;
@@ -76,7 +78,7 @@ async function call<T>(
 ): Promise<AuthResult<T>> {
   let res: Response;
   try {
-    res = await fetch(`${API_URL}/api/auth${path}`, {
+    res = await fetch(`/api/auth${path}`, {
       method: init.method,
       credentials: "include",
       cache: "no-store",

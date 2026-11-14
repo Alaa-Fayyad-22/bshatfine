@@ -4,24 +4,30 @@ Next.js app (App Router, Cache Components, next-intl for Arabic and English).
 
 ## Environment variables
 
-Set these in `frontend/.env.local` (git-ignored):
+Copy `.env.example` to `.env.local` (git-ignored) and adjust:
 
-| Variable | Used by | Purpose |
-| --- | --- | --- |
-| `API_URL` | server code (`src/lib/api.ts`, public pages) | Backend base URL for server-side fetches. Never sent to the browser. |
-| `NEXT_PUBLIC_API_URL` | browser code (`src/lib/admin-api.ts`, admin forms) | Backend base URL for requests made from the browser. |
+| Variable | Purpose |
+| --- | --- |
+| `API_INTERNAL_URL` | Where the Next.js server reaches the API (default `http://localhost:5246`). Server-side fetches use it, and so does the `/api/*` rewrite. Never sent to the browser. |
+| `SITE_URL` | Optional. The site's public `https://` address, for absolute share-image links and the `upgrade-insecure-requests` CSP rule. On Vercel it defaults to the production domain. |
 
-```
-API_URL=http://localhost:5246
-NEXT_PUBLIC_API_URL=http://localhost:5246
-```
+### One public origin
 
-Why two variables: the admin forms create, edit, publish and archive news from
-client components, so those requests run in the visitor's browser. Next.js only
-exposes variables prefixed with `NEXT_PUBLIC_` to browser code (the value is
-inlined at build time, so rebuild after changing it). Plain `API_URL` stays
-server-only. The backend must allow the frontend origin via CORS
-(`http://localhost:3000` in development).
+The browser never talks to the API host. Browser code (admin forms, sign-in)
+calls relative `/api/...` paths, and `next.config.ts` rewrites `/api/*` to
+`API_INTERNAL_URL`. So the whole site works behind a single public URL (a
+tunnel, Vercel), the session cookie is first-party, there are no cross-origin
+requests (CORS is not involved), and response headers such as `Set-Cookie` and
+`Retry-After` reach the browser unchanged. Cover and council photos
+(`/api/files/...`) are same-origin paths too, also for `next/image`.
+
+Uploads: Next.js buffers a request body before forwarding it and cuts it at
+`experimental.proxyClientMaxBodySize`, set to 11 MB to match the API's own limit.
+
+Rate limits: the rewrite does not add `X-Forwarded-For`, but it passes on the
+one a tunnel or hosting proxy sets. The API trusts it from loopback by default
+(Next.js and the API on one machine); elsewhere, see the backend's
+`ReverseProxy` settings.
 
 ## Scripts
 

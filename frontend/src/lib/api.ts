@@ -7,7 +7,7 @@ export type NewsDto = {
   title: string;
   body: string;
   publishedAt: string;
-  // Relative to the API base; turn it into a URL with coverUrl() (./cover).
+  // A same-origin path (/api/files/...); pass it through coverUrl() (./cover).
   coverImageUrl: string | null;
 };
 
@@ -34,7 +34,11 @@ export type NewsPage = {
   totalPages: number;
 };
 
-const API_URL = process.env.API_URL ?? "http://localhost:5246";
+// Server-side only (server components, the proxy's article check, "use cache"
+// functions): a relative /api URL means nothing on the server, so these call
+// the API directly. Browser code uses relative /api/... paths instead (see
+// ./auth-api and ./admin-api), which next.config.ts forwards to the same API.
+const API_URL = (process.env.API_INTERNAL_URL ?? "http://localhost:5246").replace(/\/+$/, "");
 
 export async function getNews(locale: string, page = 1, pageSize = 10): Promise<NewsPage> {
   const res = await fetch(`${API_URL}/api/news?lang=${locale}&page=${page}&pageSize=${pageSize}`, {

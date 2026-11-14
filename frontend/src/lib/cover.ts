@@ -1,11 +1,9 @@
-// Turns the API's relative coverImageUrl ("/api/files/<id>") into an absolute
-// URL. Shared by the server pages and the browser admin form, so the base is
-// NEXT_PUBLIC_API_URL (the only one browser code can read) with API_URL as the
-// server-side fallback. next.config.ts reads the same variables, so the host
-// allowed for next/image always matches the one built here.
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? "http://localhost:5246";
-
+// The API returns file addresses as same-origin paths ("/api/files/<id>").
+// The browser and next/image load them from this site's own origin, and the
+// /api rewrite in next.config.ts forwards them to the API, so the path is used
+// as it is: no API host is ever put in a page.
 export function coverUrl(coverImageUrl: string | null | undefined): string | null {
-  if (!coverImageUrl) return null;
-  return `${API_BASE.replace(/\/+$/, "")}${coverImageUrl}`;
+  // Anything else than an API file path is ignored (no other host, no tricks).
+  if (!coverImageUrl || !coverImageUrl.startsWith("/api/files/")) return null;
+  return coverImageUrl;
 }

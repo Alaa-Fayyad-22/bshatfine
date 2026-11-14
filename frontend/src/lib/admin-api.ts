@@ -1,7 +1,7 @@
 // Admin API client. Runs in the BROWSER (the admin forms mutate data from
-// client components), so it reads NEXT_PUBLIC_API_URL: Next.js only exposes
-// env vars with that prefix to browser code. Public pages keep using the
-// server-only API_URL in ./api.ts.
+// client components). It calls relative /api/admin/... paths on this site's
+// own origin; next.config.ts forwards /api/* to the API, so the session cookie
+// is first-party. Server code uses API_INTERNAL_URL in ./api.ts instead.
 import { reportAuthFailure } from "./auth-api";
 import { readRetryAfter } from "./rate-limit";
 
@@ -22,7 +22,7 @@ export type AdminNewsDto = {
   updatedAt: string | null;
   publishedAt: string | null;
   translations: TranslationDto[];
-  // Relative to the API base; turn it into a URL with coverUrl().
+  // A same-origin path (/api/files/...); pass it through coverUrl().
   coverImageUrl: string | null;
   // Changes after every successful change to the article. Sent back with a PUT
   // so the API can refuse a save that would overwrite someone else's edit.
@@ -46,8 +46,6 @@ export type Paged<T> = {
 
 export type AdminNewsPage = Paged<AdminNewsDto>;
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5246";
-
 // Thrown for non-2xx answers. `detail` is the Problem Details message from the
 // API (business-rule violations are 400s with the reason in it), if any.
 // `retryAfter` is set for a 429: seconds to wait.
@@ -70,7 +68,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ? { ...init?.headers }
       : { "Content-Type": "application/json", ...init?.headers };
   // The session lives in an HttpOnly cookie, sent only with credentials: "include".
-  const res = await fetch(`${API_URL}/api/admin${path}`, {
+  const res = await fetch(`/api/admin${path}`, {
     ...init,
     headers,
     credentials: "include",
