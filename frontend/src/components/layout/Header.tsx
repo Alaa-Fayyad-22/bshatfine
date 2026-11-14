@@ -92,6 +92,8 @@ export function Header() {
             width={648}
             height={275}
             sizes="170px"
+            // Always at the top of the page: load it at once, not lazily.
+            loading="eager"
             style={{ height: 72, width: "auto" }}
           />
         </Link>
