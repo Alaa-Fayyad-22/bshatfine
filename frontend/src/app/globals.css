@@ -1158,6 +1158,21 @@
     & .row {
       gap: 18px;
     }
+    /* Narrow screens: date + event, with the "Details" link or the tag on a
+       line of its own under the text, so nothing runs past the screen edge.
+       (In the reference all three share one line and run past it at 390px.) */
+    & .events-list a {
+      flex-wrap: wrap;
+      row-gap: 10px;
+    }
+    & .events-list .ev {
+      flex: 1 1 calc(100% - 84px - 18px);
+      min-width: 0;
+      overflow-wrap: break-word;
+    }
+    & .events-list a > :last-child {
+      margin-inline-start: calc(84px + 18px);
+    }
     & .panel {
       padding: 26px;
     }
