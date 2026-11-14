@@ -329,7 +329,7 @@ function Social({ instagram, facebook }: { instagram: SocialLink; facebook: Soci
     <>
       <a
         className="label"
-        href={instagram.href || "https://www.instagram.com"}
+        href={instagram.href || "https://www.instagram.com/bchetfine/"}
         target="_blank"
         rel="noopener noreferrer"
         style={style}
@@ -338,7 +338,7 @@ function Social({ instagram, facebook }: { instagram: SocialLink; facebook: Soci
       </a>
       <a
         className="label"
-        href={facebook.href || "https://www.facebook.com"}
+        href={facebook.href || "https://www.facebook.com/bchetfinemunicipality/"}
         target="_blank"
         rel="noopener noreferrer"
         style={style}
