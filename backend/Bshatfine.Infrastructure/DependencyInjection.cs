@@ -58,6 +58,7 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogger, AuditLogger>();
         services.AddScoped<IAuditLogQueries, AuditLogQueries>();
         services.AddScoped<IUserAdminService, UserAdminService>();
+        services.AddScoped<IEntryRepository, EntryRepository>();
         services.AddDataProtection()
             .SetApplicationName("Bshatfine")
             .PersistKeysToDbContext<AppDbContext>();

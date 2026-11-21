@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Bshatfine.Domain.Entries;
 
 namespace Bshatfine.Infrastructure.Persistence;
 
@@ -19,6 +20,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Page> Pages => Set<Page>();
     public DbSet<SiteSettings> SiteSettings => Set<SiteSettings>();
     public DbSet<CouncilMember> CouncilMembers => Set<CouncilMember>();
+    public DbSet<Entry> Entries => Set<Entry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

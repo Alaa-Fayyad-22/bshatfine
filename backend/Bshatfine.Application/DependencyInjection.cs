@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddScoped<CoverImageService>();
         services.AddScoped<SiteSettingsService>();
         services.AddScoped<CouncilService>();
+        services.AddScoped<EntryService>();
         return services;
     }
 }

@@ -51,4 +51,14 @@ public static class AuditActions
     public const string CouncilMemberPhotoSet = "council.member.photo.set";
     public const string CouncilMemberPhotoRemoved = "council.member.photo.removed";
     public const string CouncilReordered = "council.reordered";
+
+    // Entries (history, projects, places, services)
+    public const string EntryCreated = "entry.created";
+    public const string EntryUpdated = "entry.updated";
+    public const string EntryPublished = "entry.published";
+    public const string EntryUnpublished = "entry.unpublished";
+    public const string EntryCoverSet = "entry.cover.set";
+    public const string EntryCoverRemoved = "entry.cover.removed";
+    public const string EntryDeleted = "entry.deleted";
+    public const string EntriesReordered = "entry.reordered";
 }

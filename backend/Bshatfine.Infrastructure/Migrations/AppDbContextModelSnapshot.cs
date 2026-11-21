@@ -277,6 +277,94 @@ namespace Bshatfine.Infrastructure.Migrations
                     b.ToTable("SiteSettings", (string)null);
                 });
 
+            modelBuilder.Entity("Bshatfine.Domain.Entries.Entry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("CoverImagePath")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<int?>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind", "IsPublished", "DisplayOrder");
+
+                    b.ToTable("Entries", (string)null);
+                });
+
+            modelBuilder.Entity("Bshatfine.Domain.Entries.EntryTranslation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("EntryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntryId", "Language")
+                        .IsUnique();
+
+                    b.ToTable("EntryTranslations", (string)null);
+                });
+
             modelBuilder.Entity("Bshatfine.Infrastructure.Audit.AuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -598,6 +686,15 @@ namespace Bshatfine.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Bshatfine.Domain.Entries.EntryTranslation", b =>
+                {
+                    b.HasOne("Bshatfine.Domain.Entries.Entry", null)
+                        .WithMany("Translations")
+                        .HasForeignKey("EntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -655,6 +752,11 @@ namespace Bshatfine.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("Bshatfine.Domain.Entities.Page", b =>
+                {
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("Bshatfine.Domain.Entries.Entry", b =>
                 {
                     b.Navigation("Translations");
                 });
