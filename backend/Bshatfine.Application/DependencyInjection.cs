@@ -9,7 +9,6 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddScoped<NewsService>();
-        services.AddScoped<PageService>();
         services.AddScoped<CoverImageService>();
         services.AddScoped<SiteSettingsService>();
         services.AddScoped<CouncilService>();

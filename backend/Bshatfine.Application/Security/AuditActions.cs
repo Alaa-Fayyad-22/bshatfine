@@ -32,12 +32,12 @@ public static class AuditActions
     public const string RegistrationDuplicate = "auth.register.duplicate_email";
 
     // Pages
-    public const string PageCreated = "page.created";
-    public const string PageUpdated = "page.updated";
-    public const string PagePublished = "page.published";
-    public const string PageUnpublished = "page.unpublished";
-    public const string PageCoverSet = "page.cover.set";
-    public const string PageCoverRemoved = "page.cover.removed";
+    //public const string PageCreated = "page.created";
+    //public const string PageUpdated = "page.updated";
+    //public const string PagePublished = "page.published";
+    //public const string PageUnpublished = "page.unpublished";
+    //public const string PageCoverSet = "page.cover.set";
+    //public const string PageCoverRemoved = "page.cover.removed";
 
     // Site settings
     public const string SiteSettingsUpdated = "settings.updated";
