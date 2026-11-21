@@ -11,8 +11,6 @@ export type MetaPage =
   | "news"
   | "events"
   | "contact"
-  | "tourism"
-  | "achievements"
   | "gallery"
   | "careers";
 

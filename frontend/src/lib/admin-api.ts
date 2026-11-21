@@ -2,6 +2,7 @@
 // client components). It calls relative /api/admin/... paths on this site's
 // own origin; next.config.ts forwards /api/* to the API, so the session cookie
 // is first-party. Server code uses API_INTERNAL_URL in ./api.ts instead.
+import type { EntryKind, EntryLanguage } from "@/config/entries";
 import { reportAuthFailure } from "./auth-api";
 import { readRetryAfter } from "./rate-limit";
 
@@ -161,77 +162,99 @@ export function removeNewsCover(id: string): Promise<AdminNewsDto> {
   return request(`/news/${encodeURIComponent(id)}/cover`, { method: "DELETE" });
 }
 
-// ---------- Pages (Admins and Editors) ----------
-export const PAGE_KEYS = ["history", "tourism", "achievements", "services"] as const;
-export type PageKey = (typeof PAGE_KEYS)[number];
+// ---------- Entries: history, projects, places, services (Admins and Editors) ----------
+// What each kind allows lives in src/config/entries.ts.
 
-export const PAGE_BODY_MAX = 50_000;
-export const PAGE_TITLE_MAX = 200;
+export type EntryTranslationDto = {
+  language: EntryLanguage;
+  title: string;
+  summary: string;
+  // Markdown; optional (may be empty).
+  body: string;
+};
 
-export type AdminPageDto = {
+export type AdminEntryDto = {
   id: string;
-  key: PageKey;
+  kind: EntryKind;
+  category: string | null;
+  status: string | null;
+  year: number | null;
   isPublished: boolean;
+  displayOrder: number;
   createdAt: string;
   updatedAt: string | null;
   publishedAt: string | null;
-  translations: TranslationDto[];
+  translations: EntryTranslationDto[];
   coverImageUrl: string | null;
   // Changes after every successful change; sent back with a PUT.
   version: number;
 };
 
-export type AdminPageSummaryDto = {
-  key: PageKey;
-  exists: boolean;
-  isPublished: boolean;
-  arabicTitle: string | null;
-  englishTitle: string | null;
-  updatedAt: string | null;
+// The fields that depend on the kind: null for the ones it does not use.
+export type EntryDetails = {
+  category: string | null;
+  status: string | null;
+  year: number | null;
 };
 
-export function listAdminPages(): Promise<AdminPageSummaryDto[]> {
-  return request("/pages");
-}
+// In display order.
+export const listAdminEntries = (kind: EntryKind): Promise<AdminEntryDto[]> =>
+  request(`/entries?kind=${kind}`);
 
-// null when the page has not been created yet.
-export async function getAdminPage(key: PageKey): Promise<AdminPageDto | null> {
+// null when the entry does not exist (any more).
+export async function getAdminEntry(id: string): Promise<AdminEntryDto | null> {
   try {
-    return await request<AdminPageDto>(`/pages/${encodeURIComponent(key)}`);
+    return await request<AdminEntryDto>(`/entries/${encodeURIComponent(id)}`);
   } catch (e) {
     if (e instanceof AdminApiError && e.status === 404) return null;
     throw e;
   }
 }
 
-export function createPage(key: PageKey, translations: TranslationDto[]): Promise<AdminPageDto> {
-  return request("/pages", { method: "POST", body: JSON.stringify({ key, translations }) });
-}
+// Added at the end of its kind's list.
+export const createEntry = (
+  kind: EntryKind,
+  translations: EntryTranslationDto[],
+  details: EntryDetails,
+): Promise<AdminEntryDto> =>
+  request("/entries", { method: "POST", body: JSON.stringify({ kind, translations, ...details }) });
 
-export function updatePage(
-  key: PageKey,
-  translations: TranslationDto[],
+// The languages sent BECOME the entry's languages: always send every language
+// the form has, or the missing one is deleted.
+export const updateEntry = (
+  id: string,
+  translations: EntryTranslationDto[],
+  details: EntryDetails,
   version: number,
-): Promise<AdminPageDto> {
-  return request(`/pages/${encodeURIComponent(key)}`, {
+): Promise<AdminEntryDto> =>
+  request(`/entries/${encodeURIComponent(id)}`, {
     method: "PUT",
-    body: JSON.stringify({ translations, version }),
+    body: JSON.stringify({ translations, ...details, version }),
   });
-}
 
-export const publishPage = (key: PageKey): Promise<AdminPageDto> =>
-  request(`/pages/${encodeURIComponent(key)}/publish`, { method: "POST" });
-export const unpublishPage = (key: PageKey): Promise<AdminPageDto> =>
-  request(`/pages/${encodeURIComponent(key)}/unpublish`, { method: "POST" });
+// Publishing needs an Arabic text (the API says so otherwise).
+export const publishEntry = (id: string): Promise<AdminEntryDto> =>
+  request(`/entries/${encodeURIComponent(id)}/publish`, { method: "POST" });
+export const unpublishEntry = (id: string): Promise<AdminEntryDto> =>
+  request(`/entries/${encodeURIComponent(id)}/unpublish`, { method: "POST" });
 
-export function uploadPageCover(key: PageKey, file: File): Promise<AdminPageDto> {
+// `ids` is EVERY id of that kind, in the new order. Returns the reordered list.
+export const reorderEntries = (kind: EntryKind, ids: string[]): Promise<AdminEntryDto[]> =>
+  request(`/entries/order?kind=${kind}`, { method: "PUT", body: JSON.stringify({ ids }) });
+
+export function uploadEntryCover(id: string, file: File): Promise<AdminEntryDto> {
   const body = new FormData();
   body.append("file", file);
-  return request(`/pages/${encodeURIComponent(key)}/cover`, { method: "POST", body });
+  return request(`/entries/${encodeURIComponent(id)}/cover`, { method: "POST", body });
 }
 
-export const removePageCover = (key: PageKey): Promise<AdminPageDto> =>
-  request(`/pages/${encodeURIComponent(key)}/cover`, { method: "DELETE" });
+export const removeEntryCover = (id: string): Promise<AdminEntryDto> =>
+  request(`/entries/${encodeURIComponent(id)}/cover`, { method: "DELETE" });
+
+// Unpublished entries only (the API answers 400 otherwise); the cover goes too.
+export async function deleteEntry(id: string): Promise<void> {
+  await request<void>(`/entries/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
 
 // ---------- Contact details (Admin only) ----------
 export type AdminSiteSettingsDto = {

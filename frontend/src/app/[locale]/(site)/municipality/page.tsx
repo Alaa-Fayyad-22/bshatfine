@@ -8,9 +8,22 @@ import { Preparing } from "@/components/Preparing";
 import { Filters } from "@/components/site/Filters";
 import { Hero } from "@/components/site/Hero";
 import { photoSrc } from "@/components/site/Photo";
+import { directionOf, LanguageNote } from "@/components/LanguageNote";
+import {
+  isProjectStatus,
+  knownCategory,
+  STATUS_CLASS,
+  type ProjectStatus,
+} from "@/config/entries";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
-import { coverUrl, getCouncil, type CouncilMemberDto } from "@/lib/api";
+import {
+  coverUrl,
+  getCouncil,
+  getEntries,
+  type CouncilMemberDto,
+  type EntrySummaryDto,
+} from "@/lib/api";
 import { pageMetadata } from "@/lib/site-meta";
 
 export async function generateMetadata({
@@ -19,15 +32,10 @@ export async function generateMetadata({
   return pageMetadata((await params).locale, "municipality");
 }
 
-// PLACEHOLDER: the sample projects and documents of the approved design.
-const PROJECTS = [
-  { key: "road", status: "done" },
-  { key: "lighting", status: "on" },
-  { key: "water", status: "on" },
-  { key: "garden", status: "plan" },
-  { key: "waste", status: "done" },
-] as const;
+// The status filters in the order of the approved design.
+const STATUS_FILTER_ORDER = ["completed", "ongoing", "planned"] as const satisfies readonly ProjectStatus[];
 
+// PLACEHOLDER: the sample documents of the approved design.
 const DOCS = ["decision", "budget", "minutes"] as const;
 
 export default async function Page({ params }: PageProps<"/[locale]/municipality">) {
@@ -37,6 +45,7 @@ export default async function Page({ params }: PageProps<"/[locale]/municipality
   const t = await getTranslations("Municipality");
   const tm = await getTranslations("Mayor");
   const tn = await getTranslations("Nav");
+  const te = await getTranslations("Entries");
 
   return (
     <>
@@ -106,52 +115,20 @@ export default async function Page({ params }: PageProps<"/[locale]/municipality
 
       <section className="section" id="projects">
         <div className="wrap">
-          <div className="head-row" data-reveal>
-            <div>
-              <span className="kicker">{t("projects.kicker")}</span>
-              <h2 className="title">{t("projects.title")}</h2>
-            </div>
-            <Filters
-              group="projects"
-              label={t("projects.filtersLabel")}
-              style={{ margin: 0 }}
-              options={(["all", "done", "on", "plan"] as const).map((key) => ({
-                key,
-                label: t(`projects.filters.${key}`),
-              }))}
-            />
-          </div>
-          <div className="table-box" data-reveal>
-            <table>
-              <thead>
-                <tr>
-                  <th style={{ width: "44%" }}>{t("projects.cols.project")}</th>
-                  <th>{t("projects.cols.area")}</th>
-                  <th>{t("projects.cols.status")}</th>
-                  <th>{t("projects.cols.year")}</th>
-                </tr>
-              </thead>
-              <tbody data-filter-items="projects">
-                {PROJECTS.map((p) => (
-                  <tr key={p.key} data-cat={p.status}>
-                    <td>
-                      <span className="serif">{t(`projects.items.${p.key}.title`)}</span>
-                      <br />
-                      <span style={{ color: "var(--muted)" }}>{t(`projects.items.${p.key}.text`)}</span>
-                    </td>
-                    <td>{t(`projects.items.${p.key}.area`)}</td>
-                    <td>
-                      <span className={`tag st-${p.status}`}>{t(`projects.filters.${p.status}`)}</span>
-                    </td>
-                    <td className="ph">{t("projects.year")}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="lead" style={{ marginTop: 18, fontSize: 14 }}>
-            {t("projects.note")}
-          </p>
+          {/* The published projects, read live. The filter buttons come with
+              the table (there is nothing to filter while it is empty). */}
+          <Suspense
+            fallback={
+              <>
+                <ProjectsHead />
+                <p role="status" className="lead">
+                  {te("loading")}
+                </p>
+              </>
+            }
+          >
+            <Projects locale={locale} />
+          </Suspense>
         </div>
       </section>
 
@@ -178,6 +155,109 @@ export default async function Page({ params }: PageProps<"/[locale]/municipality
           </div>
         </div>
       </section>
+    </>
+  );
+}
+
+async function ProjectsHead({ entries }: { entries?: EntrySummaryDto[] }) {
+  const t = await getTranslations("Municipality");
+  return (
+    <div className="head-row" data-reveal>
+      <div>
+        <span className="kicker">{t("projects.kicker")}</span>
+        <h2 className="title">{t("projects.title")}</h2>
+      </div>
+      {entries && entries.length > 0 && (
+        <Filters
+          group="projects"
+          label={t("projects.filtersLabel")}
+          style={{ margin: 0 }}
+          options={(["all", ...STATUS_FILTER_ORDER] as const).map((key) => ({
+            key,
+            label: t(`projects.filters.${key}`),
+          }))}
+        />
+      )}
+    </div>
+  );
+}
+
+// The published projects in their order: title and summary (leading to the
+// project's own page), area, status tag and year; filtered by status.
+async function Projects({ locale }: { locale: string }) {
+  const t = await getTranslations("Municipality");
+  const te = await getTranslations("Entries");
+
+  let entries: EntrySummaryDto[];
+  try {
+    entries = await getEntries("project", locale);
+  } catch {
+    return (
+      <>
+        <ProjectsHead />
+        <p role="status" className="lead">
+          {te("error")}
+        </p>
+      </>
+    );
+  }
+  if (entries.length === 0) {
+    return (
+      <>
+        <ProjectsHead />
+        <Preparing />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <ProjectsHead entries={entries} />
+      <div className="table-box" data-reveal>
+        <table>
+          <thead>
+            <tr>
+              <th style={{ width: "44%" }}>{t("projects.cols.project")}</th>
+              <th>{t("projects.cols.area")}</th>
+              <th>{t("projects.cols.status")}</th>
+              <th>{t("projects.cols.year")}</th>
+            </tr>
+          </thead>
+          <tbody data-filter-items="projects">
+            {entries.map((p) => {
+              const area = knownCategory("project", p.category);
+              const status = isProjectStatus(p.status) ? p.status : null;
+              return (
+                <tr key={p.id} data-cat={status ?? undefined}>
+                  <td>
+                    <Link
+                      className="serif"
+                      href={`/entries/${p.id}`}
+                      lang={p.language}
+                      dir={directionOf(p.language)}
+                      style={{ textDecoration: "none" }}
+                    >
+                      {p.title}
+                    </Link>
+                    <br />
+                    <span lang={p.language} dir={directionOf(p.language)} style={{ color: "var(--muted)" }}>
+                      {p.summary}
+                    </span>
+                    <LanguageNote language={p.language} locale={locale} of="Entries" />
+                  </td>
+                  <td>{area && te(`categories.project.${area}`)}</td>
+                  <td>
+                    {status && (
+                      <span className={`tag ${STATUS_CLASS[status]}`}>{te(`statuses.${status}`)}</span>
+                    )}
+                  </td>
+                  <td>{p.year}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 }

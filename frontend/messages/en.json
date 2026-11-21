@@ -10,11 +10,10 @@
       "news": "News & notices · Bchatfine",
       "events": "Events · Bchatfine",
       "contact": "Contact · Bchatfine",
-      "tourism": "Tourism · Bchatfine",
-      "achievements": "Achievements · Bchatfine",
       "gallery": "Gallery · Bchatfine",
       "careers": "Careers · Bchatfine",
-      "article": "{title} · Bchatfine"
+      "article": "{title} · Bchatfine",
+      "entry": "{title} · Bchatfine"
     }
   },
   "Nav": {
@@ -26,9 +25,6 @@
     "events": "Events",
     "contact": "Contact",
     "report": "Report",
-    "history": "History",
-    "tourism": "Tourism",
-    "achievements": "Achievements",
     "gallery": "Gallery",
     "careers": "Careers",
     "login": "Staff login",
@@ -212,9 +208,7 @@
       "title": "the village"
     },
     "story": {
-      "kicker": "The village story",
-      "placeholderTitle": "[A short history of Bchatfine: its first families, its stone houses and red roofs, and how the village grew.]",
-      "placeholderBody": "[Two or three paragraphs written with the village’s elders and archives: where the name comes from, the old quarter, the families, and the events that shaped Bchatfine.]"
+      "kicker": "The village story"
     },
     "glance": {
       "label": "At a glance",
@@ -236,39 +230,7 @@
         "all": "All",
         "heritage": "Heritage",
         "nature": "Nature",
-        "life": "Village life"
-      },
-      "items": {
-        "gate": {
-          "alt": "The stone gate of Bchatfine",
-          "title": "The stone gate",
-          "text": "A pointed stone arch and wooden doors under the carved village sign. [Add its story.]"
-        },
-        "sunset": {
-          "alt": "Sunset viewpoint",
-          "title": "Sunset viewpoint",
-          "text": "Pines frame the valley as the sun goes down. [Add the exact spot.]"
-        },
-        "street": {
-          "alt": "Road under umbrella pines",
-          "title": "Walk under the pines",
-          "text": "Quiet roads shaded by tall umbrella pines and old stone walls."
-        },
-        "aerial": {
-          "alt": "Aerial view of the old quarter",
-          "title": "The old quarter",
-          "text": "Red-tiled roofs climbing the hillside. [Add landmarks to visit.]"
-        },
-        "festival": {
-          "alt": "Village celebration",
-          "title": "The village square",
-          "text": "Where Bchatfine gathers for feasts and celebrations."
-        },
-        "golden": {
-          "alt": "Golden hour over the village",
-          "title": "Golden hour panorama",
-          "text": "The whole village in evening light, seen from above."
-        }
+        "village-life": "Village life"
       }
     },
     "before": {
@@ -306,25 +268,16 @@
       "filtersLabel": "Filter projects",
       "filters": {
         "all": "All",
-        "done": "Completed",
-        "on": "Ongoing",
-        "plan": "Planned"
+        "completed": "Completed",
+        "ongoing": "Ongoing",
+        "planned": "Planned"
       },
       "cols": {
         "project": "Project",
         "area": "Area",
         "status": "Status",
         "year": "Year"
-      },
-      "year": "[Year]",
-      "items": {
-        "road": { "title": "Road rehabilitation", "text": "[Street or neighbourhood]", "area": "Roads" },
-        "lighting": { "title": "Solar street lighting", "text": "[Number] lights across the village", "area": "Lighting" },
-        "water": { "title": "Water network maintenance", "text": "[Details]", "area": "Water" },
-        "garden": { "title": "Public garden", "text": "[Location]", "area": "Green spaces" },
-        "waste": { "title": "Waste sorting points", "text": "[Details]", "area": "Environment" }
-      },
-      "note": "Sample projects for layout only."
+      }
     },
     "docs": {
       "kicker": "Decisions",
@@ -361,34 +314,16 @@
       "filtersLabel": "Filter forms",
       "filters": {
         "all": "All",
-        "cert": "Certificates",
+        "certificate": "Certificates",
         "permit": "Permits",
         "fees": "Fees"
       },
       "cols": {
         "form": "Form",
         "type": "Type",
-        "papers": "Papers required",
-        "fee": "Fee",
         "download": "Download"
       },
-      "types": {
-        "cert": "Certificate",
-        "permit": "Permit",
-        "fees": "Fees"
-      },
-      "fee": "[___]",
-      "download": "Download",
-      "items": {
-        "residence": { "title": "Residence certificate", "other": "إفادة سكن", "papers": "ID card, [___]" },
-        "clearance": { "title": "Municipal clearance", "other": "براءة ذمة", "papers": "Property details, [___]" },
-        "building": { "title": "Building permit application", "other": "طلب رخصة بناء", "papers": "Plans, title deed, [___]" },
-        "occupation": { "title": "Public property occupation", "other": "إشغال الأملاك العامة", "papers": "Site sketch, [___]" },
-        "rent": { "title": "Rent contract registration", "other": "تسجيل عقد إيجار", "papers": "Signed contract, IDs" },
-        "instalment": { "title": "Fee instalment request", "other": "طلب تقسيط رسوم", "papers": "Fee statement, [___]" },
-        "objection": { "title": "Objection to municipal fees", "other": "اعتراض على الرسوم", "papers": "Fee notice, supporting papers" }
-      },
-      "note": "Forms, papers and fees to be confirmed by the municipality."
+      "download": "Download"
     },
     "fix": {
       "kicker": "Something",
@@ -453,22 +388,73 @@
     }
   },
   "Pages": {
-    "loading": "Loading page",
     "preparingTitle": "This page is being prepared",
     "preparingText": "We are still working on this content. Please check back soon.",
-    "error": "We could not load this page right now. Please try again shortly.",
-    "tourism": {
-      "alt": "Sunset over the valley framed by pine trees",
-      "kicker": "Tourism",
-      "title": "in Bchatfine"
-    },
-    "achievements": {
-      "alt": "Bchatfine glowing in the evening light",
-      "kicker": "Our",
-      "title": "achievements"
-    },
     "planned": {
       "alt": "Aerial view of Bchatfine"
+    }
+  },
+  "Entries": {
+    "loading": "Loading content",
+    "error": "We could not load this content right now. Please try again shortly.",
+    "errorTitle": "Not available",
+    "kinds": {
+      "history": "The village story",
+      "project": "Project",
+      "place": "Place to see",
+      "service": "Service"
+    },
+    "photoAlt": {
+      "history": "Aerial view of Bchatfine",
+      "project": "The village at golden hour",
+      "place": "Sunset over the valley framed by pine trees",
+      "service": "Street in Bchatfine"
+    },
+    "meta": {
+      "year": "Year",
+      "status": "Status",
+      "category": {
+        "project": "Area",
+        "place": "Category",
+        "service": "Type"
+      }
+    },
+    "categories": {
+      "project": {
+        "roads": "Roads",
+        "lighting": "Lighting",
+        "water": "Water",
+        "green-spaces": "Green spaces",
+        "environment": "Environment",
+        "buildings": "Buildings",
+        "other": "Other"
+      },
+      "place": {
+        "heritage": "Heritage",
+        "nature": "Nature",
+        "village-life": "Village life"
+      },
+      "service": {
+        "certificate": "Certificate",
+        "permit": "Permit",
+        "fees": "Fees"
+      }
+    },
+    "statuses": {
+      "planned": "Planned",
+      "ongoing": "Ongoing",
+      "completed": "Completed"
+    },
+    "back": {
+      "discover": "Back to Discover",
+      "municipality": "Back to the Municipality",
+      "services": "Back to Services"
+    },
+    "onlyIn": "This text is only available in {language}",
+    "onlyInOther": "This text is only available in another language",
+    "languages": {
+      "ar": "Arabic",
+      "en": "English"
     }
   },
   "News": {
@@ -540,45 +526,90 @@
     "brand": "Admin",
     "nav": {
       "news": "News",
-      "pages": "Pages",
+      "content": "Content",
       "contact": "Contact details",
       "council": "Council",
       "users": "Users",
       "audit": "Audit log"
     },
-    "pages": {
-      "title": "Pages",
-      "intro": "Edit the text of the fixed pages of the site. Only published pages are visible to visitors.",
-      "colPage": "Page",
-      "colStatus": "Status",
-      "colTitle": "Title",
-      "colUpdated": "Last updated",
-      "colActions": "Actions",
-      "notCreated": "Not created yet",
-      "draft": "Not published",
+    "content": {
+      "title": "Content",
+      "intro": "The village story, projects, places and services of the public site. Visitors see only the published entries, in the order of this list.",
+      "tabsLabel": "Kind of content",
+      "kinds": {
+        "history": "History",
+        "project": "Projects",
+        "place": "Places",
+        "service": "Services"
+      },
+      "new": {
+        "history": "New history entry",
+        "project": "New project",
+        "place": "New place",
+        "service": "New service"
+      },
+      "loading": "Loading entries",
+      "retry": "Try again",
+      "empty": "There is nothing here yet. Use “{new}” to add the first one.",
+      "listLabel": "{kind}, in display order",
       "published": "Published",
-      "never": "Never",
-      "create": "Create",
-      "createLabel": "Create page: {page}",
+      "draft": "Not published",
+      "untitled": "(untitled)",
+      "noCover": "No cover",
+      "noArabic": "No Arabic text yet, so it cannot be published.",
+      "none": "None",
       "edit": "Edit",
-      "editLabel": "Edit page: {page}",
-      "loading": "Loading pages",
-      "error": "Could not load the pages. Check that the API is running.",
-      "retry": "Try again"
+      "editLabel": "Edit: {title}",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "moveUpLabel": "Move up: {title}",
+      "moveDownLabel": "Move down: {title}",
+      "movedOk": "“{title}” is now number {position} of {total}.",
+      "deletedOk": "“{title}” was deleted."
     },
-    "pageForm": {
-      "backToList": "Back to pages",
-      "createTitle": "Create page: {page}",
-      "editTitle": "Edit page: {page}",
-      "loading": "Loading page",
-      "notFound": "This page does not exist.",
-      "loadError": "Could not load the page. Check that the API is running.",
+    "entryForm": {
+      "backToList": "Back to {kind}",
+      "backToContent": "Back to content",
+      "createTitle": {
+        "history": "New history entry",
+        "project": "New project",
+        "place": "New place",
+        "service": "New service"
+      },
+      "editTitle": {
+        "history": "Edit history entry",
+        "project": "Edit project",
+        "place": "Edit place",
+        "service": "Edit service"
+      },
+      "loading": "Loading entry",
+      "notFound": "This entry does not exist.",
+      "loadError": "Could not load the entry. Check that the API is running.",
+      "gone": "This entry no longer exists. Someone may have deleted it.",
       "status": "Status",
+      "notSaved": "Not saved yet",
       "created": "Created",
       "updated": "Last updated",
       "published": "Published",
+      "coverTitle": "Cover photo",
+      "coverNone": "No cover photo",
+      "coverSaveFirst": "Save first to add a cover photo.",
+      "coverChoose": "Choose photo",
+      "coverReplace": "Replace photo",
+      "coverRemove": "Remove photo",
+      "coverRemoveConfirm": "Remove the cover photo? The public site shows a default photo instead.",
+      "detailsTitle": "Details",
+      "choose": "Choose…",
+      "yearHint": "Optional. A year between {min} and {max}.",
+      "yearInvalid": "Enter the year as a whole number, for example 1998.",
+      "requiredCategory": "{field} is required.",
+      "requiredBoth": "{field} and Status are required.",
+      "languagesLabel": "Language of the text",
+      "languagesHint": "Fill in Arabic, English or both. Each language needs a title and a summary; leave all its fields empty to leave it out. Publishing needs the Arabic text.",
       "fieldTitle": "Title",
-      "fieldBody": "Text",
+      "fieldSummary": "Summary",
+      "summaryHint": "One or two sentences, shown in the lists of the public site.",
+      "fieldBody": "Full text (optional)",
       "markdownHint": "You can format the text with Markdown: # heading, **bold**, - list, [link text](https://example.com). HTML and images are not shown.",
       "preview": "Preview",
       "previewEmpty": "Nothing to preview yet.",
@@ -586,28 +617,31 @@
       "bodyOver": "Over the limit. Shorten the text to be able to save.",
       "bodyNear": "You are close to the limit.",
       "bodyTooLong": "The {language} text is too long. The limit is {max} characters. Shorten it before saving.",
-      "needContent": "Add a title and text in at least one language before saving.",
-      "needArabic": "An Arabic title and text are needed before this page can be published.",
+      "needContent": "Add a title and a summary in at least one language before saving.",
+      "incomplete": "The {language} text needs both a title and a summary. Fill in both, or empty all its fields to leave that language out.",
       "save": "Save",
       "saving": "Saving…",
       "publish": "Publish",
       "publishing": "Publishing…",
-      "publishConfirm": "Publish this page? It becomes visible to visitors of the public site.",
+      "publishConfirm": "Publish this entry? It becomes visible to visitors of the public site.",
+      "publishConfirmDirty": "Save your changes and publish this entry? It becomes visible to visitors of the public site.",
       "publishYes": "Yes, publish",
       "unpublish": "Unpublish",
       "unpublishing": "Unpublishing…",
-      "unpublishConfirm": "Unpublish this page? Visitors will see “This page is being prepared” instead. Your text is kept.",
+      "unpublishConfirm": "Unpublish this entry? It disappears from the public site. Your text is kept.",
       "unpublishYes": "Yes, unpublish",
       "cancel": "Cancel",
-      "createdOk": "Page created. It is not published yet.",
+      "createdOk": "Saved. It is not published yet. You can now add a cover photo.",
       "savedOk": "Changes saved.",
-      "publishedOk": "Page published.",
-      "unpublishedOk": "Page unpublished.",
-      "coverHintNew": "JPEG, PNG or WebP, up to 10 MB. Choosing an image saves the page first.",
-      "coverNeedContent": "Add a title and text in at least one language first. The page is saved before the image is uploaded.",
-      "coverRemoveConfirm": "Remove the cover image from this page?",
-      "conflictTitle": "Someone else changed this page",
-      "conflictText": "Someone else saved this page after you opened it, so your changes were not saved. What you typed is still in the form. Copy it if you need it, then load the latest version."
+      "publishedOk": "Entry published. It is now on the public site.",
+      "unpublishedOk": "Entry unpublished. It is no longer on the public site.",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "deleteYes": "Yes, delete",
+      "deleteConfirm": "Delete “{title}”? This cannot be undone. The cover photo is deleted too.",
+      "deletePublishedHint": "A published entry cannot be deleted. Unpublish it first.",
+      "conflictTitle": "Someone else changed this entry",
+      "conflictText": "Someone else saved this entry after you opened it, so your changes were not saved. What you typed is still in the form. Copy it if you need it, then load the latest version."
     },
     "contact": {
       "title": "Contact details",
@@ -723,7 +757,7 @@
     },
     "forbidden": {
       "title": "Access denied",
-      "body": "This page is for administrators only. Your account can manage news but not users or the audit log.",
+      "body": "This page is for administrators only. Your account can manage news and content, but not users or the audit log.",
       "back": "Back to news"
     },
     "password": {
@@ -887,7 +921,8 @@
       "entity": {
         "News": "Article",
         "User": "User",
-        "Page": "Page",
+        "Entry": "Content entry",
+        "Page": "Page (former)",
         "SiteSettings": "Contact details",
         "CouncilMember": "Council member"
       },
@@ -916,6 +951,14 @@
         "newsCoverSet": "Cover image set",
         "newsCoverRemoved": "Cover image removed",
         "newsDeleted": "Draft deleted",
+        "entryCreated": "Entry created",
+        "entryUpdated": "Entry updated",
+        "entryPublished": "Entry published",
+        "entryUnpublished": "Entry unpublished",
+        "entryCoverSet": "Entry cover photo set",
+        "entryCoverRemoved": "Entry cover photo removed",
+        "entryDeleted": "Entry deleted",
+        "entriesReordered": "Entries reordered",
         "pageCreated": "Page created",
         "pageUpdated": "Page updated",
         "pagePublished": "Page published",

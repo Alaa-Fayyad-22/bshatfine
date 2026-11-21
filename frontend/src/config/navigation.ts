@@ -23,8 +23,10 @@ export const navItems: readonly NavItem[] = [
 ];
 
 // Pages that exist but are not in the header:
-//  - /tourism and /achievements: editable pages, reachable by their address;
-//  - /history and /council: permanent redirects to /discover and /municipality
+//  - /entries/<id>: one history entry, project, place or service, linked from
+//    its section (its crumb leads back there);
+//  - /history, /council, /tourism and /achievements: permanent redirects to
+//    /discover, /municipality, /discover#places and /municipality#projects
 //    (see next.config.ts);
 //  - planned pages (below): only a "coming soon" page exists. Reachable only in
 //    development or when NEXT_PUBLIC_SHOW_PLANNED_NAV=true; otherwise 404.

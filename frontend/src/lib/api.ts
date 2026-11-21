@@ -1,4 +1,5 @@
 import { cacheLife } from "next/cache";
+import { ENTRY_ID, type EntryKind } from "@/config/entries";
 
 export type NewsDto = {
   id: string;
@@ -77,31 +78,74 @@ export async function getNewsBySlug(locale: string, slug: string): Promise<NewsD
   return res.json();
 }
 
-// ---------- Editable pages, contact details, council ----------
-// All three are read live (no-store) behind <Suspense>, so an edit in the admin
-// shows up on the next visit. `signal` makes a dead API fail fast.
+// ---------- Entries (history, projects, places, services) ----------
+// Lists, contact details and the council are read live (no-store) behind
+// <Suspense>, so an edit in the admin shows up on the next visit. `signal`
+// makes a dead API fail fast.
 
-export type PageDto = {
-  key: string;
+// One row of a public list: published only, in display order. `category` and
+// `status` are codes (see src/config/entries.ts); null when the kind has none.
+export type EntrySummaryDto = {
+  id: string;
+  kind: EntryKind;
+  category: string | null;
+  status: string | null;
+  year: number | null;
   // Can differ from the requested language (fallback).
   language: string;
   title: string;
-  // Markdown. Always render it with <Markdown> (raw HTML is ignored there).
-  body: string;
-  updatedAt: string | null;
+  summary: string;
+  // A same-origin path (/api/files/...); pass it through coverUrl().
   coverImageUrl: string | null;
 };
 
-// null when the page is missing or unpublished (404); other failures throw.
-export async function getPage(key: string, locale: string): Promise<PageDto | null> {
-  const res = await fetch(`${API_URL}/api/pages/${encodeURIComponent(key)}?lang=${locale}`, {
+export type EntryDto = EntrySummaryDto & {
+  // Markdown, may be empty. Always render it with <Markdown> (raw HTML is ignored there).
+  body: string;
+  updatedAt: string | null;
+};
+
+export async function getEntries(kind: EntryKind, locale: string): Promise<EntrySummaryDto[]> {
+  const res = await fetch(`${API_URL}/api/entries?kind=${kind}&lang=${locale}`, {
     cache: "no-store",
     signal: AbortSignal.timeout(5000),
   });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`Failed to load page: ${res.status}`);
+  if (!res.ok) throw new Error(`Failed to load entries: ${res.status}`);
   return res.json();
 }
+
+// null when the entry is missing or unpublished (404); other failures throw.
+// Cached briefly for the same reason as getNewsBySlug: the entry page must have
+// the answer before it renders. The proxy checks existence live (entryExists).
+export async function getEntry(locale: string, id: string): Promise<EntryDto | null> {
+  "use cache";
+  cacheLife("minutes");
+
+  if (!ENTRY_ID.test(id)) return null;
+  const res = await fetch(`${API_URL}/api/entries/${encodeURIComponent(id)}?lang=${locale}`, {
+    signal: AbortSignal.timeout(5000),
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Failed to load entry: ${res.status}`);
+  return res.json();
+}
+
+// Live existence check for the proxy (same contract as newsExists below).
+export async function entryExists(locale: string, id: string): Promise<boolean | null> {
+  if (!ENTRY_ID.test(id)) return false;
+  try {
+    const res = await fetch(`${API_URL}/api/entries/${encodeURIComponent(id)}?lang=${locale}`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(3000),
+    });
+    if (res.status === 404) return false;
+    return res.ok ? true : null;
+  } catch {
+    return null;
+  }
+}
+
+// ---------- Contact details, council ----------
 
 // Any field may be null (never saved, or left empty).
 export type SiteSettingsDto = {

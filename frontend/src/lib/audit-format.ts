@@ -19,6 +19,15 @@ export const AUDIT_ACTIONS = {
   "news.cover.set": "newsCoverSet",
   "news.cover.removed": "newsCoverRemoved",
   "news.deleted": "newsDeleted",
+  "entry.created": "entryCreated",
+  "entry.updated": "entryUpdated",
+  "entry.published": "entryPublished",
+  "entry.unpublished": "entryUnpublished",
+  "entry.cover.set": "entryCoverSet",
+  "entry.cover.removed": "entryCoverRemoved",
+  "entry.deleted": "entryDeleted",
+  "entry.reordered": "entriesReordered",
+  // The former Pages feature: no longer written, kept so older log rows stay readable.
   "page.created": "pageCreated",
   "page.updated": "pageUpdated",
   "page.published": "pagePublished",
@@ -50,8 +59,8 @@ export function actionKey(code: string): (typeof AUDIT_ACTIONS)[AuditActionCode]
   return Object.hasOwn(AUDIT_ACTIONS, code) ? AUDIT_ACTIONS[code as AuditActionCode] : null;
 }
 
-// Entity types the API writes today.
-export const AUDIT_ENTITY_TYPES = ["News", "User", "Page", "SiteSettings", "CouncilMember"] as const;
+// Entity types in the log ("Page" only in rows written before Entries replaced Pages).
+export const AUDIT_ENTITY_TYPES = ["News", "User", "Entry", "Page", "SiteSettings", "CouncilMember"] as const;
 
 export const LOGIN_FAIL_REASONS = {
   unknown_email: "unknownEmail",
