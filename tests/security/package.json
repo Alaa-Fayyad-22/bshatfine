@@ -1,0 +1,20 @@
+{
+  "name": "bshatfine-security-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Security and race-condition tests for the Bshatfine site (Next.js frontend + ASP.NET Core API), run against an isolated test environment.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node run.mjs",
+    "test:only": "node run.mjs --no-env",
+    "env:up": "node env.mjs up",
+    "env:down": "node env.mjs down",
+    "env:status": "node env.mjs status"
+  },
+  "dependencies": {
+    "playwright-core": "1.56.1"
+  }
+}

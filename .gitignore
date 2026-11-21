@@ -486,3 +486,6 @@ editor.txt
 citizen.txt
 temp.txt
 admin2.txt
+
+# Security test suite output (tests/security)
+tests/security/results/
