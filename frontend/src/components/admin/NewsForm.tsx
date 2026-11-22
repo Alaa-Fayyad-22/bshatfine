@@ -7,10 +7,9 @@ import {
   AdminApiError,
   archiveNews,
   BODY_MAX,
-  COVER_MAX_BYTES,
-  COVER_TYPES,
   createNews,
   getAdminNews,
+  isPayloadTooLarge,
   publishNews,
   removeNewsCover,
   republishNews,
@@ -20,6 +19,7 @@ import {
   type TranslationDto,
 } from "@/lib/admin-api";
 import { NewsCover } from "@/components/NewsCover";
+import { PHOTO_ACCEPT, PHOTO_ERROR_KEYS, prepareImage } from "@/lib/prepare-image";
 import { rateProblem, type Problem } from "@/lib/problem";
 import { DELETED_FLASH_KEY, DeleteNewsDialog } from "./DeleteNewsDialog";
 import { isRateLimited, ProblemNotice } from "./ProblemNotice";
@@ -32,7 +32,15 @@ const FLASH_KEY = "admin-news-flash";
 const langs = ["ar", "en"] as const;
 type Lang = (typeof langs)[number];
 type Values = Record<Lang, { title: string; body: string }>;
-type Busy = "save" | "publish" | "archive" | "republish" | "upload" | "removeCover" | null;
+type Busy =
+  | "save"
+  | "publish"
+  | "archive"
+  | "republish"
+  | "prepare"
+  | "upload"
+  | "removeCover"
+  | null;
 type Flash = "createdOk" | "publishedOk";
 
 // Ref callback for an inline confirmation panel: focus it as soon as it appears.
@@ -193,6 +201,7 @@ export function NewsForm({ id }: { id?: string }) {
   }, [t]);
 
   function describe(e: unknown): string {
+    if (isPayloadTooLarge(e)) return t("photoUploadTooLarge");
     if (e instanceof AdminApiError) return e.detail ?? t("apiError", { status: e.status });
     return t("networkError");
   }
@@ -324,20 +333,32 @@ export function NewsForm({ id }: { id?: string }) {
     });
   }
 
-  // The file was chosen in the hidden input. Check it here first, so an
-  // obviously wrong file never costs an upload; the API still has the last word
-  // and its message is shown as is.
-  function onCoverPicked(file: File | undefined) {
+  // The file was chosen in the hidden input. It is checked, scaled down and
+  // re-encoded here first (see prepareImage), so a wrong file never costs an
+  // upload; the API still has the last word and its message is shown as is.
+  async function onCoverPicked(picked: File | undefined) {
     if (fileRef.current) fileRef.current.value = ""; // allow picking the same file again
-    if (!file) return;
-    if (!(COVER_TYPES as readonly string[]).includes(file.type)) {
-      setSuccess(null);
-      return setError(t("coverTypeError"));
+    if (!picked) return;
+
+    // New article: a cover needs a saved draft, so it is saved first. Check
+    // that it can be before spending time on the photo.
+    const translations = article ? [] : toTranslations(values);
+    if (!article) {
+      if (translations.length === 0) {
+        setSuccess(null);
+        return setError(t("coverNeedContent"));
+      }
+      if (bodyTooLong()) return;
     }
-    if (file.size > COVER_MAX_BYTES) {
-      setSuccess(null);
-      return setError(t("coverSizeError", { max: COVER_MAX_BYTES / (1024 * 1024) }));
-    }
+
+    setBusy("prepare");
+    setError(null);
+    setRate(null);
+    setSuccess(null);
+    const prepared = await prepareImage(picked);
+    setBusy(null);
+    if (!prepared.ok) return setError(t(PHOTO_ERROR_KEYS[prepared.reason]));
+    const file = prepared.file;
 
     if (article) {
       return run("upload", async () => {
@@ -347,13 +368,6 @@ export function NewsForm({ id }: { id?: string }) {
       });
     }
 
-    // New article: a cover needs a saved draft, so save it first.
-    const translations = toTranslations(values);
-    if (translations.length === 0) {
-      setSuccess(null);
-      return setError(t("coverNeedContent"));
-    }
-    if (bodyTooLong()) return;
     return run("upload", async () => {
       const created = await createNews(translations);
       try {
@@ -494,12 +508,16 @@ export function NewsForm({ id }: { id?: string }) {
                 {t("coverNone")}
               </p>
             )}
-            {(busy === "upload" || busy === "removeCover") && (
+            {(busy === "prepare" || busy === "upload" || busy === "removeCover") && (
               <p
                 role="status"
                 className="absolute inset-0 grid place-items-center bg-paper/80 font-medium"
               >
-                {busy === "upload" ? t("coverUploading") : t("coverRemoving")}
+                {busy === "prepare"
+                  ? t("photoPreparing")
+                  : busy === "upload"
+                    ? t("coverUploading")
+                    : t("coverRemoving")}
               </p>
             )}
           </div>
@@ -511,10 +529,10 @@ export function NewsForm({ id }: { id?: string }) {
               <input
                 ref={fileRef}
                 type="file"
-                accept={COVER_TYPES.join(",")}
+                accept={PHOTO_ACCEPT}
                 hidden
                 tabIndex={-1}
-                onChange={(e) => onCoverPicked(e.target.files?.[0])}
+                onChange={(e) => void onCoverPicked(e.target.files?.[0])}
               />
               <div className="flex flex-wrap items-center gap-3">
                 <button

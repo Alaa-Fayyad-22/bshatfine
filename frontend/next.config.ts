@@ -57,10 +57,10 @@ const nextConfig: NextConfig = {
   experimental: {
     // Next.js buffers a request body before it goes through src/proxy.ts
     // (which forwards /api/*) and silently cuts it at this size (default
-    // 10 MB). Uploads go up to 10 MB plus the multipart wrapper, so allow what
-    // the API accepts (its own limit is 11 MB, see backend Program.cs); the
-    // proxy answers 413 for anything larger.
-    proxyClientMaxBodySize: "11mb",
+    // 10 MB). Uploads are at most 4 MB plus the multipart wrapper; the proxy
+    // answers 413 above 4.5 MB (Vercel's own limit), so this only has to be
+    // a little larger than that.
+    proxyClientMaxBodySize: "5mb",
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

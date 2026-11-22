@@ -14,18 +14,20 @@ import {
 // locale to /ar/... (default locale).
 const intl = createMiddleware(routing);
 
-// The API's own limit (backend Program.cs, MaxRequestBodySize) and the most
-// Next.js buffers for a request that goes through this proxy
-// (experimental.proxyClientMaxBodySize in next.config.ts). A larger body
-// would be cut at this size, so it is refused here instead.
-const MAX_BODY_BYTES = 11 * 1024 * 1024;
+// Vercel refuses request bodies over 4.5 MB, so nothing larger may pass here
+// either (same answer everywhere, not only on Vercel). The admin forms shrink
+// photos to at most 4 MB before sending (src/lib/prepare-image.ts), which
+// leaves room for the multipart wrapper. Next.js buffers at most
+// experimental.proxyClientMaxBodySize (next.config.ts) of a body for this
+// proxy, so that must stay above this limit.
+const MAX_BODY_BYTES = 4.5 * 1024 * 1024;
 
 const tooLarge = () =>
   NextResponse.json(
     {
       title: "Payload Too Large",
       status: 413,
-      detail: "The file is too large. The maximum is 10 MB.",
+      detail: "The file is too large. The maximum is 4 MB.",
     },
     { status: 413, headers: { "Content-Type": "application/problem+json" } },
   );

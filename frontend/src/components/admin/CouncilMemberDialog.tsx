@@ -6,10 +6,9 @@ import { useTranslations } from "next-intl";
 import {
   AdminApiError,
   COUNCIL_TEXT_MAX,
-  COVER_MAX_BYTES,
-  COVER_TYPES,
   createCouncilMember,
   getCouncilMember,
+  isPayloadTooLarge,
   removeCouncilPhoto,
   updateCouncilMember,
   uploadCouncilPhoto,
@@ -17,6 +16,7 @@ import {
   type CouncilMemberInput,
 } from "@/lib/admin-api";
 import { coverUrl } from "@/lib/cover";
+import { PHOTO_ACCEPT, PHOTO_ERROR_KEYS, prepareImage } from "@/lib/prepare-image";
 import { rateProblem, type Problem } from "@/lib/problem";
 import {
   ConflictNotice,
@@ -91,7 +91,7 @@ function Body({
   const [member, setMember] = useState<AdminCouncilMemberDto | null>(initial);
   const [values, setValues] = useState<Values>(initial ? toValues(initial) : emptyValues);
   const [baseline, setBaseline] = useState(JSON.stringify(values));
-  const [busy, setBusy] = useState<"save" | "upload" | "removePhoto" | null>(null);
+  const [busy, setBusy] = useState<"save" | "prepare" | "upload" | "removePhoto" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [rate, setRate] = useState<Problem | null>(null);
@@ -124,6 +124,7 @@ function Body({
   }
 
   function describe(e: unknown): string {
+    if (isPayloadTooLarge(e)) return tf("photoUploadTooLarge");
     if (e instanceof AdminApiError) return e.detail ?? tf("apiError", { status: e.status });
     return tf("networkError");
   }
@@ -191,17 +192,18 @@ function Body({
     }
   }
 
-  function onPhotoPicked(file: File | undefined) {
+  // Checked, scaled down and re-encoded first (see prepareImage).
+  async function onPhotoPicked(picked: File | undefined) {
     if (fileRef.current) fileRef.current.value = "";
-    if (!file || !member) return;
-    if (!(COVER_TYPES as readonly string[]).includes(file.type)) {
-      setSuccess(null);
-      return setError(t("photoTypeError"));
-    }
-    if (file.size > COVER_MAX_BYTES) {
-      setSuccess(null);
-      return setError(t("photoSizeError", { max: COVER_MAX_BYTES / (1024 * 1024) }));
-    }
+    if (!picked || !member) return;
+    setBusy("prepare");
+    setError(null);
+    setRate(null);
+    setSuccess(null);
+    const prepared = await prepareImage(picked);
+    setBusy(null);
+    if (!prepared.ok) return setError(tf(PHOTO_ERROR_KEYS[prepared.reason]));
+    const file = prepared.file;
     return run("upload", async () => {
       // Only the photo changes: keep whatever is typed, but adopt the new version.
       adopt(await uploadCouncilPhoto(member.id, file), { resetForm: false });
@@ -283,9 +285,13 @@ function Body({
                   {t("photoNone")}
                 </span>
               )}
-              {(busy === "upload" || busy === "removePhoto") && (
+              {(busy === "prepare" || busy === "upload" || busy === "removePhoto") && (
                 <p role="status" className="absolute inset-0 grid place-items-center bg-paper/80 px-2 text-center text-sm font-medium">
-                  {busy === "upload" ? t("photoUploading") : t("photoRemoving")}
+                  {busy === "prepare"
+                    ? tf("photoPreparing")
+                    : busy === "upload"
+                      ? t("photoUploading")
+                      : t("photoRemoving")}
                 </p>
               )}
             </div>
@@ -296,10 +302,10 @@ function Body({
               <input
                 ref={fileRef}
                 type="file"
-                accept={COVER_TYPES.join(",")}
+                accept={PHOTO_ACCEPT}
                 hidden
                 tabIndex={-1}
-                onChange={(e) => onPhotoPicked(e.target.files?.[0])}
+                onChange={(e) => void onPhotoPicked(e.target.files?.[0])}
               />
               <div className="flex flex-wrap gap-3">
                 <button

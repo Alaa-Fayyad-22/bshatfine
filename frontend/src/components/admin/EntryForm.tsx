@@ -19,11 +19,10 @@ import {
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   AdminApiError,
-  COVER_MAX_BYTES,
-  COVER_TYPES,
   createEntry,
   deleteEntry,
   getAdminEntry,
+  isPayloadTooLarge,
   publishEntry,
   removeEntryCover,
   unpublishEntry,
@@ -33,6 +32,7 @@ import {
   type EntryDetails,
   type EntryTranslationDto,
 } from "@/lib/admin-api";
+import { PHOTO_ACCEPT, PHOTO_ERROR_KEYS, prepareImage } from "@/lib/prepare-image";
 import { rateProblem, type Problem } from "@/lib/problem";
 import {
   ConfirmPanel,
@@ -55,7 +55,15 @@ type Text = { title: string; summary: string; body: string };
 type Values = Record<Lang, Text>;
 // The kind-specific fields as typed in the form ("" = nothing chosen / empty).
 type Fields = { category: string; status: string; year: string };
-type Busy = "save" | "publish" | "unpublish" | "upload" | "removeCover" | "delete" | null;
+type Busy =
+  | "save"
+  | "publish"
+  | "unpublish"
+  | "prepare"
+  | "upload"
+  | "removeCover"
+  | "delete"
+  | null;
 type Confirm = "publish" | "unpublish" | "removeCover" | "delete" | null;
 
 const emptyText: Text = { title: "", summary: "", body: "" };
@@ -200,6 +208,7 @@ export function EntryForm(props: { id: string; kind?: undefined } | { id?: undef
   // The server's own message whenever it gave one (business rules are 400s
   // with the reason), so nothing ever fails silently.
   function describe(e: unknown): string {
+    if (isPayloadTooLarge(e)) return tf("photoUploadTooLarge");
     if (e instanceof AdminApiError) {
       if (e.detail) return e.detail;
       if (e.status === 404) return t("gone");
@@ -337,13 +346,18 @@ export function EntryForm(props: { id: string; kind?: undefined } | { id?: undef
     });
   }
 
-  function onCoverPicked(file: File | undefined) {
+  // Checked, scaled down and re-encoded first (see prepareImage).
+  async function onCoverPicked(picked: File | undefined) {
     if (fileRef.current) fileRef.current.value = ""; // allow picking the same file again
-    if (!file || !entry) return;
-    if (!(COVER_TYPES as readonly string[]).includes(file.type)) return fail(tf("coverTypeError"));
-    if (file.size > COVER_MAX_BYTES) {
-      return fail(tf("coverSizeError", { max: COVER_MAX_BYTES / (1024 * 1024) }));
-    }
+    if (!picked || !entry) return;
+    setBusy("prepare");
+    setError(null);
+    setRate(null);
+    setSuccess(null);
+    const prepared = await prepareImage(picked);
+    setBusy(null);
+    if (!prepared.ok) return fail(tf(PHOTO_ERROR_KEYS[prepared.reason]));
+    const file = prepared.file;
     return run("upload", async () => {
       adoptState(await uploadEntryCover(entry.id, file));
       setSuccess(tf("coverUploadedOk"));
@@ -486,9 +500,13 @@ export function EntryForm(props: { id: string; kind?: undefined } | { id?: undef
                 {t("coverNone")}
               </p>
             )}
-            {(busy === "upload" || busy === "removeCover") && (
+            {(busy === "prepare" || busy === "upload" || busy === "removeCover") && (
               <p role="status" className="absolute inset-0 grid place-items-center bg-paper/80 font-medium">
-                {busy === "upload" ? tf("coverUploading") : tf("coverRemoving")}
+                {busy === "prepare"
+                  ? tf("photoPreparing")
+                  : busy === "upload"
+                    ? tf("coverUploading")
+                    : tf("coverRemoving")}
               </p>
             )}
           </div>
@@ -498,10 +516,10 @@ export function EntryForm(props: { id: string; kind?: undefined } | { id?: undef
           <input
             ref={fileRef}
             type="file"
-            accept={COVER_TYPES.join(",")}
+            accept={PHOTO_ACCEPT}
             hidden
             tabIndex={-1}
-            onChange={(e) => onCoverPicked(e.target.files?.[0])}
+            onChange={(e) => void onCoverPicked(e.target.files?.[0])}
           />
           <div className="flex flex-wrap items-center gap-3">
             <button

@@ -34,8 +34,8 @@ export { coverUrl } from "./cover";
 
 export const BODY_MAX = 20_000;
 
-export const COVER_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-export const COVER_MAX_BYTES = 10 * 1024 * 1024;
+// Photos are checked, scaled down and re-encoded in the browser before they are
+// sent: see ./prepare-image.
 
 export type Paged<T> = {
   items: T[];
@@ -58,6 +58,14 @@ export class AdminApiError extends Error {
   ) {
     super(detail ?? `Request failed: ${status}`);
   }
+}
+
+// 413: the upload was too large. It comes either from this site's proxy (JSON)
+// or from Vercel itself, as plain text ("FUNCTION_PAYLOAD_TOO_LARGE") that has
+// no `detail`. Either way the forms show their own translated message
+// ("the maximum is 4 MB") instead of a bare status code.
+export function isPayloadTooLarge(e: unknown): boolean {
+  return e instanceof AdminApiError && e.status === 413;
 }
 
 // `path` starts after /api/admin.
