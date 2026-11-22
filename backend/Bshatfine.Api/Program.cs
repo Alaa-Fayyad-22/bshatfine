@@ -57,6 +57,7 @@ await IdentitySeeder.SeedAsync(app.Services, app.Configuration);
 
 app.UseForwardedHeaders();
 app.UseBshatfineSecurityHeaders();
+app.UseBshatfineTrustedProxy(app.Configuration);
 app.UseExceptionHandler();
 if (!app.Environment.IsDevelopment())
 {

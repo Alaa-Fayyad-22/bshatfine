@@ -21,10 +21,10 @@ public static class RateLimitingSetup
         // Only trust that header from proxies we list ourselves.
         services.Configure<ForwardedHeadersOptions>(options =>
         {
-            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedProto;
             foreach (var proxy in config.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [])
                 options.KnownProxies.Add(IPAddress.Parse(proxy));
-            // Behind a hosting platform's proxy (e.g. Railway), the proxy addresses aren't fixed.
+            // Behind a hosting platform's proxy, the proxy addresses aren't fixed.
             // Only enable this when the app can ONLY be reached through that proxy.
             if (config.GetValue<bool>("ReverseProxy:TrustAllProxies"))
             {
@@ -57,8 +57,12 @@ public static class RateLimitingSetup
             };
 
             // Applies to every request, in addition to any named policy
+            // Applies to every request, in addition to any named policy.
+            // The website's own page rendering is exempt: it serves every visitor.
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(http =>
-                FixedWindow(ClientIp(http), permits: 300));
+                TrustedProxy.IsWebsiteServer(http)
+                    ? RateLimitPartition.GetNoLimiter("website-server")
+                    : FixedWindow(ClientIp(http), permits: 300));
 
             options.AddPolicy(RateLimitPolicies.Login, http => FixedWindow(ClientIp(http), permits: 10));
             options.AddPolicy(RateLimitPolicies.Admin, http => FixedWindow(UserKey(http), permits: 120));
@@ -77,7 +81,9 @@ public static class RateLimitingSetup
         });
 
     private static string ClientIp(HttpContext http) =>
-        http.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+     TrustedProxy.IsWebsiteServer(http)
+         ? "website-server"
+         : http.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 
     // Logged-in users are counted by user ID; anyone else by IP
     private static string UserKey(HttpContext http) =>
