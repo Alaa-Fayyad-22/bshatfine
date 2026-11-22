@@ -1,6 +1,6 @@
 // Admin API client. Runs in the BROWSER (the admin forms mutate data from
 // client components). It calls relative /api/admin/... paths on this site's
-// own origin; next.config.ts forwards /api/* to the API, so the session cookie
+// own origin; src/proxy.ts forwards /api/* to the API, so the session cookie
 // is first-party. Server code uses API_INTERNAL_URL in ./api.ts instead.
 import type { EntryKind, EntryLanguage } from "@/config/entries";
 import { reportAuthFailure } from "./auth-api";

@@ -1,11 +1,10 @@
 import type { NextConfig } from "next";
 
-// The API, as the Next.js SERVER reaches it (never sent to the browser). The
-// browser only ever talks to this site's own origin: /api/* is forwarded here
-// by the rewrite below, so the session cookie is first-party and there is no
-// cross-origin request (no CORS, Retry-After readable) behind any public URL.
-// Same variable as src/lib/api.ts.
-const apiInternalUrl = (process.env.API_INTERNAL_URL ?? "http://localhost:5246").replace(/\/+$/, "");
+// The browser only ever talks to this site's own origin: src/proxy.ts forwards
+// /api/* to the API (API_INTERNAL_URL, see src/lib/api-upstream.ts), so the
+// session cookie is first-party and there is no cross-origin request (no CORS,
+// Retry-After readable) behind any public URL. The proxy, not a rewrite here,
+// does the forwarding because it must add headers the API trusts.
 
 // The public address of the site, when known (see src/lib/site-url.ts).
 const siteUrl =
@@ -53,11 +52,14 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  // No "X-Powered-By: Next.js": don't advertise what we run.
+  poweredByHeader: false,
   experimental: {
-    // Next.js buffers a request body before forwarding it through the /api
-    // rewrite and silently cuts it at this size (default 10 MB). Uploads go up
-    // to 10 MB plus the multipart wrapper, so allow what the API accepts (its
-    // own limit is 11 MB, see backend Program.cs).
+    // Next.js buffers a request body before it goes through src/proxy.ts
+    // (which forwards /api/*) and silently cuts it at this size (default
+    // 10 MB). Uploads go up to 10 MB plus the multipart wrapper, so allow what
+    // the API accepts (its own limit is 11 MB, see backend Program.cs); the
+    // proxy answers 413 for anything larger.
     proxyClientMaxBodySize: "11mb",
   },
   async headers() {
@@ -79,18 +81,10 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  async rewrites() {
-    return {
-      // Before anything else, so /api/* can never be taken for a page (such as
-      // the [locale] route). The request and response pass through as they are:
-      // method, body, cookies, Set-Cookie, Retry-After, Cache-Control.
-      beforeFiles: [{ source: "/api/:path*", destination: `${apiInternalUrl}/api/:path*` }],
-    };
-  },
   images: {
     // Only the site's own photos and the files the API serves (covers, council
-    // photos), both same-origin paths. /api/files/* reaches the API through the
-    // rewrite above, so no remote host needs to be allowed.
+    // photos), both same-origin paths. /api/files/* reaches the API through
+    // src/proxy.ts, so no remote host needs to be allowed.
     localPatterns: [
       { pathname: "/images/**", search: "" },
       { pathname: "/api/files/**", search: "" },

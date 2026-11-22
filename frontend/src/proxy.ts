@@ -2,10 +2,68 @@ import { NextResponse, type NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 import { entryExists, newsExists } from "./lib/api";
+import {
+  API_INTERNAL_URL,
+  CLIENT_IP_HEADER,
+  PROXY_SECRET_HEADER,
+  proxySecret,
+} from "./lib/api-upstream";
 
 // Next.js 16 calls this file "proxy" (it used to be "middleware").
-// It redirects "/" and any path without a locale to /ar/... (default locale).
+// It forwards /api/* to the API, and redirects "/" and any path without a
+// locale to /ar/... (default locale).
 const intl = createMiddleware(routing);
+
+// The API's own limit (backend Program.cs, MaxRequestBodySize) and the most
+// Next.js buffers for a request that goes through this proxy
+// (experimental.proxyClientMaxBodySize in next.config.ts). A larger body
+// would be cut at this size, so it is refused here instead.
+const MAX_BODY_BYTES = 11 * 1024 * 1024;
+
+const tooLarge = () =>
+  NextResponse.json(
+    {
+      title: "Payload Too Large",
+      status: 413,
+      detail: "The file is too large. The maximum is 10 MB.",
+    },
+    { status: 413, headers: { "Content-Type": "application/problem+json" } },
+  );
+
+// The visitor's IP, only where it can be trusted: Vercel sets x-real-ip and
+// x-forwarded-for itself (overwriting whatever the visitor sent). Anywhere
+// else (local dev, next start) those headers come from the visitor, so none is
+// given and the API counts the request by its connection.
+function visitorIp(request: NextRequest): string | null {
+  if (process.env.VERCEL !== "1") return null;
+  const ip =
+    request.headers.get("x-real-ip")?.trim() ||
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  return ip || null;
+}
+
+// The browser only talks to this site's origin; /api/* goes on to the API
+// with the same method, body, cookies and query, and the API's answer
+// (Set-Cookie, Retry-After, Cache-Control...) comes back unchanged.
+function forwardToApi(request: NextRequest) {
+  const length = Number(request.headers.get("content-length"));
+  if (Number.isFinite(length) && length > MAX_BODY_BYTES) return tooLarge();
+
+  const headers = new Headers(request.headers);
+  // Only this proxy may set these: drop whatever the visitor sent.
+  headers.delete(PROXY_SECRET_HEADER);
+  headers.delete(CLIENT_IP_HEADER);
+
+  const secret = proxySecret();
+  if (secret) headers.set(PROXY_SECRET_HEADER, secret);
+  const ip = visitorIp(request);
+  if (ip) headers.set(CLIENT_IP_HEADER, ip);
+
+  const { pathname, search } = request.nextUrl;
+  return NextResponse.rewrite(`${API_INTERNAL_URL}${pathname}${search}`, {
+    request: { headers },
+  });
+}
 
 const ARTICLE_PATH = /^\/(ar|en)\/news\/([^/]+)\/?$/;
 const ENTRY_PATH = /^\/(ar|en)\/entries\/([^/]+)\/?$/;
@@ -19,6 +77,8 @@ function safeDecode(segment: string): string | null {
 }
 
 export default async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/api/")) return forwardToApi(request);
+
   // An unknown article slug or entry id (or an unpublished entry) must answer
   // with a real 404. The page cannot set that status itself (see newsExists),
   // so check here, before rendering, and rewrite to a path that only the
@@ -46,6 +106,10 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Skip API routes, Next internals and files with an extension (images, fonts...)
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  matcher: [
+    // Everything under /api/ (files with an extension too: /api/files/x.jpg).
+    "/api/:path+",
+    // Pages: skip /api, Next internals and files with an extension (images, fonts...)
+    "/((?!api|_next|_vercel|.*\\..*).*)",
+  ],
 };

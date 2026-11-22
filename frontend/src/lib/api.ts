@@ -1,5 +1,6 @@
 import { cacheLife } from "next/cache";
 import { ENTRY_ID, type EntryKind } from "@/config/entries";
+import { API_INTERNAL_URL, upstreamHeaders } from "./api-upstream";
 
 export type NewsDto = {
   id: string;
@@ -38,11 +39,14 @@ export type NewsPage = {
 // Server-side only (server components, the proxy's article check, "use cache"
 // functions): a relative /api URL means nothing on the server, so these call
 // the API directly. Browser code uses relative /api/... paths instead (see
-// ./auth-api and ./admin-api), which next.config.ts forwards to the same API.
-const API_URL = (process.env.API_INTERNAL_URL ?? "http://localhost:5246").replace(/\/+$/, "");
+// ./auth-api and ./admin-api), which src/proxy.ts forwards to the same API.
+// Every call sends the proxy secret (when configured): with one set, the API
+// refuses any request without it.
+const API_URL = API_INTERNAL_URL;
 
 export async function getNews(locale: string, page = 1, pageSize = 10): Promise<NewsPage> {
   const res = await fetch(`${API_URL}/api/news?lang=${locale}&page=${page}&pageSize=${pageSize}`, {
+    headers: upstreamHeaders(),
     cache: "no-store",
     // Fail fast if the API is down so the page never hangs on it.
     signal: AbortSignal.timeout(5000),
@@ -67,6 +71,7 @@ export async function getNewsBySlug(locale: string, slug: string): Promise<NewsD
   cacheLife("minutes");
 
   const res = await fetch(`${API_URL}/api/news/${encodeURIComponent(slug)}?lang=${locale}`, {
+    headers: upstreamHeaders(),
     signal: AbortSignal.timeout(5000),
   });
 
@@ -107,6 +112,7 @@ export type EntryDto = EntrySummaryDto & {
 
 export async function getEntries(kind: EntryKind, locale: string): Promise<EntrySummaryDto[]> {
   const res = await fetch(`${API_URL}/api/entries?kind=${kind}&lang=${locale}`, {
+    headers: upstreamHeaders(),
     cache: "no-store",
     signal: AbortSignal.timeout(5000),
   });
@@ -123,6 +129,7 @@ export async function getEntry(locale: string, id: string): Promise<EntryDto | n
 
   if (!ENTRY_ID.test(id)) return null;
   const res = await fetch(`${API_URL}/api/entries/${encodeURIComponent(id)}?lang=${locale}`, {
+    headers: upstreamHeaders(),
     signal: AbortSignal.timeout(5000),
   });
   if (res.status === 404) return null;
@@ -135,6 +142,7 @@ export async function entryExists(locale: string, id: string): Promise<boolean |
   if (!ENTRY_ID.test(id)) return false;
   try {
     const res = await fetch(`${API_URL}/api/entries/${encodeURIComponent(id)}?lang=${locale}`, {
+      headers: upstreamHeaders(),
       cache: "no-store",
       signal: AbortSignal.timeout(3000),
     });
@@ -165,6 +173,7 @@ export type SiteSettingsDto = {
 export async function getSiteSettings(locale: string): Promise<SiteSettingsDto | null> {
   try {
     const res = await fetch(`${API_URL}/api/site-settings?lang=${locale}`, {
+      headers: upstreamHeaders(),
       cache: "no-store",
       signal: AbortSignal.timeout(5000),
     });
@@ -183,6 +192,7 @@ export type CouncilMemberDto = {
 
 export async function getCouncil(locale: string): Promise<CouncilMemberDto[]> {
   const res = await fetch(`${API_URL}/api/council?lang=${locale}`, {
+    headers: upstreamHeaders(),
     cache: "no-store",
     signal: AbortSignal.timeout(5000),
   });
@@ -198,6 +208,7 @@ export async function getCouncil(locale: string): Promise<CouncilMemberDto[]> {
 export async function newsExists(locale: string, slug: string): Promise<boolean | null> {
   try {
     const res = await fetch(`${API_URL}/api/news/${encodeURIComponent(slug)}?lang=${locale}`, {
+      headers: upstreamHeaders(),
       cache: "no-store",
       signal: AbortSignal.timeout(3000),
     });

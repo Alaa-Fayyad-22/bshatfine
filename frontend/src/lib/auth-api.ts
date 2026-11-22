@@ -4,7 +4,7 @@
 // cookie along with `credentials: "include"`.
 //
 // The address is relative (/api/auth/...): the browser only talks to this
-// site's own origin and next.config.ts forwards /api/* to the API, so the
+// site's own origin and src/proxy.ts forwards /api/* to the API, so the
 // session cookie is first-party.
 //
 // None of these functions throws. They return a result, so callers handle
