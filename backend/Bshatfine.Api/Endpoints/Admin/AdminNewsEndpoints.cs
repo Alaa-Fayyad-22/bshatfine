@@ -1,5 +1,6 @@
 using Bshatfine.Application.Dtos;
 using Bshatfine.Application.Services;
+using Bshatfine.Api.Security;
 
 namespace Bshatfine.Api.Endpoints.Admin;
 
@@ -59,7 +60,8 @@ public static class AdminNewsEndpoints
             var news = await service.SetCoverImageAsync(id, stream, file.Length, ct);
             return news is null ? Results.NotFound() : Results.Ok(news);
         }).DisableAntiforgery()
-        .WithFormOptions(multipartBodyLengthLimit: 11 * 1024 * 1024); 
+        .WithFormOptions(multipartBodyLengthLimit: 11 * 1024 * 1024)
+        .RequireRateLimiting(RateLimitPolicies.Uploads);
 
         group.MapDelete("/{id:guid}/cover", async (Guid id, NewsService service, CancellationToken ct) =>
         {

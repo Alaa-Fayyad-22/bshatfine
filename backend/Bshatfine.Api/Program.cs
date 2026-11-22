@@ -49,6 +49,7 @@ builder.Services.AddHsts(options =>
     options.IncludeSubDomains = true;
 });
 builder.Services.AddExceptionHandler<ConcurrencyExceptionHandler>();
+builder.Services.AddExceptionHandler<DatabaseExceptionHandler>();
 
 // ---------- Pipeline ----------
 var app = builder.Build();

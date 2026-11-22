@@ -60,6 +60,8 @@ set "LONG=%A50%%A50%%A50%%A50%A"
 > news-dup.json         echo {"translations":[{"language":"ar","title":"One","body":"One"},{"language":"AR","title":"Two","body":"Two"}]}
 > news-long.json        echo {"translations":[{"language":"ar","title":"%LONG%","body":"x"}]}
 > news-emptytitle.json  echo {"translations":[{"language":"ar","title":"","body":"x"}]}
+> news-nul.json         echo {"translations":[{"language":"ar","title":"a\u0000b","body":"x"}]}
+> entry-nul.json        echo {"kind":"place","translations":[{"language":"ar","title":"a\u0000b","summary":"x"}],"category":"nature"}
 
 > entry-ok.json         echo {"kind":"project","translations":[{"language":"ar","title":"Suite AR project","summary":"Suite AR summary"},{"language":"en","title":"Suite test project","summary":"Suite EN summary","body":"Suite body"}],"category":"roads","status":"planned","year":2026}
 > entry-badkind.json    echo {"kind":"castle","translations":[{"language":"ar","title":"x","summary":"x"}]}
@@ -168,6 +170,7 @@ call :http 400 "Create news - unsupported language" POST "/api/admin/news" admin
 call :http 400 "Create news - duplicate language ar and AR" POST "/api/admin/news" admin.txt news-dup.json
 call :http 400 "Create news - title over 200 characters" POST "/api/admin/news" admin.txt news-long.json
 call :http 400 "Create news - empty title" POST "/api/admin/news" admin.txt news-emptytitle.json
+call :http 400 "Create news - NUL character refused, not a 500" POST "/api/admin/news" admin.txt news-nul.json
 call :http 201 "Create news - English-only draft" POST "/api/admin/news" admin.txt news-en-only.json
 call :json ".id"
 set "EN_ID=%VAL%"
@@ -261,6 +264,7 @@ call :http 400 "Create entry - unknown kind" POST "/api/admin/entries" admin.txt
 call :http 400 "Create entry - category of another kind" POST "/api/admin/entries" admin.txt entry-badcat.json
 call :http 400 "Create entry - year out of range" POST "/api/admin/entries" admin.txt entry-badyear.json
 call :http 400 "Create entry - history has no category" POST "/api/admin/entries" admin.txt entry-history-cat.json
+call :http 400 "Create entry - NUL character refused, not a 500" POST "/api/admin/entries" admin.txt entry-nul.json
 call :http 201 "Create entry - project" POST "/api/admin/entries" admin.txt entry-ok.json
 call :json ".id"
 set "ENTRY_ID=%VAL%"
@@ -307,6 +311,7 @@ call :check ".items[0].entityId" "%NEWS_ID%" "Audit filter - by entity"
 call :check ".items.Count -ge 8" "True" "Audit - every news action was recorded"
 call :http 200 "Audit filter - entry deleted" GET "/api/admin/audit?action=entry.deleted" admin.txt -
 call :check ".totalCount -gt 0" "True" "Audit - entry deletion recorded"
+call :http 400 "Audit filter - NUL character refused, not a 500" GET "/api/admin/audit?userEmail=%%%%00" admin.txt -
 call :http 200 "Audit filter - email, case-insensitive" GET "/api/admin/audit?userEmail=ADMINTEST" admin.txt -
 call :check ".totalCount -gt 0" "True" "Audit filter - finds admintest"
 
@@ -319,6 +324,7 @@ call :http 403 "Users - Editor is refused" GET "/api/admin/users" editor.txt -
 call :http 200 "Users - Admin" GET "/api/admin/users" admin.txt -
 call :http 200 "Users - search" GET "/api/admin/users?search=editortest" admin.txt -
 call :check ".totalCount" "1" "Users - search finds exactly one"
+call :http 400 "Users - NUL character in search refused, not a 500" GET "/api/admin/users?search=%%%%00" admin.txt -
 call :http 403 "Create user - Editor is refused" POST "/api/admin/users" editor.txt user-create.json
 call :http 400 "Create user - invalid role" POST "/api/admin/users" admin.txt user-badrole.json
 call :http 400 "Create user - duplicate email" POST "/api/admin/users" admin.txt user-dup.json
@@ -455,6 +461,22 @@ if "%GOT429%"=="1" (
 )
 call :header "Retry-After" 1 "Rate limit - Retry-After header present"
 call :http 200 "Rate limit - public site unaffected" GET "/api/news?lang=ar" - -
+
+echo.
+echo --- Upload rate limit on news covers ---
+call :http 201 "Upload limit - create a draft" POST "/api/admin/news" admin.txt news-ok.json
+call :json ".id"
+set "UL_ID=%VAL%"
+set "GOT429=0"
+for /L %%i in (1,1,25) do call :ulhit
+if "%GOT429%"=="1" (
+  set /a PASS+=1
+  echo [PASS] Upload limit - rapid news cover uploads get 429
+) else (
+  set /a FAIL+=1
+  echo [FAIL] Upload limit - 25 rapid news cover uploads never got 429
+)
+call :http 204 "Upload limit - delete the draft and its cover" DELETE "/api/admin/news/%UL_ID%" admin.txt -
 
 REM ==================================================================
 echo.
@@ -614,6 +636,13 @@ exit /b
 :rlhit
 set "RC=000"
 for /f "usebackq" %%c in (`curl -s -o out.json -D hdr.txt -w "%%{http_code}" -X POST -H "Content-Type: application/json" --data-binary @login-unknown.json "%BASE%/api/auth/login"`) do set "RC=%%c"
+if "%RC%"=="429" set "GOT429=1"
+exit /b
+
+:ulhit
+if "%GOT429%"=="1" exit /b
+set "RC=000"
+for /f "usebackq" %%c in (`curl -s -o out.json -w "%%{http_code}" -X POST -b admin.txt -F "file=@%IMG%" "%BASE%/api/admin/news/%UL_ID%/cover"`) do set "RC=%%c"
 if "%RC%"=="429" set "GOT429=1"
 exit /b
 
