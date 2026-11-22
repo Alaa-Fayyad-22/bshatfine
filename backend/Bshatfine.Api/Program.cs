@@ -64,6 +64,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 app.UseCors(FrontendCorsPolicy);
+app.UseBshatfineOriginCheck(allowedOrigins);
 app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();

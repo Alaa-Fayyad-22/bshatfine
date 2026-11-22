@@ -487,6 +487,18 @@ call :header "Access-Control-Allow-Credentials: true" 1 "CORS - credentials allo
 curl -s -o out.json -D hdr.txt -H "Origin: http://localhost:3000" "%BASE%/api/news?lang=ar&pageSize=1"
 call :header "Access-Control-Expose-Headers: Retry-After" 1 "CORS - Retry-After readable by the frontend"
 
+echo.
+echo --- Origin check: state-changing requests from other websites ---
+call :origin 403 "Origin - another website cannot create news" "https://evil.example" POST "/api/admin/news" news-ok.json
+call :origin 403 "Origin - a sandboxed page, Origin null, cannot create news" "null" POST "/api/admin/news" news-ok.json
+call :origin 403 "Origin - another port on localhost cannot create news" "http://localhost:4444" POST "/api/admin/news" news-ok.json
+call :origin 403 "Origin - another website cannot log out a user" "https://evil.example" POST "/api/auth/logout" -
+call :origin 201 "Origin - the frontend itself can create news" "http://localhost:3000" POST "/api/admin/news" news-ok.json
+call :json ".id"
+set "OR_ID=%VAL%"
+call :http 204 "Origin - delete that draft again" DELETE "/api/admin/news/%OR_ID%" admin.txt -
+call :http 200 "Origin - GET from another website is not blocked, CORS hides it" GET "/api/news?lang=ar&pageSize=1" - -
+
 REM ==================================================================
 echo.
 echo === 12. SECURITY HEADERS ===
@@ -637,6 +649,17 @@ exit /b
 set "RC=000"
 for /f "usebackq" %%c in (`curl -s -o out.json -D hdr.txt -w "%%{http_code}" -X POST -H "Content-Type: application/json" --data-binary @login-unknown.json "%BASE%/api/auth/login"`) do set "RC=%%c"
 if "%RC%"=="429" set "GOT429=1"
+exit /b
+
+:origin
+REM %1 expected  %2 name  %3 Origin header  %4 method  %5 path  %6 json body file or -   (always as the test Admin)
+set "CODE=000"
+if "%~6"=="-" (
+  for /f "usebackq" %%c in (`curl -s -o out.json -D hdr.txt -w "%%{http_code}" -X %~4 -b admin.txt -c admin.txt -H "Origin: %~3" "%BASE%%~5"`) do set "CODE=%%c"
+) else (
+  for /f "usebackq" %%c in (`curl -s -o out.json -D hdr.txt -w "%%{http_code}" -X %~4 -b admin.txt -c admin.txt -H "Origin: %~3" -H "Content-Type: application/json" --data-binary @%~6 "%BASE%%~5"`) do set "CODE=%%c"
+)
+call :verdict "%~1" "%~2" ""
 exit /b
 
 :ulhit
