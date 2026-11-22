@@ -8,10 +8,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Bshatfine.Infrastructure.Identity;
 
-public class UserAdminService(AppDbContext db, UserManager<AppUser> users, IAuditLogger audit) : IUserAdminService
+public class UserAdminService(
+    AppDbContext db, UserManager<AppUser> users, IAuditLogger audit, IExclusiveLock exclusive) : IUserAdminService
 {
     private const string EntityType = "User";
     private const int MaxDisplayNameLength = 100;
+
+    // Creating, demoting and disabling staff run one at a time, so two parallel requests
+    // can never both pass the "last active Admin" or "email already exists" checks.
+    private const string StaffAccountsLock = "staff-accounts";
 
     // ---------- Reading ----------
     public async Task<PagedResult<StaffUserDto>> GetPageAsync(StaffUserFilter filter, CancellationToken ct)
@@ -63,7 +68,10 @@ public class UserAdminService(AppDbContext db, UserManager<AppUser> users, IAudi
     }
 
     // ---------- Changes (each one audited) ----------
-    public async Task<TemporaryPasswordResult> CreateAsync(CreateStaffUserRequest request, CancellationToken ct)
+    public Task<TemporaryPasswordResult> CreateAsync(CreateStaffUserRequest request, CancellationToken ct) =>
+        exclusive.RunAsync(StaffAccountsLock, () => CreateCoreAsync(request, ct), ct);
+
+    private async Task<TemporaryPasswordResult> CreateCoreAsync(CreateStaffUserRequest request, CancellationToken ct)
     {
         var role = RequireStaffRole(request.Role);
         var email = (request.Email ?? string.Empty).Trim();
@@ -99,7 +107,10 @@ public class UserAdminService(AppDbContext db, UserManager<AppUser> users, IAudi
         return new TemporaryPasswordResult(ToDto(user, role), temporaryPassword);
     }
 
-    public async Task<StaffUserDto?> UpdateAsync(Guid id, UpdateStaffUserRequest request, Guid actingUserId, CancellationToken ct)
+    public Task<StaffUserDto?> UpdateAsync(Guid id, UpdateStaffUserRequest request, Guid actingUserId, CancellationToken ct) =>
+        exclusive.RunAsync(StaffAccountsLock, () => UpdateCoreAsync(id, request, actingUserId, ct), ct);
+
+    private async Task<StaffUserDto?> UpdateCoreAsync(Guid id, UpdateStaffUserRequest request, Guid actingUserId, CancellationToken ct)
     {
         var (user, currentRole) = await FindStaffAsync(id);
         if (user is null || currentRole is null)
@@ -114,7 +125,7 @@ public class UserAdminService(AppDbContext db, UserManager<AppUser> users, IAudi
             if (id == actingUserId)
                 throw new DomainException("You cannot remove your own Admin role.");
 
-            await EnsureNotLastActiveAdminAsync(user);
+            await EnsureNotLastActiveAdminAsync(user, ct);
         }
 
         user.DisplayName = name;
@@ -135,7 +146,10 @@ public class UserAdminService(AppDbContext db, UserManager<AppUser> users, IAudi
         return ToDto(user, newRole);
     }
 
-    public async Task<StaffUserDto?> SetActiveAsync(Guid id, bool active, Guid actingUserId, CancellationToken ct)
+    public Task<StaffUserDto?> SetActiveAsync(Guid id, bool active, Guid actingUserId, CancellationToken ct) =>
+        exclusive.RunAsync(StaffAccountsLock, () => SetActiveCoreAsync(id, active, actingUserId, ct), ct);
+
+    private async Task<StaffUserDto?> SetActiveCoreAsync(Guid id, bool active, Guid actingUserId, CancellationToken ct)
     {
         var (user, role) = await FindStaffAsync(id);
         if (user is null || role is null)
@@ -147,7 +161,7 @@ public class UserAdminService(AppDbContext db, UserManager<AppUser> users, IAudi
                 throw new DomainException("You cannot disable your own account.");
 
             if (role == Roles.Admin)
-                await EnsureNotLastActiveAdminAsync(user);
+                await EnsureNotLastActiveAdminAsync(user, ct);
         }
 
         user.IsActive = active;
@@ -170,8 +184,6 @@ public class UserAdminService(AppDbContext db, UserManager<AppUser> users, IAudi
 
         if (id == actingUserId)
             throw new DomainException("Use Change password to change your own password.");
-
-
 
         var temporaryPassword = TemporaryPasswordGenerator.Generate();
         var token = await users.GeneratePasswordResetTokenAsync(user);
@@ -230,9 +242,16 @@ public class UserAdminService(AppDbContext db, UserManager<AppUser> users, IAudi
         return role is null ? (null, null) : (user, role);
     }
 
-    private async Task EnsureNotLastActiveAdminAsync(AppUser user)
+    // Counts in the database (not from tracked entities), so it always sees changes
+    // committed by a parallel request that held the lock just before us.
+    private async Task EnsureNotLastActiveAdminAsync(AppUser user, CancellationToken ct)
     {
-        var activeAdmins = (await users.GetUsersInRoleAsync(Roles.Admin)).Count(u => u.IsActive);
+        var activeAdmins = await (
+            from u in db.Users.AsNoTracking()
+            join ur in db.UserRoles on u.Id equals ur.UserId
+            join r in db.Roles on ur.RoleId equals r.Id
+            where r.Name == Roles.Admin && u.IsActive
+            select u.Id).CountAsync(ct);
 
         if (user.IsActive && activeAdmins <= 1)
             throw new DomainException("This is the last active Admin. Create or enable another Admin first.");

@@ -64,7 +64,7 @@ public class Entry
 
         Category = rule.UsesCategory
             ? NormalizeCategory(category, rule)
-            : category is null ? null : throw new DomainException($"A {Kind} entry has no category.");
+            : string.IsNullOrWhiteSpace(category) ? null : throw new DomainException($"A {Kind} entry has no category.");
 
         Status = rule.UsesStatus
             ? status ?? throw new DomainException("The status is required.")

@@ -3,6 +3,7 @@ using Bshatfine.Application.Abstractions;
 using Bshatfine.Application.Security;
 using Bshatfine.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Bshatfine.Api.Security;
 using Bshatfine.Domain.Common;
 
@@ -25,9 +26,37 @@ public static class AuthEndpoints
 
         // ---------- Login, step 1: password ----------
         group.MapPost("/login", async (LoginRequest request, UserManager<AppUser> users, HttpContext http,
-            SignInManager <AppUser> signIn, IAuditLogger audit, CancellationToken ct) =>
+            SignInManager<AppUser> signIn, IAuditLogger audit, IExclusiveLock exclusive, CancellationToken ct) =>
         {
-            var user = await users.FindByEmailAsync(request.Email ?? string.Empty);
+            var email = (request.Email ?? string.Empty).Trim();
+
+            AppUser? user;
+            SignInResult result;
+            try
+            {
+                // Logins for the SAME email run one at a time, so parallel wrong passwords are all
+                // counted and the lockout always happens. The user is loaded INSIDE the lock, so it
+                // always sees the failed-attempt count the previous attempt just saved.
+                (user, result) = await exclusive.RunAsync($"login:{users.NormalizeEmail(email)}", async () =>
+                {
+                    var found = await users.FindByEmailAsync(email);
+                    if (found is null || !found.IsActive)
+                        return (found, SignInResult.Failed);
+
+                    var signInResult = await signIn.PasswordSignInAsync(
+                        found, request.Password ?? string.Empty, isPersistent: false, lockoutOnFailure: true);
+
+                    return (found, signInResult);
+                }, ct);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // Should not happen with the lock; if it ever does, it is a failed login, never a 500
+                await audit.LogAsync(new AuditEvent(AuditActions.LoginFailed,
+                    Details: new { reason = "concurrent_attempt" }, UserEmail: email), ct);
+
+                return Results.Problem(InvalidLogin, statusCode: StatusCodes.Status401Unauthorized);
+            }
 
             // Unknown email or disabled account: the SAME answer as a wrong password
             if (user is null || !user.IsActive)
@@ -40,9 +69,6 @@ public static class AuthEndpoints
 
                 return Results.Problem(InvalidLogin, statusCode: StatusCodes.Status401Unauthorized);
             }
-
-            var result = await signIn.PasswordSignInAsync(
-                user, request.Password ?? string.Empty, isPersistent: false, lockoutOnFailure: true);
 
             if (result.Succeeded)
             {
