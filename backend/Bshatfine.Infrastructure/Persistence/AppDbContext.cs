@@ -20,6 +20,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<SiteSettings> SiteSettings => Set<SiteSettings>();
     public DbSet<CouncilMember> CouncilMembers => Set<CouncilMember>();
     public DbSet<Entry> Entries => Set<Entry>();
+    public DbSet<AuthSession> AuthSessions => Set<AuthSession>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

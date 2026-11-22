@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Bshatfine.Application.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -66,6 +67,12 @@ public static class AuthenticationSetup
                 }
             };
         });
+
+        // Sessions live in the database; the cookie only carries the session key,
+        // so logout really ends the session, even for a copied cookie
+        services.AddSingleton<ITicketStore, DatabaseTicketStore>();
+        services.AddOptions<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme)
+            .Configure<ITicketStore>((options, store) => options.SessionStore = store);
 
         // Re-check accounts every minute: disabling an account or forcing a logout
         // takes effect quickly, even for sessions that are already open

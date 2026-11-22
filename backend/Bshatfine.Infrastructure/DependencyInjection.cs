@@ -59,6 +59,7 @@ public static class DependencyInjection
         services.AddScoped<IUserAdminService, UserAdminService>();
         services.AddScoped<IEntryRepository, EntryRepository>();
         services.AddScoped<IExclusiveLock, PostgresExclusiveLock>();
+        services.AddScoped<IAuthSessionStore, AuthSessionStore>();
         services.AddDataProtection()
             .SetApplicationName("Bshatfine")
             .PersistKeysToDbContext<AppDbContext>();

@@ -137,8 +137,12 @@ call :http 400 "2FA enable - wrong code" POST "/api/auth/2fa/enable" admin.txt c
 call :http 401 "Change password - not logged in" POST "/api/auth/change-password" - pw-anon.json
 call :http 204 "Logout - without a session is harmless" POST "/api/auth/logout" - -
 call :http 200 "Login - second Admin session" POST "/api/auth/login" admin2.txt login-admin.json
+copy /y admin2.txt admin2-copy.txt >nul
 call :http 204 "Logout - second session" POST "/api/auth/logout" admin2.txt -
 call :http 401 "Me - after logout" GET "/api/auth/me" admin2.txt -
+call :http 401 "Logout - a saved copy of the old cookie no longer works" GET "/api/auth/me" admin2-copy.txt -
+call :http 401 "Logout - the old cookie cannot reach admin data" GET "/api/admin/news" admin2-copy.txt -
+call :http 200 "Logout - the other session stays logged in" GET "/api/auth/me" admin.txt -
 call :http 404 "Register - switched off, looks like it does not exist" POST "/api/auth/register" - login-unknown.json
 call :http 401 "Deny by default - unknown admin route, anonymous" GET "/api/admin/does-not-exist" - -
 call :http 404 "Deny by default - unknown admin route, logged in" GET "/api/admin/does-not-exist" admin.txt -
