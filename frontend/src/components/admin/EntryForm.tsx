@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
-import { useFormatter, useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatDate, formatNumber, formatYear } from "@/lib/numbers";
 import { Markdown } from "@/components/Markdown";
 import { NewsCover } from "@/components/NewsCover";
 import {
@@ -98,8 +99,8 @@ export function EntryForm(props: { id: string; kind?: undefined } | { id?: undef
   const tc = useTranslations("Admin.content");
   const tl = useTranslations("Admin.languages");
   const labels = useEntryLabels();
-  const format = useFormatter();
   const locale = useLocale();
+  const num = (value: number) => formatNumber(value, locale);
   const router = useRouter();
   const uid = useId();
 
@@ -212,7 +213,7 @@ export function EntryForm(props: { id: string; kind?: undefined } | { id?: undef
     if (e instanceof AdminApiError) {
       if (e.detail) return e.detail;
       if (e.status === 404) return t("gone");
-      return tf("apiError", { status: e.status });
+      return tf("apiError", { status: num(e.status) });
     }
     return tf("networkError");
   }
@@ -259,7 +260,7 @@ export function EntryForm(props: { id: string; kind?: undefined } | { id?: undef
       if (!filled(v)) continue;
       if (!v.title.trim() || !v.summary.trim()) return fail(t("incomplete", { language: tl(l) }), l);
       if (v.body.length > ENTRY_BODY_MAX) {
-        return fail(t("bodyTooLong", { language: tl(l), max: ENTRY_BODY_MAX }), l);
+        return fail(t("bodyTooLong", { language: tl(l), max: num(ENTRY_BODY_MAX) }), l);
       }
       translations.push({ language: l, title: v.title.trim(), summary: v.summary.trim(), body: v.body.trim() });
     }
@@ -444,7 +445,7 @@ export function EntryForm(props: { id: string; kind?: undefined } | { id?: undef
         <dt className="text-ink/70">{label}</dt>
         <dd>
           <time dateTime={iso}>
-            {format.dateTime(new Date(iso), { dateStyle: "medium", timeStyle: "short" })}
+            {formatDate(iso, locale, { dateStyle: "medium", timeStyle: "short" })}
           </time>
         </dd>
       </div>
@@ -637,7 +638,7 @@ export function EntryForm(props: { id: string; kind?: undefined } | { id?: undef
                   className={inputClass}
                 />
                 <p id={`${uid}-year-hint`} className="mt-1 text-sm text-ink/70">
-                  {t("yearHint", { min: ENTRY_YEAR_MIN, max: ENTRY_YEAR_MAX })}
+                  {t("yearHint", { min: formatYear(ENTRY_YEAR_MIN, locale), max: formatYear(ENTRY_YEAR_MAX, locale) })}
                 </p>
               </div>
             )}
@@ -715,7 +716,7 @@ export function EntryForm(props: { id: string; kind?: undefined } | { id?: undef
                   className={inputClass}
                 />
                 <p id={`${uid}-count-${l}`} className="mt-1 text-sm text-ink/70">
-                  {t("chars", { count: v.title.length, max: ENTRY_TITLE_MAX })}
+                  {t("chars", { count: num(v.title.length), max: num(ENTRY_TITLE_MAX) })}
                 </p>
               </div>
               <div>
@@ -738,7 +739,7 @@ export function EntryForm(props: { id: string; kind?: undefined } | { id?: undef
                   className="mt-2 block w-full rounded-control border border-ink/40 bg-paper px-3 py-2 leading-relaxed read-only:bg-stone"
                 />
                 <p id={`${uid}-sumcount-${l}`} className="mt-1 text-sm text-ink/70">
-                  {t("chars", { count: v.summary.length, max: ENTRY_SUMMARY_MAX })}
+                  {t("chars", { count: num(v.summary.length), max: num(ENTRY_SUMMARY_MAX) })}
                 </p>
               </div>
               <div>
@@ -772,7 +773,7 @@ export function EntryForm(props: { id: string; kind?: undefined } | { id?: undef
                         : "text-ink/70"
                   }`}
                 >
-                  {t("chars", { count: bodyLen, max: ENTRY_BODY_MAX })}
+                  {t("chars", { count: num(bodyLen), max: num(ENTRY_BODY_MAX) })}
                 </p>
                 <div aria-live="polite" className="empty:hidden">
                   {bodyLen > ENTRY_BODY_MAX ? (

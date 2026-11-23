@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   listUsers,
   STAFF_ROLES,
@@ -11,6 +11,7 @@ import {
   type TemporaryPasswordResult,
   type UserFilter,
 } from "@/lib/admin-api";
+import { formatDate, formatNumber } from "@/lib/numbers";
 import { toProblem, type Problem } from "@/lib/problem";
 import { useAdminUser } from "./AdminGuard";
 import { CreateUserDialog } from "./CreateUserDialog";
@@ -31,7 +32,8 @@ type Reveal = { name: string; email: string; password: string };
 
 export function UsersPanel() {
   const t = useTranslations("Admin.users");
-  const format = useFormatter();
+  const locale = useLocale();
+  const num = (value: number) => formatNumber(value, locale);
   const me = useAdminUser();
   const uid = useId();
 
@@ -231,7 +233,7 @@ export function UsersPanel() {
         )
       ) : (
         <div aria-busy={loading} className={loading ? "opacity-60" : undefined}>
-          <p className="mt-6 text-ink/80">{t("total", { count: data.totalCount })}</p>
+          <p className="mt-6 text-ink/80">{t("total", { count: data.totalCount, n: num(data.totalCount) })}</p>
 
           {page > Math.max(data.totalPages, 1) ? (
             <div role="status" className="mt-8 max-w-prose">
@@ -281,7 +283,7 @@ export function UsersPanel() {
                       </td>
                       <td className="py-3 pe-4 whitespace-nowrap">
                         <time dateTime={u.createdAt}>
-                          {format.dateTime(new Date(u.createdAt), { dateStyle: "medium" })}
+                          {formatDate(u.createdAt, locale, { dateStyle: "medium" })}
                         </time>
                       </td>
                       <td className="py-3 whitespace-nowrap">
@@ -321,7 +323,7 @@ export function UsersPanel() {
                 <span />
               )}
               <span className="text-sm text-ink/70">
-                {t("page", { page, total: data.totalPages })}
+                {t("page", { page: num(page), total: num(data.totalPages) })}
               </span>
               {page < data.totalPages ? (
                 <button

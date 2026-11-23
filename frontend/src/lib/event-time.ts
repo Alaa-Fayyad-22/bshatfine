@@ -9,12 +9,9 @@
 // - All-day events: the start is the first day at 00:00 Beirut, the end (if
 //   any) the LAST day at 00:00 Beirut (the API counts that day inclusively).
 
-export const EVENT_TIME_ZONE = "Asia/Beirut";
+import { dateTimeFormat } from "./numbers";
 
-// The display locales: Levantine Arabic month names (كانون الأول...) and
-// British English ("20 December 2026, 18:00").
-export const DISPLAY_LOCALE = { ar: "ar-LB", en: "en-GB" } as const;
-const displayLocale = (locale: string) => (locale === "ar" ? DISPLAY_LOCALE.ar : DISPLAY_LOCALE.en);
+export const EVENT_TIME_ZONE = "Asia/Beirut";
 
 type Wall = { y: number; m: number; d: number; h: number; mi: number };
 
@@ -112,17 +109,10 @@ export function beirutParts(iso: string): { date: string; time: string } {
 
 export type EventWhen = { startsAt: string; endsAt: string | null; isAllDay: boolean };
 
-const formats = new Map<string, Intl.DateTimeFormat>();
-
-function formatter(locale: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
-  const key = `${locale}|${JSON.stringify(options)}`;
-  let f = formats.get(key);
-  if (!f) {
-    f = new Intl.DateTimeFormat(displayLocale(locale), { timeZone: EVENT_TIME_ZONE, ...options });
-    formats.set(key, f);
-  }
-  return f;
-}
+// Levantine Arabic month names and Arabic-Indic digits ("٢٠ كانون الأول ٢٠٢٦، ١٨:٠٠"),
+// or British English ("20 December 2026, 18:00"): see lib/numbers.ts.
+const formatter = (locale: string, options: Intl.DateTimeFormatOptions) =>
+  dateTimeFormat(locale, { timeZone: EVENT_TIME_ZONE, ...options });
 
 const DAY: Intl.DateTimeFormatOptions = { day: "numeric", month: "long", year: "numeric" };
 const TIME_OF_DAY: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit", hourCycle: "h23" };

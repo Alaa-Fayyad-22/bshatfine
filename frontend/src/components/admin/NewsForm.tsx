@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
-import { useFormatter, useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatDate, formatNumber } from "@/lib/numbers";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   AdminApiError,
@@ -74,9 +75,9 @@ function toTranslations(values: Values): TranslationDto[] {
 export function NewsForm({ id }: { id?: string }) {
   const t = useTranslations("Admin.form");
   const tl = useTranslations("Admin.languages");
-  const format = useFormatter();
   const router = useRouter();
   const locale = useLocale();
+  const num = (value: number) => formatNumber(value, locale);
   const uid = useId();
 
   const [load, setLoad] = useState<"loading" | "ready" | "notfound" | "error">(
@@ -202,7 +203,7 @@ export function NewsForm({ id }: { id?: string }) {
 
   function describe(e: unknown): string {
     if (isPayloadTooLarge(e)) return t("photoUploadTooLarge");
-    if (e instanceof AdminApiError) return e.detail ?? t("apiError", { status: e.status });
+    if (e instanceof AdminApiError) return e.detail ?? t("apiError", { status: num(e.status) });
     return t("networkError");
   }
 
@@ -242,7 +243,7 @@ export function NewsForm({ id }: { id?: string }) {
     const over = langs.find((l) => values[l].body.length > BODY_MAX);
     if (!over) return false;
     setSuccess(null);
-    setError(t("bodyTooLong", { language: tl(over), max: BODY_MAX }));
+    setError(t("bodyTooLong", { language: tl(over), max: num(BODY_MAX) }));
     setTab(over);
     return true;
   }
@@ -443,7 +444,7 @@ export function NewsForm({ id }: { id?: string }) {
       <div>
         <dt className="text-ink/70">{label}</dt>
         <dd>
-          <time dateTime={iso}>{format.dateTime(new Date(iso), { dateStyle: "medium", timeStyle: "short" })}</time>
+          <time dateTime={iso}>{formatDate(iso, locale, { dateStyle: "medium", timeStyle: "short" })}</time>
         </dd>
       </div>
     ) : null;
@@ -658,7 +659,7 @@ export function NewsForm({ id }: { id?: string }) {
               className="mt-1 block min-h-11 w-full rounded-control border border-ink/40 bg-paper px-3 py-2 read-only:bg-stone"
             />
             <p id={`${uid}-count-${l}`} className="mt-1 text-sm text-ink/70">
-              {t("chars", { count: values[l].title.length, max: MAX_TITLE })}
+              {t("chars", { count: num(values[l].title.length), max: num(MAX_TITLE) })}
             </p>
           </div>
           <div>
@@ -689,7 +690,7 @@ export function NewsForm({ id }: { id?: string }) {
                     : "text-ink/70"
               }`}
             >
-              {t("chars", { count: values[l].body.length, max: BODY_MAX })}
+              {t("chars", { count: num(values[l].body.length), max: num(BODY_MAX) })}
             </p>
             <div aria-live="polite" className="empty:hidden">
               {values[l].body.length > BODY_MAX ? (

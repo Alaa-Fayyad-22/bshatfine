@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useId, useState, type FormEvent } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { listAudit, type AuditFilter, type AuditLogDto, type Paged } from "@/lib/admin-api";
+import { formatDate, formatNumber } from "@/lib/numbers";
 import {
   actionKey,
   AUDIT_ACTIONS,
@@ -26,7 +27,8 @@ type Draft = typeof emptyFilter;
 
 export function AuditPanel() {
   const t = useTranslations("Admin.audit");
-  const format = useFormatter();
+  const locale = useLocale();
+  const num = (value: number) => formatNumber(value, locale);
   const uid = useId();
 
   const [draft, setDraft] = useState<Draft>(emptyFilter);
@@ -242,7 +244,7 @@ export function AuditPanel() {
         )
       ) : (
         <div aria-busy={loading} className={loading ? "opacity-60" : undefined}>
-          <p className="mt-6 text-ink/80">{t("total", { count: data.totalCount })}</p>
+          <p className="mt-6 text-ink/80">{t("total", { count: data.totalCount, n: num(data.totalCount) })}</p>
 
           {page > Math.max(data.totalPages, 1) ? (
             <div role="status" className="mt-8 max-w-prose">
@@ -277,7 +279,7 @@ export function AuditPanel() {
                     <tr key={row.id} className="border-b border-line align-top">
                       <td className="py-3 pe-4 whitespace-nowrap">
                         <time dateTime={when(row.occurredAt).toISOString()}>
-                          {format.dateTime(when(row.occurredAt), {
+                          {formatDate(when(row.occurredAt), locale, {
                             dateStyle: "medium",
                             timeStyle: "medium",
                           })}
@@ -326,7 +328,7 @@ export function AuditPanel() {
                 <span />
               )}
               <span className="text-sm text-ink/70">
-                {t("page", { page, total: data.totalPages })}
+                {t("page", { page: num(page), total: num(data.totalPages) })}
               </span>
               {page < data.totalPages ? (
                 <button

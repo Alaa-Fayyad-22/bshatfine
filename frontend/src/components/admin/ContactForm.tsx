@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatDate, formatNumber } from "@/lib/numbers";
 import {
   AdminApiError,
   getAdminSiteSettings,
@@ -62,7 +63,7 @@ const checks: Record<Exclude<Kind, "text">, (s: string) => boolean> = {
 export function ContactForm() {
   const t = useTranslations("Admin.contact");
   const tf = useTranslations("Admin.form");
-  const format = useFormatter();
+  const locale = useLocale();
   const uid = useId();
 
   const [load, setLoad] = useState<"loading" | "ready" | "error">("loading");
@@ -137,7 +138,7 @@ export function ContactForm() {
   }, [tf]);
 
   function describe(e: unknown): string {
-    if (e instanceof AdminApiError) return e.detail ?? tf("apiError", { status: e.status });
+    if (e instanceof AdminApiError) return e.detail ?? tf("apiError", { status: formatNumber(e.status, locale) });
     return tf("networkError");
   }
 
@@ -260,7 +261,7 @@ export function ContactForm() {
       <p className="mt-2 text-sm text-ink/70">
         {dto?.updatedAt
           ? t("updated", {
-              date: format.dateTime(new Date(dto.updatedAt), { dateStyle: "medium", timeStyle: "short" }),
+              date: formatDate(dto.updatedAt, locale, { dateStyle: "medium", timeStyle: "short" }),
             })
           : t("notSavedYet")}
       </p>

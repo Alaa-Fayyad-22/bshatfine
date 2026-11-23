@@ -1,5 +1,5 @@
 import { useLocale, useTranslations } from "next-intl";
-import { directionOf } from "@/components/LanguageNote";
+import { directionOf, LanguageNote } from "@/components/LanguageNote";
 import { SiteImage } from "@/components/SiteImage";
 import { CATEGORY_CLASS, isEventCategory } from "@/config/events";
 import { Link } from "@/i18n/navigation";
@@ -48,6 +48,8 @@ export function EventCard({ event }: { event: EventSummaryDto }) {
         <span className="d" lang={event.language} dir={dir} style={{ overflowWrap: "anywhere" }}>
           {event.summary}
         </span>
+        {/* Not translated (the API fell back to Arabic): say so, as on news cards. */}
+        <LanguageNote language={event.language} locale={locale} of="Events" />
         {event.location.trim() !== "" && (
           <span className="d" style={{ fontSize: 14, overflowWrap: "anywhere" }}>
             <span style={{ color: "var(--clay)" }}>{t("location")}: </span>

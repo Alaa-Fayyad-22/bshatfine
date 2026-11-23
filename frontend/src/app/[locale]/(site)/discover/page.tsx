@@ -13,6 +13,7 @@ import { ENTRY_RULES, knownCategory, PLACE_PHOTO } from "@/config/entries";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { coverUrl, getEntries, type EntrySummaryDto } from "@/lib/api";
+import { formatYear } from "@/lib/numbers";
 import { pageMetadata } from "@/lib/site-meta";
 
 export async function generateMetadata({
@@ -170,7 +171,7 @@ async function Story({ locale }: { locale: string }) {
               />
             )}
             <div className="ev" style={{ minWidth: 0, overflowWrap: "break-word" }}>
-              {e.year !== null && <span className="label">{e.year}</span>}
+              {e.year !== null && <span className="label">{formatYear(e.year, locale)}</span>}
               <span className="t" lang={e.language} dir={directionOf(e.language)}>
                 {e.title}
               </span>

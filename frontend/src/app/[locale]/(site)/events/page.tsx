@@ -11,6 +11,7 @@ import { PAST_PAGE_SIZE } from "@/config/events";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { getPastEvents, getUpcomingEvents, type EventPage, type EventSummaryDto } from "@/lib/api";
+import { formatNumber } from "@/lib/numbers";
 import { pageMetadata } from "@/lib/site-meta";
 
 // The API returns at most 50 upcoming events at once.
@@ -206,7 +207,7 @@ async function Past({
             </Link>
           )}
           <span className="now" aria-current="page">
-            {t("past.page", { page, total: totalPages })}
+            {t("past.page", { page: formatNumber(page, locale), total: formatNumber(totalPages, locale) })}
           </span>
           {page < totalPages && (
             <Link href={pastHref(page + 1)} rel="next">

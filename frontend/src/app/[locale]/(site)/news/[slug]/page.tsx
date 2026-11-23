@@ -2,13 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { directionOf, LanguageNote } from "@/components/LanguageNote";
 import { DEFAULT_COVER } from "@/components/NewsCover";
 import { Hero } from "@/components/site/Hero";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { coverUrl, getNewsBySlug, type NewsDto } from "@/lib/api";
+import { formatDate } from "@/lib/numbers";
 import { siteUrl } from "@/lib/site-url";
 
 // Cache Components needs at least one param to prerender the route shell. This
@@ -118,7 +119,6 @@ export default async function Page({ params }: PageProps<"/[locale]/news/[slug]"
     );
   }
 
-  const format = await getFormatter();
   const cover = coverUrl(article.coverImageUrl);
   const paragraphs = article.body.split(/\n{2,}/).filter((p) => p.trim() !== "");
 
@@ -130,7 +130,7 @@ export default async function Page({ params }: PageProps<"/[locale]/news/[slug]"
         crumbs={crumbs}
         kicker={
           <time dateTime={article.publishedAt}>
-            {format.dateTime(new Date(article.publishedAt), { dateStyle: "long" })}
+            {formatDate(article.publishedAt, locale, { dateStyle: "long" })}
           </time>
         }
         title={article.title}

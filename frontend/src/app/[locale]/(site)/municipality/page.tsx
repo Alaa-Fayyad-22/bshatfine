@@ -24,6 +24,7 @@ import {
   type CouncilMemberDto,
   type EntrySummaryDto,
 } from "@/lib/api";
+import { formatYear } from "@/lib/numbers";
 import { pageMetadata } from "@/lib/site-meta";
 
 export async function generateMetadata({
@@ -251,7 +252,7 @@ async function Projects({ locale }: { locale: string }) {
                       <span className={`tag ${STATUS_CLASS[status]}`}>{te(`statuses.${status}`)}</span>
                     )}
                   </td>
-                  <td>{p.year}</td>
+                  <td>{p.year !== null && formatYear(p.year, locale)}</td>
                 </tr>
               );
             })}

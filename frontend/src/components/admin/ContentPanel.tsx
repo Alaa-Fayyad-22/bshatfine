@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SiteImage } from "@/components/SiteImage";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ENTRY_KINDS, ENTRY_RULES, isProjectStatus, type EntryKind } from "@/config/entries";
 import { Link } from "@/i18n/navigation";
 import { listAdminEntries, reorderEntries, type AdminEntryDto } from "@/lib/admin-api";
 import { coverUrl } from "@/lib/cover";
+import { formatNumber, formatYear } from "@/lib/numbers";
 import { toProblem, type Problem } from "@/lib/problem";
 import { primaryButton } from "./AdminControls";
 import { useEntryLabels } from "./entry-labels";
@@ -33,6 +34,7 @@ export function entryTitle(e: AdminEntryDto) {
 // display order with move up/down, and a link to create a new one.
 export function ContentPanel({ kind }: { kind: EntryKind }) {
   const t = useTranslations("Admin.content");
+  const locale = useLocale();
   const labels = useEntryLabels();
   const rule = ENTRY_RULES[kind];
   const [attempt, setAttempt] = useState(0);
@@ -109,8 +111,8 @@ export function ContentPanel({ kind }: { kind: EntryKind }) {
       setNotice(
         t("movedOk", {
           title: entryTitle(moved)?.text ?? t("untitled"),
-          position: list.findIndex((x) => x.id === moved.id) + 1,
-          total: list.length,
+          position: formatNumber(list.findIndex((x) => x.id === moved.id) + 1, locale),
+          total: formatNumber(list.length, locale),
         }),
       );
       setFocusMove((f) => ({ id: moved.id, dir, n: (f?.n ?? 0) + 1 }));
@@ -221,7 +223,7 @@ export function ContentPanel({ kind }: { kind: EntryKind }) {
                       {rule.usesYear && (
                         <span>
                           <span className="text-ink/70">{labels.yearHeading}: </span>
-                          {e.year ?? <span className="text-ink/60">{t("none")}</span>}
+                          {e.year !== null ? formatYear(e.year, locale) : <span className="text-ink/60">{t("none")}</span>}
                         </span>
                       )}
                       {kind !== "history" && (

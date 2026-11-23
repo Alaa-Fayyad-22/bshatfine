@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { SiteImage } from "@/components/SiteImage";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatNumber } from "@/lib/numbers";
 import {
   AdminApiError,
   COUNCIL_TEXT_MAX,
@@ -85,6 +86,8 @@ function Body({
 }) {
   const t = useTranslations("Admin.council");
   const tf = useTranslations("Admin.form");
+  const locale = useLocale();
+  const num = (value: number) => formatNumber(value, locale);
   const close = useModalClose();
   const uid = useId();
 
@@ -125,7 +128,7 @@ function Body({
 
   function describe(e: unknown): string {
     if (isPayloadTooLarge(e)) return tf("photoUploadTooLarge");
-    if (e instanceof AdminApiError) return e.detail ?? tf("apiError", { status: e.status });
+    if (e instanceof AdminApiError) return e.detail ?? tf("apiError", { status: num(e.status) });
     return tf("networkError");
   }
 
@@ -249,7 +252,7 @@ function Body({
         />
         <p id={`${id}-hint`} className="mt-1 text-sm text-ink/70">
           {opts.required ? `${t("requiredHint")} ` : lang === "en" && name === "nameEn" ? `${t("englishOptional")} ` : ""}
-          {t("chars", { count: values[name].length, max: COUNCIL_TEXT_MAX })}
+          {t("chars", { count: num(values[name].length), max: num(COUNCIL_TEXT_MAX) })}
         </p>
       </div>
     );

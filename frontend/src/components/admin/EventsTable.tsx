@@ -6,6 +6,7 @@ import { isEventCategory } from "@/config/events";
 import { Link } from "@/i18n/navigation";
 import { listAdminEvents, type AdminEventDto, type Paged } from "@/lib/admin-api";
 import { formatEventWhen } from "@/lib/event-time";
+import { formatNumber } from "@/lib/numbers";
 import { toProblem, type Problem } from "@/lib/problem";
 import { ProblemNotice } from "./ProblemNotice";
 
@@ -30,6 +31,7 @@ export function EventsTable({ page }: { page: number }) {
   const t = useTranslations("Admin.events");
   const tc = useTranslations("Events.categories");
   const locale = useLocale();
+  const num = (value: number) => formatNumber(value, locale);
   const [attempt, setAttempt] = useState(0);
   const key = `${page}:${attempt}`;
   const [result, setResult] = useState<{
@@ -121,8 +123,8 @@ export function EventsTable({ page }: { page: number }) {
     body = (
       <div aria-busy={loading} className={loading ? "opacity-60" : undefined}>
         <p className="mt-6 text-ink/80">
-          {t("total", { count: totalCount })}
-          {totalPages > 1 && ` · ${t("page", { page, total: totalPages })}`}
+          {t("total", { count: totalCount, n: num(totalCount) })}
+          {totalPages > 1 && ` · ${t("page", { page: num(page), total: num(totalPages) })}`}
         </p>
 
         {items.length === 0 ? (
@@ -210,7 +212,7 @@ export function EventsTable({ page }: { page: number }) {
             ) : (
               <span />
             )}
-            <span className="text-sm text-ink/70">{t("page", { page, total: totalPages })}</span>
+            <span className="text-sm text-ink/70">{t("page", { page: num(page), total: num(totalPages) })}</span>
             {page < totalPages ? (
               <Link
                 href={listHref(page + 1)}

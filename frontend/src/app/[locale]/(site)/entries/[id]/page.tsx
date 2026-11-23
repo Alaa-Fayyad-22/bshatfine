@@ -18,6 +18,7 @@ import {
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { coverUrl, getEntry, type EntryDto } from "@/lib/api";
+import { formatYear } from "@/lib/numbers";
 import { siteUrl } from "@/lib/site-url";
 
 // One history entry, project, place or service on its own page. Built like the
@@ -149,7 +150,7 @@ export default async function Page({ params }: PageProps<"/[locale]/entries/[id]
                       {t("meta.year")}
                     </dt>
                     <dd className="label" style={{ margin: 0 }}>
-                      {year}
+                      {formatYear(year, locale)}
                     </dd>
                   </div>
                 )}

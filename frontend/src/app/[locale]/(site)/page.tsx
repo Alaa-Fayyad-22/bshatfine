@@ -153,11 +153,11 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
           <span className="label" style={{ color: "#E9E2D6", letterSpacing: 4 }} data-reveal>
             {locale === "ar" ? (
               <>
-                بشتفين · <span lang="en">Bchatfine</span>
+                بشتفين · <span lang="en">Bshatfine</span>
               </>
             ) : (
               <>
-                Bchatfine · <span lang="ar">بشتفين</span>
+                Bshatfine · <span lang="ar">بشتفين</span>
               </>
             )}
           </span>

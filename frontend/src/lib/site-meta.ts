@@ -14,7 +14,7 @@ export type MetaPage =
   | "gallery"
   | "careers";
 
-// The browser-tab title of a public page ("Discover · Bchatfine"), as in the design.
+// The browser-tab title of a public page ("Discover · Bshatfine"), as in the design.
 export async function pageMetadata(locale: string, page: MetaPage): Promise<Metadata> {
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "Meta" });

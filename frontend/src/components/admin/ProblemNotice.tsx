@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { formatNumber } from "@/lib/numbers";
 import type { Problem } from "@/lib/problem";
 
 const box = "border-s-4 border-alert-danger bg-stone px-4 py-3 text-alert-danger";
@@ -11,6 +12,7 @@ const box = "border-s-4 border-alert-danger bg-stone px-4 py-3 text-alert-danger
 // ticking number is for the eyes only, so it does not chatter every second.
 function RateNotice({ seconds, onDone }: { seconds: number; onDone: () => void }) {
   const t = useTranslations("Admin.errors");
+  const locale = useLocale();
   const [left, setLeft] = useState(seconds);
   const done = useRef(onDone);
   useEffect(() => {
@@ -34,9 +36,9 @@ function RateNotice({ seconds, onDone }: { seconds: number; onDone: () => void }
   return (
     <p role="alert" className={box}>
       <span className="sr-only">
-        {t("errorLabel")}: {t("rateLimited", { seconds })}
+        {t("errorLabel")}: {t("rateLimited", { seconds, n: formatNumber(seconds, locale) })}
       </span>
-      <span aria-hidden>{t("rateLimited", { seconds: left })}</span>
+      <span aria-hidden>{t("rateLimited", { seconds: left, n: formatNumber(left, locale) })}</span>
     </p>
   );
 }
@@ -52,6 +54,7 @@ export function ProblemNotice({
   onRateDone: () => void;
 }) {
   const t = useTranslations("Admin.errors");
+  const locale = useLocale();
   if (!problem) return null;
   if (problem.kind === "rate") {
     return <RateNotice key={problem.nonce} seconds={problem.seconds} onDone={onRateDone} />;
@@ -60,7 +63,7 @@ export function ProblemNotice({
     problem.kind === "detail"
       ? problem.text
       : problem.kind === "api"
-        ? t("apiError", { status: problem.status })
+        ? t("apiError", { status: formatNumber(problem.status, locale) })
         : t("networkError");
   return (
     <p role="alert" className={box}>

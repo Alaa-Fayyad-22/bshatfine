@@ -3,7 +3,7 @@ import { SiteImage } from "@/components/SiteImage";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { hasLocale } from "next-intl";
-import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { directionOf, LanguageNote } from "@/components/LanguageNote";
 import { DEFAULT_COVER } from "@/components/NewsCover";
 import { Hero } from "@/components/site/Hero";
@@ -12,6 +12,7 @@ import { photoSrc } from "@/components/site/Photo";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { coverUrl, getNews, type NewsPage } from "@/lib/api";
+import { formatDate, formatNumber } from "@/lib/numbers";
 import { pageMetadata } from "@/lib/site-meta";
 
 const PAGE_SIZE = 10;
@@ -84,7 +85,6 @@ async function NewsList({
 }) {
   const page = parsePage((await searchParams).page);
   const t = await getTranslations("News");
-  const format = await getFormatter();
   const result = await loadPage(locale, page);
 
   if (result === null) {
@@ -130,7 +130,7 @@ async function NewsList({
                 />
                 <span className="label">
                   <time dateTime={item.publishedAt}>
-                    {format.dateTime(new Date(item.publishedAt), { dateStyle: "long" })}
+                    {formatDate(item.publishedAt, locale, { dateStyle: "long" })}
                   </time>
                 </span>
                 <span className="t" lang={item.language} dir={directionOf(item.language)}>
@@ -155,7 +155,7 @@ async function NewsList({
             </Link>
           )}
           <span className="now" aria-current="page">
-            {t("page", { page, total: totalPages })}
+            {t("page", { page: formatNumber(page, locale), total: formatNumber(totalPages, locale) })}
           </span>
           {page < totalPages && (
             <Link href={{ pathname: "/news", query: { page: page + 1 } }} rel="next">

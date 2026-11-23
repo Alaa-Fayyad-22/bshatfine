@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useFormatter, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   listAdminNews,
@@ -10,6 +10,7 @@ import {
   type AdminNewsPage,
   type NewsStatus,
 } from "@/lib/admin-api";
+import { formatDate, formatNumber } from "@/lib/numbers";
 import { toProblem, type Problem } from "@/lib/problem";
 import { DELETED_FLASH_KEY, DeleteNewsDialog } from "./DeleteNewsDialog";
 import { ProblemNotice } from "./ProblemNotice";
@@ -38,7 +39,8 @@ function displayTitle(item: AdminNewsDto) {
 export function NewsTable({ page, status }: { page: number; status?: NewsStatus }) {
   const t = useTranslations("Admin.list");
   const ts = useTranslations("Admin.status");
-  const format = useFormatter();
+  const locale = useLocale();
+  const num = (value: number) => formatNumber(value, locale);
   const router = useRouter();
   const [attempt, setAttempt] = useState(0);
   const key = `${status ?? ""}:${page}:${attempt}`;
@@ -103,7 +105,7 @@ export function NewsTable({ page, status }: { page: number; status?: NewsStatus 
 
   const date = (iso: string | null) =>
     iso ? (
-      <time dateTime={iso}>{format.dateTime(new Date(iso), { dateStyle: "medium" })}</time>
+      <time dateTime={iso}>{formatDate(iso, locale, { dateStyle: "medium" })}</time>
     ) : (
       <span className="text-ink/60">{t("notPublished")}</span>
     );
@@ -206,12 +208,12 @@ export function NewsTable({ page, status }: { page: number; status?: NewsStatus 
       <div aria-busy={loading} className={loading ? "opacity-60" : undefined}>
         <p className="mt-6 text-ink/80">
           {shownStatus
-            ? t("totalFiltered", { count: totalCount, status: ts(shownStatus) })
-            : t("total", { count: totalCount })}
+            ? t("totalFiltered", { count: totalCount, n: num(totalCount), status: ts(shownStatus) })
+            : t("total", { count: totalCount, n: num(totalCount) })}
           {totalPages === 1 && (
             <>
               {" · "}
-              {t("page", { page, total: totalPages })}
+              {t("page", { page: num(page), total: num(totalPages) })}
             </>
           )}
         </p>
@@ -296,7 +298,7 @@ export function NewsTable({ page, status }: { page: number; status?: NewsStatus 
             ) : (
               <span />
             )}
-            <span className="text-sm text-ink/70">{t("page", { page, total: totalPages })}</span>
+            <span className="text-sm text-ink/70">{t("page", { page: num(page), total: num(totalPages) })}</span>
             {hasNext ? (
               <Link
                 href={listHref(status, page + 1)}

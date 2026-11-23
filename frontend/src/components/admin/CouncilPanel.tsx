@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SiteImage } from "@/components/SiteImage";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   activateCouncilMember,
   deactivateCouncilMember,
@@ -12,6 +12,7 @@ import {
   type AdminCouncilMemberDto,
 } from "@/lib/admin-api";
 import { coverUrl } from "@/lib/cover";
+import { formatNumber } from "@/lib/numbers";
 import { toProblem, type Problem } from "@/lib/problem";
 import { dangerButton, neutralButton, primaryButton } from "./AdminControls";
 import { CouncilMemberDialog, initials } from "./CouncilMemberDialog";
@@ -24,6 +25,7 @@ const smallButton =
 // Admin list of the council: display order, status, and every action.
 export function CouncilPanel() {
   const t = useTranslations("Admin.council");
+  const locale = useLocale();
   const [attempt, setAttempt] = useState(0);
   const [members, setMembers] = useState<AdminCouncilMemberDto[] | null>(null);
   const [loadProblem, setLoadProblem] = useState<Problem | null>(null);
@@ -91,7 +93,13 @@ export function CouncilPanel() {
     return act("order", async () => {
       // The API wants EVERY id in the new order, and answers with the new list.
       setMembers(await reorderCouncil(reordered.map((x) => x.id)));
-      setNotice(t("movedOk", { name: m.nameAr, position: target + 1, total: reordered.length }));
+      setNotice(
+        t("movedOk", {
+          name: m.nameAr,
+          position: formatNumber(target + 1, locale),
+          total: formatNumber(reordered.length, locale),
+        }),
+      );
       setFocusMove((f) => ({ id: m.id, dir, n: (f?.n ?? 0) + 1 }));
     });
   }

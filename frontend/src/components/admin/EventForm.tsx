@@ -43,6 +43,7 @@ import {
   isValidDate,
   isValidTime,
 } from "@/lib/event-time";
+import { formatNumber, formatYear } from "@/lib/numbers";
 import { PHOTO_ACCEPT, PHOTO_ERROR_KEYS, prepareImage } from "@/lib/prepare-image";
 import { rateProblem, type Problem } from "@/lib/problem";
 import {
@@ -169,6 +170,7 @@ export function EventForm({ id }: { id?: string }) {
   const tl = useTranslations("Admin.languages");
   const tc = useTranslations("Events.categories");
   const locale = useLocale();
+  const num = (value: number) => formatNumber(value, locale);
   const router = useRouter();
   const uid = useId();
 
@@ -282,7 +284,7 @@ export function EventForm({ id }: { id?: string }) {
     if (e instanceof AdminApiError) {
       if (e.detail) return e.detail;
       if (e.status === 404) return t("gone");
-      return tf("apiError", { status: e.status });
+      return tf("apiError", { status: num(e.status) });
     }
     return tf("networkError");
   }
@@ -331,7 +333,7 @@ export function EventForm({ id }: { id?: string }) {
       const v = values[l];
       if (!filled(v)) continue;
       if (!v.title.trim() || !v.summary.trim()) return fail(t("incomplete", { language: tl(l) }), l);
-      if (v.body.length > EVENT_BODY_MAX) return fail(t("bodyTooLong", { language: tl(l), max: EVENT_BODY_MAX }), l);
+      if (v.body.length > EVENT_BODY_MAX) return fail(t("bodyTooLong", { language: tl(l), max: num(EVENT_BODY_MAX) }), l);
       translations.push({
         language: l,
         title: v.title.trim(),
@@ -343,7 +345,10 @@ export function EventForm({ id }: { id?: string }) {
     }
     if (translations.length === 0) return fail(t("needContent"));
     if (!isEventCategory(fields.category)) return fail(t("categoryRequired"));
-    if (!schedule.ok) return fail(t(`schedule.${schedule.error}`, { min: EVENT_YEAR_MIN, max: EVENT_YEAR_MAX }));
+    if (!schedule.ok) return fail(t(`schedule.${schedule.error}`, {
+          min: formatYear(EVENT_YEAR_MIN, locale),
+          max: formatYear(EVENT_YEAR_MAX, locale),
+        }));
     if (mapInvalid) return fail(t("mapInvalid"));
     return { translations, category: fields.category, ...schedule.value, mapUrl: trimmedMap || null };
   }
@@ -534,7 +539,7 @@ export function EventForm({ id }: { id?: string }) {
         className={inputClass}
       />
       <p id={`${uid}-${key}count-${l}`} className="mt-1 text-sm text-ink/70">
-        {t("chars", { count: values[l][key].length, max })}
+        {t("chars", { count: num(values[l][key].length), max: num(max) })}
       </p>
     </div>
   );
@@ -873,7 +878,7 @@ export function EventForm({ id }: { id?: string }) {
                   className="mt-2 block w-full rounded-control border border-ink/40 bg-paper px-3 py-2 leading-relaxed read-only:bg-stone"
                 />
                 <p id={`${uid}-sumcount-${l}`} className="mt-1 text-sm text-ink/70">
-                  {t("chars", { count: v.summary.length, max: EVENT_SUMMARY_MAX })}
+                  {t("chars", { count: num(v.summary.length), max: num(EVENT_SUMMARY_MAX) })}
                 </p>
               </div>
               {textField(l, "location", t("fieldLocation"), EVENT_LOCATION_MAX, t("optional"))}
@@ -907,7 +912,7 @@ export function EventForm({ id }: { id?: string }) {
                         : "text-ink/70"
                   }`}
                 >
-                  {t("chars", { count: bodyLen, max: EVENT_BODY_MAX })}
+                  {t("chars", { count: num(bodyLen), max: num(EVENT_BODY_MAX) })}
                 </p>
                 <div aria-live="polite" className="empty:hidden">
                   {bodyLen > EVENT_BODY_MAX ? (

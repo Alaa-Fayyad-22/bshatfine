@@ -1,20 +1,20 @@
 {
   "Meta": {
-    "title": "Bchatfine Municipality",
-    "description": "The official website of Bchatfine Municipality in the Chouf",
+    "title": "Bshatfine Municipality",
+    "description": "The official website of Bshatfine Municipality in the Chouf",
     "pages": {
-      "discover": "Discover · Bchatfine",
-      "municipality": "Municipality · Bchatfine",
-      "services": "Services & forms · Bchatfine",
-      "report": "Report an issue · Bchatfine",
-      "news": "News & notices · Bchatfine",
-      "events": "Events · Bchatfine",
-      "contact": "Contact · Bchatfine",
-      "gallery": "Gallery · Bchatfine",
-      "careers": "Careers · Bchatfine",
-      "article": "{title} · Bchatfine",
-      "entry": "{title} · Bchatfine",
-      "event": "{title} · Bchatfine"
+      "discover": "Discover · Bshatfine",
+      "municipality": "Municipality · Bshatfine",
+      "services": "Services & forms · Bshatfine",
+      "report": "Report an issue · Bshatfine",
+      "news": "News & notices · Bshatfine",
+      "events": "Events · Bshatfine",
+      "contact": "Contact · Bshatfine",
+      "gallery": "Gallery · Bshatfine",
+      "careers": "Careers · Bshatfine",
+      "article": "{title} · Bshatfine",
+      "entry": "{title} · Bshatfine",
+      "event": "{title} · Bshatfine"
     }
   },
   "Nav": {
@@ -29,7 +29,7 @@
     "gallery": "Gallery",
     "careers": "Careers",
     "login": "Staff login",
-    "brand": "Bchatfine Municipality"
+    "brand": "Bshatfine Municipality"
   },
   "Language": {
     "switchTo": "العربية",
@@ -46,7 +46,7 @@
     "title": "not found",
     "text": "We could not find the page you were looking for. Its address may have changed.",
     "backHome": "Back to home",
-    "imageAlt": "Aerial view of Bchatfine"
+    "imageAlt": "Aerial view of Bshatfine"
   },
   "Skip": {
     "toContent": "Skip to content"
@@ -54,14 +54,14 @@
   "Header": {
     "mainNav": "Main",
     "menu": "Menu",
-    "logoAlt": "Bchatfine Municipality – بلدية بشتفين"
+    "logoAlt": "Bshatfine Municipality – بلدية بشتفين"
   },
   "Forms": {
     "comingSoon": "This online service is coming soon. Please call or email the municipality.",
     "downloadSoon": "Coming soon: this form cannot be downloaded yet."
   },
   "Footer": {
-    "hall": "Municipal Hall, Bchatfine",
+    "hall": "Municipal Hall, Bshatfine",
     "village": "The village",
     "municipality": "Municipality",
     "council": "Council",
@@ -71,7 +71,7 @@
     "newsletterText": "Notices, events and village news, once a week.",
     "emailPlaceholder": "Your email address",
     "subscribe": "Subscribe",
-    "rights": "© 2026 Bchatfine Municipality"
+    "rights": "© 2026 Bshatfine Municipality"
   },
   "Notices": {
     "label": "Official notices",
@@ -86,13 +86,13 @@
   "Mayor": {
     "label": "A word from the mayor",
     "name": "Makram Fayyad",
-    "role": "Mayor of Bchatfine"
+    "role": "Mayor of Bshatfine"
   },
   "Home": {
     "hero": {
-      "alt": "Bchatfine’s houses spread over the hillside at golden hour",
+      "alt": "Bshatfine’s houses spread over the hillside at golden hour",
       "kicker": "Welcome to",
-      "title": "Bchatfine",
+      "title": "Bshatfine",
       "text": "A mountain village of pine, stone and red-tiled roofs, cared for together.",
       "cta": "Discover the village"
     },
@@ -112,7 +112,7 @@
       "all": "All places",
       "cards": {
         "gate": {
-          "alt": "Stone archway and wooden gate under the carved Bchatfine sign",
+          "alt": "Stone archway and wooden gate under the carved Bshatfine sign",
           "label": "Heritage",
           "title": "The stone gate"
         },
@@ -134,7 +134,7 @@
       }
     },
     "statement": {
-      "alt": "Bchatfine glowing in the evening light",
+      "alt": "Bshatfine glowing in the evening light",
       "quote": "“Between the pines and the valley, a village that keeps its stones and its stories.”"
     },
     "service": {
@@ -143,19 +143,19 @@
       "lead": "Everyday procedures, the people who represent you, and the work under way across the village.",
       "cards": {
         "services": {
-          "alt": "A street in Bchatfine",
+          "alt": "A street in Bshatfine",
           "title": "Services & forms",
           "text": "Certificates, permits, municipal clearance and fees, with the papers each one needs.",
           "link": "See services"
         },
         "council": {
-          "alt": "Bchatfine municipal council group photo",
+          "alt": "Bshatfine municipal council group photo",
           "title": "The council",
           "text": "The mayor, members and committees, meeting dates and published decisions.",
           "link": "Meet the council"
         },
         "projects": {
-          "alt": "Aerial view of Bchatfine’s roads and houses",
+          "alt": "Aerial view of Bshatfine’s roads and houses",
           "title": "Projects",
           "text": "Roads, lighting, water and green spaces: what is done, and what is under way.",
           "link": "Follow the projects"
@@ -164,17 +164,17 @@
     },
     "coming": {
       "kicker": "Coming",
-      "title": "up in Bchatfine",
+      "title": "up in Bshatfine",
       "all": "All events"
     },
     "mayor": {
-      "alt": "Members of the Bchatfine municipal council",
+      "alt": "Members of the Bshatfine municipal council",
       "quote": "“[A short message from the mayor to residents, the diaspora and visitors.]”",
       "link": "Meet the council"
     },
     "wall": {
       "kicker": "Follow us",
-      "title": "#LoveBchatfine",
+      "title": "#LoveBshatfine",
       "instagram": "Instagram",
       "facebook": "Facebook",
       "alts": {
@@ -231,7 +231,7 @@
   },
   "Municipality": {
     "hero": {
-      "alt": "Bchatfine municipal council",
+      "alt": "Bshatfine municipal council",
       "kicker": "Your",
       "title": "municipality"
     },
@@ -279,7 +279,7 @@
   },
   "Services": {
     "hero": {
-      "alt": "Street in Bchatfine",
+      "alt": "Street in Bshatfine",
       "kicker": "Services",
       "title": "& forms",
       "report": "Report an issue"
@@ -320,7 +320,7 @@
   },
   "Report": {
     "hero": {
-      "alt": "Bchatfine at golden hour",
+      "alt": "Bshatfine at golden hour",
       "kicker": "Report",
       "title": "an issue"
     },
@@ -359,9 +359,9 @@
     "hero": {
       "alt": "Village celebration",
       "kicker": "What’s on",
-      "title": "in Bchatfine"
+      "title": "in Bshatfine"
     },
-    "description": "Cultural, religious, sports and health events, and municipal meetings in Bchatfine.",
+    "description": "Cultural, religious, sports and health events, and municipal meetings in Bshatfine.",
     "loading": "Loading events",
     "error": "We could not load the events right now. Please try again shortly.",
     "errorTitle": "Not available",
@@ -426,7 +426,7 @@
     "preparingTitle": "This page is being prepared",
     "preparingText": "We are still working on this content. Please check back soon.",
     "planned": {
-      "alt": "Aerial view of Bchatfine"
+      "alt": "Aerial view of Bshatfine"
     }
   },
   "Entries": {
@@ -440,10 +440,10 @@
       "service": "Service"
     },
     "photoAlt": {
-      "history": "Aerial view of Bchatfine",
+      "history": "Aerial view of Bshatfine",
       "project": "The village at golden hour",
       "place": "Sunset over the valley framed by pine trees",
-      "service": "Street in Bchatfine"
+      "service": "Street in Bshatfine"
     },
     "meta": {
       "year": "Year",
@@ -520,13 +520,13 @@
   },
   "Contact": {
     "hero": {
-      "alt": "Aerial view of Bchatfine",
+      "alt": "Aerial view of Bshatfine",
       "kicker": "Contact",
       "title": "us"
     },
     "loading": "Loading contact details",
     "hall": "Municipal Hall",
-    "country": "Bchatfine, Lebanon",
+    "country": "Bshatfine, Lebanon",
     "phone": "Phone",
     "email": "Email",
     "hours": "Opening hours",
@@ -550,7 +550,7 @@
     },
     "statement": {
       "alt": "Sunset over the valley",
-      "quote": "“Come and see Bchatfine for yourself.”",
+      "quote": "“Come and see Bshatfine for yourself.”",
       "link": "Plan your visit"
     }
   },
@@ -687,7 +687,7 @@
       "error": "Could not load the events. Check that the API is running.",
       "retry": "Try again",
       "empty": "There are no events yet. Use “New event” to add the first one.",
-      "total": "{count, plural, one {# event in total} other {# events in total}}",
+      "total": "{count, plural, one {{n} event in total} other {{n} events in total}}",
       "colTitle": "Title",
       "colDate": "Date (Lebanon time)",
       "colCategory": "Category",
@@ -906,7 +906,7 @@
       "errorLabel": "Error",
       "apiError": "The server rejected the request ({status}).",
       "networkError": "Could not reach the server. Check your connection and that the API is running.",
-      "rateLimited": "Too many requests. Try again in {seconds, plural, one {# second} other {# seconds}}."
+      "rateLimited": "Too many requests. Try again in {seconds, plural, one {{n} second} other {{n} seconds}}."
     },
     "forbidden": {
       "title": "Access denied",
@@ -976,7 +976,7 @@
       "previous": "Previous",
       "next": "Next",
       "page": "Page {page} of {total}",
-      "total": "{count, plural, one {# user in total} other {# users in total}}",
+      "total": "{count, plural, one {{n} user in total} other {{n} users in total}}",
       "pageOutOfRange": "This page does not exist. There are fewer pages than that.",
       "goToFirst": "Go to page 1",
       "cancel": "Cancel",
@@ -1068,7 +1068,7 @@
       "previous": "Previous",
       "next": "Next",
       "page": "Page {page} of {total}",
-      "total": "{count, plural, one {# entry in total} other {# entries in total}}",
+      "total": "{count, plural, one {{n} entry in total} other {{n} entries in total}}",
       "pageOutOfRange": "This page does not exist. There are fewer pages than that.",
       "goToFirst": "Go to page 1",
       "entity": {
@@ -1200,14 +1200,14 @@
       "delete": "Delete",
       "deleteLabel": "Delete draft: {title}",
       "deletedOk": "The draft “{title}” was deleted.",
-      "totalFiltered": "{count, plural, one {# article with the status “{status}”} other {# articles with the status “{status}”}}",
+      "totalFiltered": "{count, plural, one {{n} article with the status “{status}”} other {{n} articles with the status “{status}”}}",
       "error": "Could not load the articles. Check that the API is running.",
       "retry": "Try again",
       "pagination": "Article pages",
       "previous": "Previous",
       "next": "Next",
       "page": "Page {page} of {total}",
-      "total": "{count, plural, one {# article in total} other {# articles in total}}",
+      "total": "{count, plural, one {{n} article in total} other {{n} articles in total}}",
       "pageOutOfRange": "This page does not exist. There are fewer pages than that.",
       "goToFirst": "Go to page 1"
     },

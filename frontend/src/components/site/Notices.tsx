@@ -1,9 +1,10 @@
 import { Suspense, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { directionOf } from "@/components/LanguageNote";
 import { Link } from "@/i18n/navigation";
 import { getNews, type NewsSummaryDto } from "@/lib/api";
+import { formatDate } from "@/lib/numbers";
 
 const SAMPLES = ["water", "fees", "roads", "council"] as const;
 
@@ -40,7 +41,6 @@ export function Notices({
 
 async function NoticeList({ locale, count }: { locale: string; count: 3 | 4 }) {
   const t = await getTranslations("Notices");
-  const format = await getFormatter();
 
   let items: NewsSummaryDto[] = [];
   try {
@@ -64,7 +64,7 @@ async function NoticeList({ locale, count }: { locale: string; count: 3 | 4 }) {
     <Link key={item.id} className="notice" href={`/news/${item.slug}`}>
       <small>
         <time dateTime={item.publishedAt}>
-          {format.dateTime(new Date(item.publishedAt), { dateStyle: "long" })}
+          {formatDate(item.publishedAt, locale, { dateStyle: "long" })}
         </time>
       </small>
       <span lang={item.language} dir={directionOf(item.language)}>
