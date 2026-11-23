@@ -12,7 +12,11 @@ public static class FileEndpoints
             if (file is null)
                 return Results.NotFound();
 
+            // Browsers: a file never changes at its address, so keep it for a year.
+            // Shared caches (Vercel's CDN): at most 1 hour, so a DELETED photo stops being
+            // public within an hour instead of staying online for a year.
             http.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+            http.Response.Headers["CDN-Cache-Control"] = "public, max-age=3600";
             http.Response.Headers["X-Content-Type-Options"] = "nosniff";
             return Results.File(file.Data, file.ContentType);
         }).AllowAnonymous();

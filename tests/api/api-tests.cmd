@@ -236,6 +236,7 @@ call :check ".coverImageUrl.StartsWith('/api/files/')" "True" "Cover upload - UR
 call :http 200 "Cover file - public download" GET "%COVER1%" - -
 call :header "image/webp" 1 "Cover file - converted to WebP"
 call :header "immutable" 1 "Cover file - cached as immutable"
+call :header "CDN-Cache-Control: public, max-age=3600" 1 "Cover file - shared caches keep it at most 1 hour"
 call :header "nosniff" 1 "Cover file - nosniff header"
 call :header "X-Frame-Options: DENY" 1 "Cover file - security headers present"
 call :upload 200 "Cover upload - replace" admin.txt file "%IMG%" "%NEWS_COVER%"
