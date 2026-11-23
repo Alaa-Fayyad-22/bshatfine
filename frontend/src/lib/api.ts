@@ -1,5 +1,6 @@
 import { cacheLife } from "next/cache";
 import { ENTRY_ID, type EntryKind } from "@/config/entries";
+import { EVENT_ID } from "@/config/events";
 import { API_INTERNAL_URL, upstreamHeaders } from "./api-upstream";
 
 export type NewsDto = {
@@ -142,6 +143,101 @@ export async function entryExists(locale: string, id: string): Promise<boolean |
   if (!ENTRY_ID.test(id)) return false;
   try {
     const res = await fetch(`${API_URL}/api/entries/${encodeURIComponent(id)}?lang=${locale}`, {
+      headers: upstreamHeaders(),
+      cache: "no-store",
+      signal: AbortSignal.timeout(3000),
+    });
+    if (res.status === 404) return false;
+    return res.ok ? true : null;
+  } catch {
+    return null;
+  }
+}
+
+// ---------- Events ----------
+// Dates are UTC instants ("...Z"); show them with src/lib/event-time.ts, which
+// always uses Beirut time. `category` is a code (src/config/events.ts).
+
+export type EventSummaryDto = {
+  id: string;
+  category: string;
+  startsAt: string;
+  // All-day events: the start of the LAST day (inclusive).
+  endsAt: string | null;
+  isAllDay: boolean;
+  // Can differ from the requested language (fallback).
+  language: string;
+  title: string;
+  summary: string;
+  // May be empty.
+  location: string;
+  // A same-origin path (/api/files/...); pass it through coverUrl().
+  coverImageUrl: string | null;
+};
+
+export type EventDto = EventSummaryDto & {
+  isPast: boolean;
+  // Markdown, may be empty. Always render it with <Markdown>.
+  body: string;
+  // May be empty.
+  organizer: string;
+  // Only ever shown when it is an https:// address (isSafeMapUrl).
+  mapUrl: string | null;
+  updatedAt: string | null;
+};
+
+export type EventPage = {
+  items: EventSummaryDto[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+};
+
+// The lists are read live (no-store) behind <Suspense>, like the other lists:
+// what is "upcoming" changes with the clock, and an edit shows up at once.
+export async function getUpcomingEvents(locale: string, limit: number): Promise<EventSummaryDto[]> {
+  const res = await fetch(`${API_URL}/api/events/upcoming?lang=${locale}&limit=${limit}`, {
+    headers: upstreamHeaders(),
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) throw new Error(`Failed to load upcoming events: ${res.status}`);
+  return res.json();
+}
+
+export async function getPastEvents(locale: string, page: number, pageSize: number): Promise<EventPage> {
+  const res = await fetch(
+    `${API_URL}/api/events/past?lang=${locale}&page=${page}&pageSize=${pageSize}`,
+    { headers: upstreamHeaders(), cache: "no-store", signal: AbortSignal.timeout(5000) },
+  );
+  if (!res.ok) throw new Error(`Failed to load past events: ${res.status}`);
+  return res.json();
+}
+
+// null when the event is missing or unpublished (404); other failures throw.
+// Cached for the same reason as getEntry (the page needs the answer before it
+// renders), but only briefly: at most about a minute old (`isPast` included).
+// The proxy checks existence live first (eventExists).
+export async function getEvent(locale: string, id: string): Promise<EventDto | null> {
+  "use cache";
+  cacheLife({ stale: 30, revalidate: 30, expire: 60 });
+
+  if (!EVENT_ID.test(id)) return null;
+  const res = await fetch(`${API_URL}/api/events/${encodeURIComponent(id)}?lang=${locale}`, {
+    headers: upstreamHeaders(),
+    signal: AbortSignal.timeout(5000),
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Failed to load event: ${res.status}`);
+  return res.json();
+}
+
+// Live existence check for the proxy (same contract as newsExists below).
+export async function eventExists(locale: string, id: string): Promise<boolean | null> {
+  if (!EVENT_ID.test(id)) return false;
+  try {
+    const res = await fetch(`${API_URL}/api/events/${encodeURIComponent(id)}?lang=${locale}`, {
       headers: upstreamHeaders(),
       cache: "no-store",
       signal: AbortSignal.timeout(3000),

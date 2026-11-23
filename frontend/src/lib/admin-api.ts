@@ -3,6 +3,7 @@
 // own origin; src/proxy.ts forwards /api/* to the API, so the session cookie
 // is first-party. Server code uses API_INTERNAL_URL in ./api.ts instead.
 import type { EntryKind, EntryLanguage } from "@/config/entries";
+import type { EventLanguage } from "@/config/events";
 import { reportAuthFailure } from "./auth-api";
 import { readRetryAfter } from "./rate-limit";
 
@@ -262,6 +263,95 @@ export const removeEntryCover = (id: string): Promise<AdminEntryDto> =>
 // Unpublished entries only (the API answers 400 otherwise); the cover goes too.
 export async function deleteEntry(id: string): Promise<void> {
   await request<void>(`/entries/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+// ---------- Events (Admins and Editors) ----------
+// Dates go OUT as ISO strings with Beirut's offset (src/lib/event-time.ts,
+// beirutToIso) and come back in UTC ("...Z").
+
+export type EventTranslationDto = {
+  language: EventLanguage;
+  title: string;
+  summary: string;
+  // Optional (may be empty). Body is Markdown.
+  body: string;
+  location: string;
+  organizer: string;
+};
+
+export type AdminEventDto = {
+  id: string;
+  category: string;
+  startsAt: string;
+  // All-day events: the start of the LAST day.
+  endsAt: string | null;
+  isAllDay: boolean;
+  // When the event moves to "Past events".
+  finishesAt: string;
+  mapUrl: string | null;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  publishedAt: string | null;
+  translations: EventTranslationDto[];
+  coverImageUrl: string | null;
+  // Changes after every successful change; sent back with a PUT.
+  version: number;
+};
+
+export type EventInput = {
+  translations: EventTranslationDto[];
+  category: string | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  isAllDay: boolean;
+  mapUrl: string | null;
+};
+
+// Newest start first.
+export function listAdminEvents(page = 1, pageSize = 20): Promise<Paged<AdminEventDto>> {
+  const q = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  return request(`/events?${q}`);
+}
+
+// null when the event does not exist (any more).
+export async function getAdminEvent(id: string): Promise<AdminEventDto | null> {
+  try {
+    return await request<AdminEventDto>(`/events/${encodeURIComponent(id)}`);
+  } catch (e) {
+    if (e instanceof AdminApiError && e.status === 404) return null;
+    throw e;
+  }
+}
+
+export const createEvent = (input: EventInput): Promise<AdminEventDto> =>
+  request("/events", { method: "POST", body: JSON.stringify(input) });
+
+// The languages sent BECOME the event's languages (a missing one is deleted).
+export const updateEvent = (id: string, input: EventInput, version: number): Promise<AdminEventDto> =>
+  request(`/events/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: JSON.stringify({ ...input, version }),
+  });
+
+// Publishing needs an Arabic text (the API says so otherwise).
+export const publishEvent = (id: string): Promise<AdminEventDto> =>
+  request(`/events/${encodeURIComponent(id)}/publish`, { method: "POST" });
+export const unpublishEvent = (id: string): Promise<AdminEventDto> =>
+  request(`/events/${encodeURIComponent(id)}/unpublish`, { method: "POST" });
+
+export function uploadEventCover(id: string, file: File): Promise<AdminEventDto> {
+  const body = new FormData();
+  body.append("file", file);
+  return request(`/events/${encodeURIComponent(id)}/cover`, { method: "POST", body });
+}
+
+export const removeEventCover = (id: string): Promise<AdminEventDto> =>
+  request(`/events/${encodeURIComponent(id)}/cover`, { method: "DELETE" });
+
+// Unpublished events only (the API answers 400 otherwise); the cover goes too.
+export async function deleteEvent(id: string): Promise<void> {
+  await request<void>(`/events/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
 // ---------- Contact details (Admin only) ----------

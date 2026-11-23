@@ -9,7 +9,7 @@ export function directionOf(language: string): "rtl" | "ltr" | "auto" {
 
 // "Available in English only" note, shown when an item came back in another
 // language than the page's. Renders nothing when the languages match.
-// `of` picks the wording: a news article, or an entry (history, project...).
+// `of` picks the wording: a news article, an entry (history, project...) or an event.
 export async function LanguageNote({
   language,
   locale,
@@ -17,7 +17,7 @@ export async function LanguageNote({
 }: {
   language: string;
   locale: string;
-  of?: "News" | "Entries";
+  of?: "News" | "Entries" | "Events";
 }) {
   if (language === locale) return null;
   const t = await getTranslations(of);

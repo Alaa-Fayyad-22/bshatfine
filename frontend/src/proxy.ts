@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
-import { entryExists, newsExists } from "./lib/api";
+import { entryExists, eventExists, newsExists } from "./lib/api";
 import {
   API_INTERNAL_URL,
   CLIENT_IP_HEADER,
@@ -67,8 +67,12 @@ function forwardToApi(request: NextRequest) {
   });
 }
 
-const ARTICLE_PATH = /^\/(ar|en)\/news\/([^/]+)\/?$/;
-const ENTRY_PATH = /^\/(ar|en)\/entries\/([^/]+)\/?$/;
+// Pages of one article, entry or event: checked live before rendering (below).
+const DETAIL_PAGES = [
+  { path: /^\/(ar|en)\/news\/([^/]+)\/?$/, kind: "article", exists: newsExists },
+  { path: /^\/(ar|en)\/entries\/([^/]+)\/?$/, kind: "entry", exists: entryExists },
+  { path: /^\/(ar|en)\/events\/([^/]+)\/?$/, kind: "event", exists: eventExists },
+] as const;
 
 function safeDecode(segment: string): string | null {
   try {
@@ -81,28 +85,22 @@ function safeDecode(segment: string): string | null {
 export default async function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/api/")) return forwardToApi(request);
 
-  // An unknown article slug or entry id (or an unpublished entry) must answer
+  // An unknown article slug, entry or event id (or an unpublished one) must answer
   // with a real 404. The page cannot set that status itself (see newsExists),
   // so check here, before rendering, and rewrite to a path that only the
   // catch-all route matches: it calls notFound() and renders the localized
   // not-found page with a 404 status.
   const { pathname } = request.nextUrl;
-  const article = ARTICLE_PATH.exec(pathname);
-  const entry = article ? null : ENTRY_PATH.exec(pathname);
-  const match = article ?? entry;
-  if (match) {
+  for (const { path, kind, exists } of DETAIL_PAGES) {
+    const match = path.exec(pathname);
+    if (!match) continue;
     const key = safeDecode(match[2]);
-    const exists =
-      key === null
-        ? false
-        : article
-          ? await newsExists(match[1], key)
-          : await entryExists(match[1], key);
-    if (exists === false) {
+    if (key === null || (await exists(match[1], key)) === false) {
       const url = request.nextUrl.clone();
-      url.pathname = `/${match[1]}/not-found-${article ? "article" : "entry"}`;
+      url.pathname = `/${match[1]}/not-found-${kind}`;
       return NextResponse.rewrite(url);
     }
+    break;
   }
   return intl(request);
 }

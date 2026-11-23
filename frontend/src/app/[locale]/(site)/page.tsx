@@ -201,7 +201,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
               <span className="kicker">{t("coming.kicker")}</span>
               <h2 className="title">{t("coming.title")}</h2>
             </div>
-            <EventRows variant="home" />
+            <EventRows locale={locale} allLabel={t("coming.all")} />
           </div>
           <Notices locale={locale} count={3} showAll />
         </div>
