@@ -295,6 +295,108 @@ namespace Bshatfine.Infrastructure.Migrations
                     b.ToTable("EntryTranslations", (string)null);
                 });
 
+            modelBuilder.Entity("Bshatfine.Domain.Events.Event", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("CoverImagePath")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EndsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FinishesAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsAllDay")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("MapUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartsAt");
+
+                    b.HasIndex("IsPublished", "FinishesAt");
+
+                    b.ToTable("Events", (string)null);
+                });
+
+            modelBuilder.Entity("Bshatfine.Domain.Events.EventTranslation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Organizer")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("character varying(400)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId", "Language")
+                        .IsUnique();
+
+                    b.ToTable("EventTranslations", (string)null);
+                });
+
             modelBuilder.Entity("Bshatfine.Infrastructure.Audit.AuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -644,6 +746,15 @@ namespace Bshatfine.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Bshatfine.Domain.Events.EventTranslation", b =>
+                {
+                    b.HasOne("Bshatfine.Domain.Events.Event", null)
+                        .WithMany("Translations")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -701,6 +812,11 @@ namespace Bshatfine.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("Bshatfine.Domain.Entries.Entry", b =>
+                {
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("Bshatfine.Domain.Events.Event", b =>
                 {
                     b.Navigation("Translations");
                 });
