@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { SiteImage } from "@/components/SiteImage";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { hasLocale } from "next-intl";
@@ -120,7 +120,7 @@ async function NewsList({
             <article key={item.id} data-reveal>
               <Link className="pcard" href={`/news/${item.slug}`}>
                 {/* The article's cover (title as alt text) or the default photo. */}
-                <Image
+                <SiteImage
                   src={cover ?? DEFAULT_COVER}
                   alt={cover ? item.title : t("defaultCoverAlt")}
                   width={840}

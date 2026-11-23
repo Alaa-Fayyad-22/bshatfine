@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { SiteImage } from "@/components/SiteImage";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { hasLocale } from "next-intl";
@@ -295,7 +295,7 @@ async function Members({ locale }: { locale: string }) {
           <div key={m.id} className="member" data-reveal>
             {photo ? (
               // 4:5 portrait, cropped by the design's CSS whatever the upload's shape.
-              <Image
+              <SiteImage
                 src={photo}
                 alt={m.name}
                 width={424}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import { SiteImage } from "@/components/SiteImage";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { hasLocale } from "next-intl";
@@ -160,7 +160,7 @@ async function Story({ locale }: { locale: string }) {
           <Link key={e.id} className="row" href={`/entries/${e.id}`} data-reveal>
             {cover && (
               // Decorative: the title right next to it says what it shows.
-              <Image
+              <SiteImage
                 src={cover}
                 alt=""
                 width={240}
@@ -246,7 +246,7 @@ async function Places({ locale }: { locale: string }) {
               data-reveal
             >
               {cover ? (
-                <Image
+                <SiteImage
                   src={cover}
                   alt={e.title}
                   width={840}

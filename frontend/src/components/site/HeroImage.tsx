@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SiteImage } from "@/components/SiteImage";
 import { motion } from "motion/react";
 
 // The hero photo. It is the only preloaded image on a page, and it settles
@@ -14,7 +14,7 @@ export function HeroImage({ src, alt }: { src: string; alt: string }) {
       animate={{ scale: 1 }}
       transition={{ duration: 7, ease: "easeOut" }}
     >
-      <Image className="bg" src={src} alt={alt} fill preload sizes="100vw" />
+      <SiteImage className="bg" src={src} alt={alt} fill preload sizes="100vw" />
     </motion.div>
   );
 }

@@ -82,13 +82,11 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
-    // Only the site's own photos and the files the API serves (covers, council
-    // photos), both same-origin paths. /api/files/* reaches the API through
-    // src/proxy.ts, so no remote host needs to be allowed.
-    localPatterns: [
-      { pathname: "/images/**", search: "" },
-      { pathname: "/api/files/**", search: "" },
-    ],
+    // Only the site's own photos go through the optimizer. Files the API serves
+    // (/api/files/*: covers, council photos) are rendered `unoptimized` by
+    // src/components/SiteImage.tsx: the optimizer's server-side fetch would not
+    // carry the proxy secret, and the API already serves them resized.
+    localPatterns: [{ pathname: "/images/**", search: "" }],
   },
   turbopack: {
     // Normally `createNextIntlPlugin()` from "next-intl/plugin" adds this alias.

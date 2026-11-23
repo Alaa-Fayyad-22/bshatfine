@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SiteImage } from "@/components/SiteImage";
 import { coverUrl } from "@/lib/cover";
 
 // The picture shown for an article or page that has no cover of its own.
@@ -20,7 +20,7 @@ export function NewsCover({
 }) {
   const src = coverUrl(coverImageUrl);
   return (
-    <Image
+    <SiteImage
       src={src ?? DEFAULT_COVER}
       alt={src ? title : ""}
       fill

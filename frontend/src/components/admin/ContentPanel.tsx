@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { SiteImage } from "@/components/SiteImage";
 import { useTranslations } from "next-intl";
 import { ENTRY_KINDS, ENTRY_RULES, isProjectStatus, type EntryKind } from "@/config/entries";
 import { Link } from "@/i18n/navigation";
@@ -193,7 +193,7 @@ export function ContentPanel({ kind }: { kind: EntryKind }) {
                 <div className="flex gap-4">
                   <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-card bg-stone">
                     {cover ? (
-                      <Image src={cover} alt="" fill sizes="6rem" className="object-cover" />
+                      <SiteImage src={cover} alt="" fill sizes="6rem" className="object-cover" />
                     ) : (
                       <span className="absolute inset-0 grid place-items-center px-1 text-center text-xs text-ink/60">
                         {t("noCover")}

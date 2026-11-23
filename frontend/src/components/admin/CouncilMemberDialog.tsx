@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import Image from "next/image";
+import { SiteImage } from "@/components/SiteImage";
 import { useTranslations } from "next-intl";
 import {
   AdminApiError,
@@ -279,7 +279,7 @@ function Body({
           <div className="mt-3 flex flex-wrap items-start gap-4">
             <div className="relative aspect-[4/5] w-32 shrink-0 overflow-hidden rounded-card bg-stone">
               {photo ? (
-                <Image src={photo} alt={t("photoOf", { name: member.nameAr })} fill sizes="8rem" className="object-cover" />
+                <SiteImage src={photo} alt={t("photoOf", { name: member.nameAr })} fill sizes="8rem" className="object-cover" />
               ) : (
                 <span className="absolute inset-0 grid place-items-center px-2 text-center text-sm text-ink/70">
                   {t("photoNone")}

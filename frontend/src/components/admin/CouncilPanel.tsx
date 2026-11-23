@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { SiteImage } from "@/components/SiteImage";
 import { useTranslations } from "next-intl";
 import {
   activateCouncilMember,
@@ -150,7 +150,7 @@ export function CouncilPanel() {
                 <div className="flex gap-4">
                   <div className="relative size-16 shrink-0 overflow-hidden rounded-card bg-stone">
                     {photo ? (
-                      <Image src={photo} alt="" fill sizes="4rem" className="object-cover" />
+                      <SiteImage src={photo} alt="" fill sizes="4rem" className="object-cover" />
                     ) : (
                       <span aria-hidden className="absolute inset-0 grid place-items-center text-lg font-semibold text-pine/60">
                         {initials(m.nameAr)}
