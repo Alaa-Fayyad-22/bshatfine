@@ -69,6 +69,15 @@ set "LONG=%A50%%A50%%A50%%A50%A"
 > entry-badyear.json    echo {"kind":"project","translations":[{"language":"ar","title":"x","summary":"x"}],"category":"roads","status":"planned","year":3000}
 > entry-history-cat.json echo {"kind":"history","translations":[{"language":"ar","title":"x","summary":"x"}],"category":"roads","year":1950}
 
+> ev-ok.json          echo {"translations":[{"language":"ar","title":"Suite AR event","summary":"Suite AR summary","location":"Suite square","organizer":"Suite organizer"},{"language":"en","title":"Suite test event","summary":"Suite EN summary","body":"Suite body"}],"category":"cultural","startsAt":"2030-06-01T18:00:00+03:00","endsAt":"2030-06-01T21:00:00+03:00","isAllDay":false,"mapUrl":"https://maps.example.com/suite"}
+> ev-nostart.json     echo {"translations":[{"language":"ar","title":"x","summary":"x"}],"category":"cultural","isAllDay":false}
+> ev-badcat.json      echo {"translations":[{"language":"ar","title":"x","summary":"x"}],"category":"party","startsAt":"2030-06-01T18:00:00+03:00","isAllDay":false}
+> ev-endbefore.json   echo {"translations":[{"language":"ar","title":"x","summary":"x"}],"category":"cultural","startsAt":"2030-06-01T18:00:00+03:00","endsAt":"2030-06-01T17:00:00+03:00","isAllDay":false}
+> ev-httpmap.json     echo {"translations":[{"language":"ar","title":"x","summary":"x"}],"category":"cultural","startsAt":"2030-06-01T18:00:00+03:00","isAllDay":false,"mapUrl":"http://maps.example.com/x"}
+> ev-quotemap.json    echo {"translations":[{"language":"ar","title":"x","summary":"x"}],"category":"cultural","startsAt":"2030-06-01T18:00:00+03:00","isAllDay":false,"mapUrl":"https://maps.example.com/x'onmouseover=alert(1)"}
+> ev-nul.json         echo {"translations":[{"language":"ar","title":"a\u0000b","summary":"x"}],"category":"cultural","startsAt":"2030-06-01T18:00:00+03:00","isAllDay":false}
+> ev-past.json        echo {"translations":[{"language":"ar","title":"Suite AR past event","summary":"Suite AR summary"}],"category":"other","startsAt":"2020-05-01T00:00:00+03:00","isAllDay":true}
+
 > user-create.json      echo {"email":"%TEMP_EMAIL%","displayName":"Suite Temp User","role":"Editor"}
 > user-badrole.json     echo {"email":"suite-badrole@example.com","displayName":"Bad Role","role":"SuperAdmin"}
 > user-dup.json         echo {"email":"%EDITOR_EMAIL%","displayName":"Duplicate","role":"Editor"}
@@ -300,6 +309,76 @@ call :http 404 "Delete entry - its cover photo is gone too" GET "%ECOVER%" - -
 
 call :http 403 "Council admin - Editor is refused" GET "/api/admin/council" editor.txt -
 call :http 403 "Site settings admin - Editor is refused" GET "/api/admin/site-settings" editor.txt -
+
+REM ==================================================================
+call :wait 61
+echo.
+echo === 6b. EVENTS ===
+call :http 200 "Public events - upcoming" GET "/api/events/upcoming?lang=ar" - -
+call :http 200 "Public events - past" GET "/api/events/past?lang=ar" - -
+call :check ".page" "1" "Public events - past starts at page 1"
+call :http 400 "Public events - unsupported language" GET "/api/events/upcoming?lang=fr" - -
+call :http 404 "Public event - unknown id" GET "/api/events/00000000-0000-0000-0000-000000000000?lang=ar" - -
+call :http 401 "Admin events - not logged in" GET "/api/admin/events" - -
+call :http 200 "Admin events - Editor" GET "/api/admin/events" editor.txt -
+call :http 401 "Create event - not logged in" POST "/api/admin/events" - ev-ok.json
+call :http 400 "Create event - start is required" POST "/api/admin/events" admin.txt ev-nostart.json
+call :http 400 "Create event - unknown category" POST "/api/admin/events" admin.txt ev-badcat.json
+call :http 400 "Create event - end before start" POST "/api/admin/events" admin.txt ev-endbefore.json
+call :http 400 "Create event - map link must be https" POST "/api/admin/events" admin.txt ev-httpmap.json
+call :http 400 "Create event - map link with a quote refused" POST "/api/admin/events" admin.txt ev-quotemap.json
+call :http 400 "Create event - NUL character refused, not a 500" POST "/api/admin/events" admin.txt ev-nul.json
+call :http 201 "Create event - upcoming" POST "/api/admin/events" admin.txt ev-ok.json
+call :json ".id"
+set "EV_ID=%VAL%"
+set "EV_COVER=/api/admin/events/%EV_ID%/cover"
+call :check ".category" "cultural" "Create event - category saved"
+call :check ".isPublished" "False" "Create event - starts unpublished"
+call :check ".translations[0].language" "ar" "Create event - Arabic listed first"
+call :http 404 "Public event - unpublished is hidden" GET "/api/events/%EV_ID%?lang=en" - -
+
+call :getver "/api/admin/events/%EV_ID%" admin.txt
+> ev-update.json echo {"translations":[{"language":"ar","title":"Suite AR event 2","summary":"Suite AR summary 2","location":"Suite square"},{"language":"en","title":"Suite test event edited","summary":"Suite EN summary 2"}],"category":"sports","startsAt":"2030-06-01T18:00:00+03:00","endsAt":"2030-06-01T21:00:00+03:00","isAllDay":false,"mapUrl":"https://maps.example.com/suite","version":%VER%}
+call :http 200 "Update event" PUT "/api/admin/events/%EV_ID%" admin.txt ev-update.json
+call :check ".category" "sports" "Update event - category changed"
+call :http 409 "Update event - stale version refused" PUT "/api/admin/events/%EV_ID%" admin.txt ev-update.json
+
+call :http 200 "Publish event" POST "/api/admin/events/%EV_ID%/publish" admin.txt -
+call :http 400 "Publish event - twice is refused" POST "/api/admin/events/%EV_ID%/publish" admin.txt -
+call :http 200 "Public event - published is visible" GET "/api/events/%EV_ID%?lang=en" - -
+call :check ".title" "Suite test event edited" "Public event - English text returned"
+call :check ".isPast" "False" "Public event - not past"
+call :http 200 "Public events - upcoming list" GET "/api/events/upcoming?lang=ar&limit=50" - -
+call :check ".id -contains '%EV_ID%'" "True" "Public events - upcoming list contains it"
+
+call :upload 200 "Event cover upload" admin.txt file "%IMG%" "%EV_COVER%"
+call :json ".coverImageUrl"
+set "EVCOVER=%VAL%"
+call :http 200 "Event cover file - public download" GET "%EVCOVER%" - -
+call :header "image/webp" 1 "Event cover file - converted to WebP"
+call :upload 400 "Event cover upload - fake image" admin.txt file fake.jpg "%EV_COVER%"
+
+call :http 201 "Create event - in the past, all day" POST "/api/admin/events" admin.txt ev-past.json
+call :json ".id"
+set "PAST_ID=%VAL%"
+call :http 200 "Publish the past event" POST "/api/admin/events/%PAST_ID%/publish" admin.txt -
+call :http 200 "Public event - past event" GET "/api/events/%PAST_ID%?lang=ar" - -
+call :check ".isPast" "True" "Public event - marked as past"
+call :http 200 "Public events - archive" GET "/api/events/past?lang=ar&pageSize=50" - -
+call :check ".items.id -contains '%PAST_ID%'" "True" "Public events - archive contains the past event"
+call :http 200 "Public events - upcoming again" GET "/api/events/upcoming?lang=ar&limit=50" - -
+call :check ".id -contains '%PAST_ID%'" "False" "Public events - past event not in upcoming"
+
+call :http 400 "Delete event - published is refused" DELETE "/api/admin/events/%EV_ID%" admin.txt -
+call :http 200 "Unpublish event" POST "/api/admin/events/%EV_ID%/unpublish" admin.txt -
+call :http 404 "Public event - hidden after unpublish" GET "/api/events/%EV_ID%?lang=en" - -
+call :http 204 "Delete event" DELETE "/api/admin/events/%EV_ID%" admin.txt -
+call :http 404 "Delete event - it is gone" GET "/api/admin/events/%EV_ID%" admin.txt -
+call :http 404 "Delete event - its cover photo is gone too" GET "%EVCOVER%" - -
+call :http 200 "Cleanup - unpublish the past event" POST "/api/admin/events/%PAST_ID%/unpublish" admin.txt -
+call :http 204 "Cleanup - delete the past event" DELETE "/api/admin/events/%PAST_ID%" admin.txt -
+call :http 200 "Audit filter - event deleted" GET "/api/admin/audit?action=event.deleted" admin.txt -
+call :check ".totalCount -ge 2" "True" "Audit - event deletions recorded"
 
 REM ==================================================================
 echo.

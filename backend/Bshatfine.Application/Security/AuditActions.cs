@@ -61,4 +61,13 @@ public static class AuditActions
     public const string EntryCoverRemoved = "entry.cover.removed";
     public const string EntryDeleted = "entry.deleted";
     public const string EntriesReordered = "entry.reordered";
+
+    // Events
+    public const string EventCreated = "event.created";
+    public const string EventUpdated = "event.updated";
+    public const string EventPublished = "event.published";
+    public const string EventUnpublished = "event.unpublished";
+    public const string EventCoverSet = "event.cover.set";
+    public const string EventCoverRemoved = "event.cover.removed";
+    public const string EventDeleted = "event.deleted";
 }
