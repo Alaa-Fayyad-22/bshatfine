@@ -82,6 +82,7 @@ app.MapFileEndpoints();
 app.MapAuthEndpoints();
 app.MapEntryEndpoints();
 app.MapEventEndpoints();
+app.MapNoticeEndpoints();
 app.MapSiteSettingsEndpoints();
 app.MapCouncilEndpoints();
 
@@ -97,5 +98,6 @@ admin.MapAdminAuditEndpoints();
 admin.MapAdminCouncilEndpoints();
 admin.MapAdminEntryEndpoints();
 admin.MapAdminEventEndpoints();
+admin.MapAdminNoticeEndpoints();
 
 app.Run();

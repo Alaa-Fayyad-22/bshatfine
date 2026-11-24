@@ -70,4 +70,11 @@ public static class AuditActions
     public const string EventCoverSet = "event.cover.set";
     public const string EventCoverRemoved = "event.cover.removed";
     public const string EventDeleted = "event.deleted";
+
+    // Notices
+    public const string NoticeCreated = "notice.created";
+    public const string NoticeUpdated = "notice.updated";
+    public const string NoticePublished = "notice.published";
+    public const string NoticeUnpublished = "notice.unpublished";
+    public const string NoticeDeleted = "notice.deleted";
 }

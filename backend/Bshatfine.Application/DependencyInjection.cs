@@ -14,6 +14,7 @@ public static class DependencyInjection
         services.AddScoped<CouncilService>();
         services.AddScoped<EntryService>();
         services.AddScoped<EventService>();
+        services.AddScoped<NoticeService>();
         return services;
     }
 }

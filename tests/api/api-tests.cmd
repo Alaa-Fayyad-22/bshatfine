@@ -78,6 +78,14 @@ set "LONG=%A50%%A50%%A50%%A50%A"
 > ev-nul.json         echo {"translations":[{"language":"ar","title":"a\u0000b","summary":"x"}],"category":"cultural","startsAt":"2030-06-01T18:00:00+03:00","isAllDay":false}
 > ev-past.json        echo {"translations":[{"language":"ar","title":"Suite AR past event","summary":"Suite AR summary"}],"category":"other","startsAt":"2020-05-01T00:00:00+03:00","isAllDay":true}
 
+> nt-ok.json          echo {"translations":[{"language":"ar","title":"Suite AR notice","body":"Suite AR body","area":"Suite area"},{"language":"en","title":"Suite test notice","body":"Suite EN body"}],"category":"water","priority":"urgent","validFrom":"2030-06-01T08:00:00+03:00","validUntil":"2030-06-01T14:00:00+03:00"}
+> nt-badcat.json      echo {"translations":[{"language":"ar","title":"x"}],"category":"party","priority":"normal"}
+> nt-badprio.json     echo {"translations":[{"language":"ar","title":"x"}],"category":"water","priority":"panic"}
+> nt-endbefore.json   echo {"translations":[{"language":"ar","title":"x"}],"category":"water","validFrom":"2030-06-01T14:00:00+03:00","validUntil":"2030-06-01T08:00:00+03:00"}
+> nt-notitle.json     echo {"translations":[{"language":"ar","title":""}],"category":"water"}
+> nt-nul.json         echo {"translations":[{"language":"ar","title":"a\u0000b"}],"category":"water"}
+> nt-past.json        echo {"translations":[{"language":"ar","title":"Suite AR expired notice"}],"category":"roads","priority":"normal","validFrom":"2020-05-01T08:00:00+03:00","validUntil":"2020-05-01T14:00:00+03:00"}
+
 > user-create.json      echo {"email":"%TEMP_EMAIL%","displayName":"Suite Temp User","role":"Editor"}
 > user-badrole.json     echo {"email":"suite-badrole@example.com","displayName":"Bad Role","role":"SuperAdmin"}
 > user-dup.json         echo {"email":"%EDITOR_EMAIL%","displayName":"Duplicate","role":"Editor"}
@@ -400,6 +408,76 @@ call :http 200 "Cleanup - unpublish the past event" POST "/api/admin/events/%PAS
 call :http 204 "Cleanup - delete the past event" DELETE "/api/admin/events/%PAST_ID%" admin.txt -
 call :http 200 "Audit filter - event deleted" GET "/api/admin/audit?action=event.deleted" admin.txt -
 call :check ".totalCount -ge 2" "True" "Audit - event deletions recorded"
+
+REM ==================================================================
+call :wait 61
+echo.
+echo === 6c. NOTICES ===
+call :http 200 "Public notices - active" GET "/api/notices?lang=ar" - -
+call :http 200 "Public notices - urgent" GET "/api/notices/urgent?lang=ar" - -
+call :http 200 "Public notices - archive" GET "/api/notices/archive?lang=ar" - -
+call :check ".page" "1" "Public notices - archive starts at page 1"
+call :http 400 "Public notices - unknown category filter" GET "/api/notices?lang=ar&category=party" - -
+call :http 400 "Public notices - unsupported language" GET "/api/notices?lang=fr" - -
+call :http 404 "Public notice - unknown id" GET "/api/notices/00000000-0000-0000-0000-000000000000?lang=ar" - -
+call :http 401 "Admin notices - not logged in" GET "/api/admin/notices" - -
+call :http 200 "Admin notices - Editor" GET "/api/admin/notices" editor.txt -
+call :http 401 "Create notice - not logged in" POST "/api/admin/notices" - nt-ok.json
+call :http 400 "Create notice - unknown category" POST "/api/admin/notices" admin.txt nt-badcat.json
+call :http 400 "Create notice - unknown priority" POST "/api/admin/notices" admin.txt nt-badprio.json
+call :http 400 "Create notice - end before start" POST "/api/admin/notices" admin.txt nt-endbefore.json
+call :http 400 "Create notice - empty title" POST "/api/admin/notices" admin.txt nt-notitle.json
+call :http 400 "Create notice - NUL character refused, not a 500" POST "/api/admin/notices" admin.txt nt-nul.json
+call :http 201 "Create notice - urgent, still valid" POST "/api/admin/notices" admin.txt nt-ok.json
+call :json ".id"
+set "NT_ID=%VAL%"
+call :check ".priority" "urgent" "Create notice - priority saved"
+call :check ".isPublished" "False" "Create notice - starts unpublished"
+call :check ".translations[0].language" "ar" "Create notice - Arabic listed first"
+call :http 404 "Public notice - unpublished is hidden" GET "/api/notices/%NT_ID%?lang=en" - -
+
+call :getver "/api/admin/notices/%NT_ID%" admin.txt
+> nt-update.json echo {"translations":[{"language":"ar","title":"Suite AR notice 2","area":"Suite area"},{"language":"en","title":"Suite test notice edited"}],"category":"roads","priority":"urgent","validFrom":"2030-06-01T08:00:00+03:00","validUntil":"2030-06-01T14:00:00+03:00","version":%VER%}
+call :http 200 "Update notice" PUT "/api/admin/notices/%NT_ID%" admin.txt nt-update.json
+call :check ".category" "roads" "Update notice - category changed"
+call :http 409 "Update notice - stale version refused" PUT "/api/admin/notices/%NT_ID%" admin.txt nt-update.json
+
+call :http 200 "Publish notice" POST "/api/admin/notices/%NT_ID%/publish" admin.txt -
+call :http 400 "Publish notice - twice is refused" POST "/api/admin/notices/%NT_ID%/publish" admin.txt -
+call :http 200 "Public notice - published is visible" GET "/api/notices/%NT_ID%?lang=en" - -
+call :check ".title" "Suite test notice edited" "Public notice - English text returned"
+call :check ".isExpired" "False" "Public notice - not expired"
+call :http 200 "Public notices - active list" GET "/api/notices?lang=ar&limit=50" - -
+call :check ".id -contains '%NT_ID%'" "True" "Public notices - active list contains it"
+call :http 200 "Public notices - urgent banner list" GET "/api/notices/urgent?lang=ar" - -
+call :check ".id -contains '%NT_ID%'" "True" "Public notices - urgent banner contains it"
+call :http 200 "Public notices - filter by its category" GET "/api/notices?lang=ar&category=roads&limit=50" - -
+call :check ".id -contains '%NT_ID%'" "True" "Public notices - category filter finds it"
+call :http 200 "Public notices - filter by another category" GET "/api/notices?lang=ar&category=health&limit=50" - -
+call :check ".id -contains '%NT_ID%'" "False" "Public notices - other category does not show it"
+
+call :http 201 "Create notice - already expired" POST "/api/admin/notices" admin.txt nt-past.json
+call :json ".id"
+set "NT_PAST=%VAL%"
+call :http 200 "Publish the expired notice" POST "/api/admin/notices/%NT_PAST%/publish" admin.txt -
+call :http 200 "Public notice - expired one is still readable" GET "/api/notices/%NT_PAST%?lang=ar" - -
+call :check ".isExpired" "True" "Public notice - marked as expired"
+call :http 200 "Public notices - archive again" GET "/api/notices/archive?lang=ar&pageSize=50" - -
+call :check ".items.id -contains '%NT_PAST%'" "True" "Public notices - archive contains the expired notice"
+call :http 200 "Public notices - active again" GET "/api/notices?lang=ar&limit=50" - -
+call :check ".id -contains '%NT_PAST%'" "False" "Public notices - expired notice not in the active list"
+
+call :http 400 "Delete notice - published is refused" DELETE "/api/admin/notices/%NT_ID%" admin.txt -
+call :http 200 "Unpublish notice" POST "/api/admin/notices/%NT_ID%/unpublish" admin.txt -
+call :http 404 "Public notice - hidden after unpublish" GET "/api/notices/%NT_ID%?lang=en" - -
+call :http 200 "Public notices - urgent banner after unpublish" GET "/api/notices/urgent?lang=ar" - -
+call :check ".id -contains '%NT_ID%'" "False" "Public notices - banner no longer shows it"
+call :http 204 "Delete notice" DELETE "/api/admin/notices/%NT_ID%" admin.txt -
+call :http 404 "Delete notice - it is gone" GET "/api/admin/notices/%NT_ID%" admin.txt -
+call :http 200 "Cleanup - unpublish the expired notice" POST "/api/admin/notices/%NT_PAST%/unpublish" admin.txt -
+call :http 204 "Cleanup - delete the expired notice" DELETE "/api/admin/notices/%NT_PAST%" admin.txt -
+call :http 200 "Audit filter - notice deleted" GET "/api/admin/audit?action=notice.deleted" admin.txt -
+call :check ".totalCount -ge 2" "True" "Audit - notice deletions recorded"
 
 REM ==================================================================
 echo.
