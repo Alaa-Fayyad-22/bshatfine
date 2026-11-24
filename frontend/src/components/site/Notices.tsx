@@ -2,15 +2,16 @@ import { Suspense, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { directionOf } from "@/components/LanguageNote";
+import { isNoticeCategory, isNoticePriority, PRIORITY_CLASS } from "@/config/notices";
 import { Link } from "@/i18n/navigation";
-import { getNews, type NewsSummaryDto } from "@/lib/api";
+import { getActiveNotices, type NoticeSummaryDto } from "@/lib/api";
+import { EVENT_TIME_ZONE } from "@/lib/event-time";
 import { formatDate } from "@/lib/numbers";
 
-const SAMPLES = ["water", "fees", "roads", "council"] as const;
-
-// The green "Official notices" panel. It lists the latest published news (date
-// and title, linking to the article). The frame renders at once; the list is
-// fetched live, so it streams in behind <Suspense>.
+// The green "Official notices" panel (home page, news page). It lists the
+// latest ACTIVE notices from the API, urgent first (priority badge, category,
+// date, title, area), each linking to its own page. The frame renders at once;
+// the list is fetched live, so it streams in behind <Suspense>.
 export function Notices({
   locale,
   count,
@@ -18,20 +19,22 @@ export function Notices({
   style,
 }: {
   locale: string;
-  count: 3 | 4;
+  count: number;
   showAll?: boolean;
   style?: CSSProperties;
 }) {
   const t = useTranslations("Notices");
 
   return (
-    <aside className="side notices" style={style} data-reveal>
-      <span className="label">{t("label")}</span>
+    <aside className="side notices" style={style} data-reveal aria-labelledby="notices-panel-label">
+      <span className="label" id="notices-panel-label">
+        {t("label")}
+      </span>
       <Suspense fallback={null}>
         <NoticeList locale={locale} count={count} />
       </Suspense>
       {showAll && (
-        <Link className="tlink" href="/news">
+        <Link className="tlink" href="/notices">
           {t("all")}
         </Link>
       )}
@@ -39,37 +42,47 @@ export function Notices({
   );
 }
 
-async function NoticeList({ locale, count }: { locale: string; count: 3 | 4 }) {
+async function NoticeList({ locale, count }: { locale: string; count: number }) {
   const t = await getTranslations("Notices");
 
-  let items: NewsSummaryDto[] = [];
+  let items: NoticeSummaryDto[] | null;
   try {
-    items = (await getNews(locale, 1, count)).items;
+    items = await getActiveNotices(locale, count);
   } catch {
-    // API down: fall through to the sample notices below.
+    items = null; // API down: a calm line instead of the list
   }
 
-  // Nothing published yet: the design's sample notices (placeholders).
-  if (items.length === 0) {
-    const samples = count === 3 ? SAMPLES.filter((s) => s !== "roads") : SAMPLES;
-    return samples.map((s) => (
-      <div key={s} className="notice">
-        <small>{t(`sample.${s}.meta`)}</small>
-        <span>{t(`sample.${s}.title`)}</span>
-      </div>
-    ));
+  if (items === null || items.length === 0) {
+    return (
+      <p style={{ margin: 0, color: "#e9e2d6" }}>{items === null ? t("homeError") : t("homeEmpty")}</p>
+    );
   }
 
-  return items.map((item) => (
-    <Link key={item.id} className="notice" href={`/news/${item.slug}`}>
-      <small>
-        <time dateTime={item.publishedAt}>
-          {formatDate(item.publishedAt, locale, { dateStyle: "long" })}
-        </time>
-      </small>
-      <span lang={item.language} dir={directionOf(item.language)}>
-        {item.title}
-      </span>
-    </Link>
-  ));
+  return items.map((n) => {
+    const dir = directionOf(n.language);
+    const date = n.publishedAt;
+    return (
+      <Link key={n.id} className="notice" href={`/notices/${n.id}`}>
+        <small className="nmeta">
+          {isNoticePriority(n.priority) && (
+            <span className={PRIORITY_CLASS[n.priority]}>{t(`priorities.${n.priority}`)}</span>
+          )}
+          {isNoticeCategory(n.category) && <span>{t(`categories.${n.category}`)}</span>}
+          {date && (
+            <time dateTime={date}>
+              {formatDate(date, locale, { dateStyle: "long", timeZone: EVENT_TIME_ZONE })}
+            </time>
+          )}
+        </small>
+        <span lang={n.language} dir={dir}>
+          {n.title}
+        </span>
+        {n.area.trim() !== "" && (
+          <small lang={n.language} dir={dir}>
+            {n.area}
+          </small>
+        )}
+      </Link>
+    );
+  });
 }

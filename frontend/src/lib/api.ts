@@ -1,6 +1,7 @@
 import { cacheLife } from "next/cache";
 import { ENTRY_ID, type EntryKind } from "@/config/entries";
 import { EVENT_ID } from "@/config/events";
+import { NOTICE_ID } from "@/config/notices";
 import { API_INTERNAL_URL, upstreamHeaders } from "./api-upstream";
 
 export type NewsDto = {
@@ -238,6 +239,126 @@ export async function eventExists(locale: string, id: string): Promise<boolean |
   if (!EVENT_ID.test(id)) return false;
   try {
     const res = await fetch(`${API_URL}/api/events/${encodeURIComponent(id)}?lang=${locale}`, {
+      headers: upstreamHeaders(),
+      cache: "no-store",
+      signal: AbortSignal.timeout(3000),
+    });
+    if (res.status === 404) return false;
+    return res.ok ? true : null;
+  } catch {
+    return null;
+  }
+}
+
+// ---------- Notices (water cuts, road closures, fees, council decisions...) ----------
+// Dates are UTC instants ("...Z") or null; show them with src/lib/event-time.ts
+// (Beirut time). `category` and `priority` are codes (src/config/notices.ts).
+// "Active" = published and not expired (no validUntil, or validUntil still
+// ahead). A validFrom in the future does NOT hide a notice: it is shown as
+// "from ...". Expired notices are in the archive.
+
+export type NoticeSummaryDto = {
+  id: string;
+  category: string;
+  priority: string;
+  validFrom: string | null;
+  validUntil: string | null;
+  isExpired: boolean;
+  // Can differ from the requested language (fallback).
+  language: string;
+  title: string;
+  // May be empty.
+  area: string;
+  publishedAt: string | null;
+};
+
+export type NoticeDto = NoticeSummaryDto & {
+  // Plain text, may be empty. NEVER render it as HTML or Markdown.
+  body: string;
+  updatedAt: string | null;
+};
+
+export type NoticePage = {
+  items: NoticeSummaryDto[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+};
+
+// An unknown category is a 400 from the API: callers only pass known codes.
+export async function getActiveNotices(
+  locale: string,
+  limit: number,
+  category?: string | null,
+): Promise<NoticeSummaryDto[]> {
+  const q = new URLSearchParams({ lang: locale, limit: String(limit) });
+  if (category) q.set("category", category);
+  const res = await fetch(`${API_URL}/api/notices?${q}`, {
+    headers: upstreamHeaders(),
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) throw new Error(`Failed to load notices: ${res.status}`);
+  return res.json();
+}
+
+export async function getNoticeArchive(
+  locale: string,
+  page: number,
+  pageSize: number,
+  category?: string | null,
+): Promise<NoticePage> {
+  const q = new URLSearchParams({ lang: locale, page: String(page), pageSize: String(pageSize) });
+  if (category) q.set("category", category);
+  const res = await fetch(`${API_URL}/api/notices/archive?${q}`, {
+    headers: upstreamHeaders(),
+    cache: "no-store",
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!res.ok) throw new Error(`Failed to load the notice archive: ${res.status}`);
+  return res.json();
+}
+
+// The urgent banner of every public page (at most 5, the API's own limit).
+// Cached for at most a minute: a new urgent notice shows up within about 60
+// seconds without every page view calling the API. Short-lived on purpose
+// (expire under 5 minutes): Next.js then reads it at request time instead of
+// baking it into a prerendered page. Thrown errors are never cached.
+export async function getUrgentNotices(locale: string): Promise<NoticeSummaryDto[]> {
+  "use cache";
+  cacheLife({ stale: 30, revalidate: 60, expire: 120 });
+
+  const res = await fetch(`${API_URL}/api/notices/urgent?lang=${locale}`, {
+    headers: upstreamHeaders(),
+    signal: AbortSignal.timeout(3000),
+  });
+  if (!res.ok) throw new Error(`Failed to load urgent notices: ${res.status}`);
+  return res.json();
+}
+
+// null when the notice is missing or unpublished (404); other failures throw.
+// Cached briefly, like getEvent (`isExpired` is at most about a minute old).
+// The proxy checks existence live first (noticeExists).
+export async function getNotice(locale: string, id: string): Promise<NoticeDto | null> {
+  "use cache";
+  cacheLife({ stale: 30, revalidate: 30, expire: 60 });
+
+  if (!NOTICE_ID.test(id)) return null;
+  const res = await fetch(`${API_URL}/api/notices/${encodeURIComponent(id)}?lang=${locale}`, {
+    headers: upstreamHeaders(),
+    signal: AbortSignal.timeout(5000),
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Failed to load notice: ${res.status}`);
+  return res.json();
+}
+
+// Live existence check for the proxy (same contract as newsExists below).
+export async function noticeExists(locale: string, id: string): Promise<boolean | null> {
+  if (!NOTICE_ID.test(id)) return false;
+  try {
+    const res = await fetch(`${API_URL}/api/notices/${encodeURIComponent(id)}?lang=${locale}`, {
       headers: upstreamHeaders(),
       cache: "no-store",
       signal: AbortSignal.timeout(3000),

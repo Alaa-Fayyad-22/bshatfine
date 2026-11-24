@@ -6,6 +6,7 @@ import { EventRows } from "@/components/site/EventRows";
 import { Hero } from "@/components/site/Hero";
 import { Notices } from "@/components/site/Notices";
 import { CARD_SIZES, Photo, photoSrc, type PhotoName } from "@/components/site/Photo";
+import { HOME_NOTICES } from "@/config/notices";
 import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import { telHref } from "@/lib/site-meta";
@@ -94,7 +95,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             </Icon>
             {t("quick.report")}
           </Link>
-          <Link href="/news">
+          <Link href="/notices">
             <Icon>
               <path d="M4 9v6h3l6 4V5L7 9z" />
               <path d="M17 9a4 4 0 0 1 0 6" />
@@ -203,7 +204,7 @@ export default async function HomePage({ params }: PageProps<"/[locale]">) {
             </div>
             <EventRows locale={locale} allLabel={t("coming.all")} />
           </div>
-          <Notices locale={locale} count={3} showAll />
+          <Notices locale={locale} count={HOME_NOTICES} showAll />
         </div>
       </section>
 

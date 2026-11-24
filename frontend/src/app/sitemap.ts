@@ -19,7 +19,7 @@ const FALLBACK_SITE_URL = "https://bshatfine.vercel.app";
 
 // The public pages ("" = home). The planned pages (gallery, careers) are left
 // out: they answer 404 in production.
-const STATIC_PATHS = ["", "/discover", "/municipality", "/services", "/report", "/news", "/events", "/contact"];
+const STATIC_PATHS = ["", "/discover", "/municipality", "/services", "/report", "/news", "/events", "/notices", "/contact"];
 
 // The API's largest page size (NewsService / EventService clamp to 50), and a
 // safety cap on the number of pages read.

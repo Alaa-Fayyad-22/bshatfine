@@ -1,0 +1,282 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { ADMIN_PRIORITY_CLASS, isNoticeCategory, isNoticePriority } from "@/config/notices";
+import { Link } from "@/i18n/navigation";
+import { listAdminNotices, type AdminNoticeDto, type Paged } from "@/lib/admin-api";
+import { formatStamp } from "@/lib/event-time";
+import { formatNumber } from "@/lib/numbers";
+import { toProblem, type Problem } from "@/lib/problem";
+import { ProblemNotice } from "./ProblemNotice";
+
+const PAGE_SIZE = 20;
+
+// Set by the editor after it deleted a notice (value: its title); the list
+// shows the confirmation once.
+export const NOTICE_DELETED_FLASH_KEY = "admin-notice-deleted";
+
+const listHref = (page: number) =>
+  page > 1 ? { pathname: "/admin/notices" as const, query: { page: String(page) } } : "/admin/notices";
+
+// Arabic title, or the English one when there is no Arabic.
+export function noticeTitle(n: AdminNoticeDto) {
+  const ar = n.translations.find((x) => x.language === "ar" && x.title);
+  const en = n.translations.find((x) => x.language === "en" && x.title);
+  return ar ? { text: ar.title, lang: "ar" } : en ? { text: en.title, lang: "en" } : null;
+}
+
+export type NoticeStatus = "draft" | "upcoming" | "active" | "expired";
+
+// What visitors see, as the API decides it (NoticeRepository):
+//  - not published: a draft, nowhere on the public site;
+//  - published, "valid until" passed: in the archive (expired);
+//  - published otherwise: active. A "valid from" in the future does NOT hide
+//    it (the API shows it at once, as "from ..."), so it is still active.
+export function noticeStatus(n: Pick<AdminNoticeDto, "isPublished" | "validFrom" | "validUntil">, now: number): NoticeStatus {
+  if (!n.isPublished) return "draft";
+  if (n.validUntil && new Date(n.validUntil).getTime() < now) return "expired";
+  if (n.validFrom && new Date(n.validFrom).getTime() > now) return "upcoming";
+  return "active";
+}
+
+export const STATUS_DOT: Record<NoticeStatus, string> = {
+  draft: "bg-alert-warn",
+  upcoming: "bg-pine",
+  active: "bg-pine",
+  expired: "bg-ink/40",
+};
+
+// Admin "Notices": every notice (published or not), newest first, paged.
+export function NoticesTable({ page }: { page: number }) {
+  const t = useTranslations("Admin.notices");
+  const tn = useTranslations("Notices");
+  const locale = useLocale();
+  const num = (value: number) => formatNumber(value, locale);
+  const [attempt, setAttempt] = useState(0);
+  const key = `${page}:${attempt}`;
+  const [result, setResult] = useState<{
+    key: string;
+    data: Paged<AdminNoticeDto> | null;
+    problem: Problem | null;
+  } | null>(null);
+  const [shown, setShown] = useState<Paged<AdminNoticeDto> | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const noticeRef = useRef<HTMLDivElement | null>(null);
+  // The status is decided against the time the list was loaded.
+  const [now, setNow] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    listAdminNotices(page, PAGE_SIZE).then(
+      (data) => {
+        if (cancelled) return;
+        setNow(Date.now());
+        setResult({ key, data, problem: null });
+        setShown(data);
+      },
+      (e) => !cancelled && setResult({ key, data: null, problem: toProblem(e) }),
+    );
+    return () => {
+      cancelled = true;
+    };
+    // `key` covers page and attempt.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  // A notice deleted in the editor: say so here, once.
+  useEffect(() => {
+    try {
+      const title = sessionStorage.getItem(NOTICE_DELETED_FLASH_KEY);
+      if (title === null) return;
+      sessionStorage.removeItem(NOTICE_DELETED_FLASH_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the hand-over from the editor
+      setNotice(t("deletedOk", { title: title || t("untitled") }));
+      setTimeout(() => noticeRef.current?.focus(), 0);
+    } catch {
+      // sessionStorage unavailable: no confirmation message.
+    }
+    // Runs once on arrival.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const current = result?.key === key ? result : null;
+  const loading = current === null;
+  const failed = current !== null && current.data === null;
+  const reload = () => setAttempt((n) => n + 1);
+
+  let body: React.ReactNode;
+  if (failed && current?.problem?.kind === "rate") {
+    body = (
+      <div className="mt-8 max-w-prose">
+        <ProblemNotice problem={current.problem} onRateDone={reload} />
+      </div>
+    );
+  } else if (failed) {
+    body = (
+      <div role="alert" className="mt-8 max-w-prose">
+        <p>{t("error")}</p>
+        <button type="button" onClick={reload} className="mt-3 min-h-11 font-semibold underline underline-offset-4">
+          {t("retry")}
+        </button>
+      </div>
+    );
+  } else if (shown === null) {
+    body = (
+      <p role="status" className="mt-8 text-ink/70">
+        {t("loading")}
+      </p>
+    );
+  } else if (page > Math.max(shown.totalPages, 1)) {
+    body = (
+      <div role="status" className="mt-8 max-w-prose">
+        <p>{t("pageOutOfRange")}</p>
+        <Link
+          href={listHref(1)}
+          className="mt-3 inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
+        >
+          {t("goToFirst")}
+        </Link>
+      </div>
+    );
+  } else {
+    const { items, totalCount, totalPages } = shown;
+    body = (
+      <div aria-busy={loading} className={loading ? "opacity-60" : undefined}>
+        <p className="mt-6 text-ink/80">
+          {t("total", { count: totalCount, n: num(totalCount) })}
+          {totalPages > 1 && ` · ${t("page", { page: num(page), total: num(totalPages) })}`}
+        </p>
+
+        {items.length === 0 ? (
+          <p role="status" className="mt-8 max-w-prose text-ink/80">
+            {t("empty")}
+          </p>
+        ) : (
+          <div className="relative mt-6 overflow-x-auto">
+            <table className="w-full min-w-[56rem] border-collapse text-start text-base">
+              <thead>
+                <tr className="border-b border-ink/30 text-sm text-ink/70">
+                  <th scope="col" className="py-3 pe-4 text-start font-medium">{t("colTitle")}</th>
+                  <th scope="col" className="py-3 pe-4 text-start font-medium">{t("colCategory")}</th>
+                  <th scope="col" className="py-3 pe-4 text-start font-medium">{t("colPriority")}</th>
+                  <th scope="col" className="py-3 pe-4 text-start font-medium">{t("colStatus")}</th>
+                  <th scope="col" className="py-3 pe-4 text-start font-medium">{t("colValidity")}</th>
+                  <th scope="col" className="py-3 pe-4 text-start font-medium">{t("colUpdated")}</th>
+                  <th scope="col" className="py-3 text-start font-medium">
+                    <span className="sr-only">{t("colActions")}</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((n) => {
+                  const ar = n.translations.find((x) => x.language === "ar" && x.title);
+                  const title = noticeTitle(n);
+                  const name = title?.text ?? t("untitled");
+                  const status = noticeStatus(n, now);
+                  const updated = n.updatedAt ?? n.createdAt;
+                  return (
+                    <tr key={n.id} className="border-b border-line">
+                      <td className="max-w-80 py-3 pe-4 font-medium">
+                        {ar ? (
+                          <span lang="ar" dir="rtl" className="line-clamp-2 break-words">
+                            {ar.title}
+                          </span>
+                        ) : (
+                          <span className="text-ink/70 italic">{t("noArabic")}</span>
+                        )}
+                      </td>
+                      <td className="py-3 pe-4 whitespace-nowrap">
+                        {isNoticeCategory(n.category) ? tn(`categories.${n.category}`) : n.category}
+                      </td>
+                      <td className="py-3 pe-4 whitespace-nowrap">
+                        {isNoticePriority(n.priority) ? (
+                          <span
+                            className={`inline-block rounded-control border px-2 py-0.5 text-sm font-semibold ${ADMIN_PRIORITY_CLASS[n.priority]}`}
+                          >
+                            {tn(`priorities.${n.priority}`)}
+                          </span>
+                        ) : (
+                          n.priority
+                        )}
+                      </td>
+                      <td className="py-3 pe-4 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-2 font-medium">
+                          <span aria-hidden className={`size-2 shrink-0 rounded-full ${STATUS_DOT[status]}`} />
+                          {t(`status.${status}`)}
+                        </span>
+                      </td>
+                      <td className="py-3 pe-4 text-sm">
+                        <span className="block whitespace-nowrap">
+                          {n.validFrom ? <time dateTime={n.validFrom}>{formatStamp(locale, n.validFrom)}</time> : "—"}
+                        </span>
+                        <span className="block whitespace-nowrap">
+                          {n.validUntil ? (
+                            <time dateTime={n.validUntil}>{formatStamp(locale, n.validUntil)}</time>
+                          ) : (
+                            <span className="text-ink/70">{t("open")}</span>
+                          )}
+                        </span>
+                      </td>
+                      <td className="py-3 pe-4 text-sm whitespace-nowrap">
+                        <time dateTime={updated}>{formatStamp(locale, updated)}</time>
+                      </td>
+                      <td className="py-3 whitespace-nowrap">
+                        <Link
+                          href={`/admin/notices/${n.id}`}
+                          aria-label={t("editLabel", { title: name })}
+                          className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4"
+                        >
+                          {t("edit")}
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <nav aria-label={t("pagination")} className="mt-8 flex items-center justify-between gap-6">
+            {page > 1 ? (
+              <Link
+                href={listHref(page - 1)}
+                rel="prev"
+                className="inline-flex min-h-11 items-center font-semibold underline-offset-4 hover:underline"
+              >
+                {t("previous")}
+              </Link>
+            ) : (
+              <span />
+            )}
+            <span className="text-sm text-ink/70">{t("page", { page: num(page), total: num(totalPages) })}</span>
+            {page < totalPages ? (
+              <Link
+                href={listHref(page + 1)}
+                rel="next"
+                className="inline-flex min-h-11 items-center font-semibold underline-offset-4 hover:underline"
+              >
+                {t("next")}
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div ref={noticeRef} tabIndex={-1} aria-live="polite" role="status" className="outline-none empty:hidden">
+        {notice && (
+          <p className="mt-4 border-s-4 border-pine bg-stone px-4 py-3 font-medium text-pine">{notice}</p>
+        )}
+      </div>
+      {body}
+    </>
+  );
+}

@@ -10,6 +10,7 @@ export type MetaPage =
   | "report"
   | "news"
   | "events"
+  | "notices"
   | "contact"
   | "gallery"
   | "careers";

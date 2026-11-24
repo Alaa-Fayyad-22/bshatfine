@@ -11,6 +11,7 @@ const sections = [
   { key: "news", href: "/admin/news", adminOnly: false },
   { key: "content", href: "/admin/content", adminOnly: false },
   { key: "events", href: "/admin/events", adminOnly: false },
+  { key: "notices", href: "/admin/notices", adminOnly: false },
   { key: "contact", href: "/admin/contact", adminOnly: true },
   { key: "council", href: "/admin/council", adminOnly: true },
   { key: "users", href: "/admin/users", adminOnly: true },

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
-import { entryExists, eventExists, newsExists } from "./lib/api";
+import { entryExists, eventExists, newsExists, noticeExists } from "./lib/api";
 import {
   API_INTERNAL_URL,
   CLIENT_IP_HEADER,
@@ -72,6 +72,7 @@ const DETAIL_PAGES = [
   { path: /^\/(ar|en)\/news\/([^/]+)\/?$/, kind: "article", exists: newsExists },
   { path: /^\/(ar|en)\/entries\/([^/]+)\/?$/, kind: "entry", exists: entryExists },
   { path: /^\/(ar|en)\/events\/([^/]+)\/?$/, kind: "event", exists: eventExists },
+  { path: /^\/(ar|en)\/notices\/([^/]+)\/?$/, kind: "notice", exists: noticeExists },
 ] as const;
 
 function safeDecode(segment: string): string | null {

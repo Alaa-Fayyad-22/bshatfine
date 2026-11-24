@@ -17,7 +17,7 @@ export async function LanguageNote({
 }: {
   language: string;
   locale: string;
-  of?: "News" | "Entries" | "Events";
+  of?: "News" | "Entries" | "Events" | "Notices";
 }) {
   if (language === locale) return null;
   const t = await getTranslations(of);

@@ -748,6 +748,143 @@
     color: var(--muted);
   }
 
+  /* Notice priority badges: colour AND word (never colour alone).
+     Text contrast is at least 7:1 in each. */
+  & .nprio {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid;
+    line-height: 1.4;
+  }
+  & .nprio-urgent {
+    background: #8f1c1c;
+    border-color: #8f1c1c;
+    color: #fff;
+  }
+  & .nprio-important {
+    background: #fff1d0;
+    border-color: #8a5a00;
+    color: #4d3300;
+  }
+  & .nprio-normal {
+    background: transparent;
+    border-color: #8f887e;
+    color: var(--ink);
+  }
+  /* On the green "Official notices" panel */
+  & .notices .nprio-normal {
+    border-color: #d3d6bf;
+    color: var(--paper);
+  }
+  & .notice .nmeta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    font-family: inherit;
+    font-size: 13px;
+    color: #d3d6bf;
+  }
+  & .notice .nmeta > * {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    color: inherit;
+  }
+  & .notice .nmeta > .nprio {
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  & .notice .nmeta > .nprio-urgent {
+    color: #fff;
+  }
+  & .notice .nmeta > .nprio-important {
+    color: #4d3300;
+  }
+  & .notice .nmeta > .nprio-normal {
+    color: var(--paper);
+  }
+
+  /* Urgent banner: above the header of every public page. Shown only when
+     there is at least one active urgent notice. */
+  & .urgent-bar {
+    background: #7a1717;
+    color: #fff;
+    position: relative;
+    z-index: 25;
+  }
+  & .urgent-bar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  & .urgent-bar li + li {
+    border-top: 1px solid rgba(255, 255, 255, 0.28);
+  }
+  & .urgent-bar .urgent-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px 18px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  & .urgent-bar .urgent-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    font-size: 15px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  & .urgent-bar .urgent-kicker {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: 1px solid #fff;
+    padding: 2px 8px;
+  }
+  & .urgent-bar a {
+    color: #fff;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  & .urgent-bar a:hover {
+    color: #ffe3c2;
+  }
+  & .urgent-bar .urgent-meta {
+    color: #ffe3e3;
+    font-size: 14px;
+  }
+  & .urgent-bar .urgent-close {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    margin: -8px 0;
+    display: inline-grid;
+    place-items: center;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    color: #fff;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  & .urgent-bar .urgent-close:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+  & .urgent-bar :focus-visible {
+    outline-color: #fff;
+  }
+
   /* People */
   & .person {
     display: flex;

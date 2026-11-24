@@ -2,7 +2,7 @@
 // the message key in "Nav.<key>"; `href` has no locale prefix (the locale-aware
 // <Link> from "@/i18n/navigation" adds it).
 
-export type NavKey = "discover" | "municipality" | "services" | "news" | "events" | "contact";
+export type NavKey = "discover" | "municipality" | "services" | "news" | "events" | "notices" | "contact";
 
 export type NavItem = {
   key: NavKey;
@@ -12,13 +12,14 @@ export type NavItem = {
   alsoActive?: readonly string[];
 };
 
-// Exactly the six links of the approved design, in its order.
+// The six links of the approved design, in its order, plus Notices next to Events.
 export const navItems: readonly NavItem[] = [
   { key: "discover", href: "/discover" },
   { key: "municipality", href: "/municipality" },
   { key: "services", href: "/services", alsoActive: ["/report"] },
   { key: "news", href: "/news" },
   { key: "events", href: "/events" },
+  { key: "notices", href: "/notices" },
   { key: "contact", href: "/contact" },
 ];
 

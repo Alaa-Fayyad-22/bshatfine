@@ -4,6 +4,7 @@
 // is first-party. Server code uses API_INTERNAL_URL in ./api.ts instead.
 import type { EntryKind, EntryLanguage } from "@/config/entries";
 import type { EventLanguage } from "@/config/events";
+import type { NoticeLanguage } from "@/config/notices";
 import { reportAuthFailure } from "./auth-api";
 import { readRetryAfter } from "./rate-limit";
 
@@ -352,6 +353,79 @@ export const removeEventCover = (id: string): Promise<AdminEventDto> =>
 // Unpublished events only (the API answers 400 otherwise); the cover goes too.
 export async function deleteEvent(id: string): Promise<void> {
   await request<void>(`/events/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+// ---------- Notices (Admins and Editors) ----------
+// Dates go OUT as ISO strings with Beirut's offset (beirutToIso) or null, and
+// come back in UTC ("...Z"). `category` and `priority` are codes
+// (src/config/notices.ts).
+
+export type NoticeTranslationDto = {
+  language: NoticeLanguage;
+  title: string;
+  // Optional (null or empty). Plain text.
+  body: string | null;
+  area: string | null;
+};
+
+export type AdminNoticeDto = {
+  id: string;
+  category: string;
+  priority: string;
+  validFrom: string | null;
+  validUntil: string | null;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  publishedAt: string | null;
+  translations: NoticeTranslationDto[];
+  // Changes after every successful change; sent back with a PUT.
+  version: number;
+};
+
+export type NoticeInput = {
+  translations: NoticeTranslationDto[];
+  category: string;
+  priority: string;
+  validFrom: string | null;
+  validUntil: string | null;
+};
+
+// Newest first (by creation). The API has no filters for this list: only paging.
+export function listAdminNotices(page = 1, pageSize = 20): Promise<Paged<AdminNoticeDto>> {
+  const q = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  return request(`/notices?${q}`);
+}
+
+// null when the notice does not exist (any more).
+export async function getAdminNotice(id: string): Promise<AdminNoticeDto | null> {
+  try {
+    return await request<AdminNoticeDto>(`/notices/${encodeURIComponent(id)}`);
+  } catch (e) {
+    if (e instanceof AdminApiError && e.status === 404) return null;
+    throw e;
+  }
+}
+
+export const createNotice = (input: NoticeInput): Promise<AdminNoticeDto> =>
+  request("/notices", { method: "POST", body: JSON.stringify(input) });
+
+// The languages sent BECOME the notice's languages (a missing one is deleted).
+export const updateNotice = (id: string, input: NoticeInput, version: number): Promise<AdminNoticeDto> =>
+  request(`/notices/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: JSON.stringify({ ...input, version }),
+  });
+
+// Publishing needs an Arabic text (the API says so otherwise).
+export const publishNotice = (id: string): Promise<AdminNoticeDto> =>
+  request(`/notices/${encodeURIComponent(id)}/publish`, { method: "POST" });
+export const unpublishNotice = (id: string): Promise<AdminNoticeDto> =>
+  request(`/notices/${encodeURIComponent(id)}/unpublish`, { method: "POST" });
+
+// Unpublished notices only (the API answers 400 otherwise).
+export async function deleteNotice(id: string): Promise<void> {
+  await request<void>(`/notices/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
 // ---------- Contact details (Admin only) ----------
