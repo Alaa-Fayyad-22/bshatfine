@@ -397,6 +397,90 @@ namespace Bshatfine.Infrastructure.Migrations
                     b.ToTable("EventTranslations", (string)null);
                 });
 
+            modelBuilder.Entity("Bshatfine.Domain.Notices.Notice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ValidFrom")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ValidUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IsPublished", "ValidUntil");
+
+                    b.ToTable("Notices", (string)null);
+                });
+
+            modelBuilder.Entity("Bshatfine.Domain.Notices.NoticeTranslation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Area")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<Guid>("NoticeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NoticeId", "Language")
+                        .IsUnique();
+
+                    b.ToTable("NoticeTranslations", (string)null);
+                });
+
             modelBuilder.Entity("Bshatfine.Infrastructure.Audit.AuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -755,6 +839,15 @@ namespace Bshatfine.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Bshatfine.Domain.Notices.NoticeTranslation", b =>
+                {
+                    b.HasOne("Bshatfine.Domain.Notices.Notice", null)
+                        .WithMany("Translations")
+                        .HasForeignKey("NoticeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -817,6 +910,11 @@ namespace Bshatfine.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity("Bshatfine.Domain.Events.Event", b =>
+                {
+                    b.Navigation("Translations");
+                });
+
+            modelBuilder.Entity("Bshatfine.Domain.Notices.Notice", b =>
                 {
                     b.Navigation("Translations");
                 });

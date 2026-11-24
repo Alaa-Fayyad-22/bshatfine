@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Bshatfine.Domain.Entries;
 using Bshatfine.Domain.Events;
+using Bshatfine.Domain.Notices;
 
 namespace Bshatfine.Infrastructure.Persistence;
 
@@ -22,6 +23,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<CouncilMember> CouncilMembers => Set<CouncilMember>();
     public DbSet<Entry> Entries => Set<Entry>();
     public DbSet<Event> Events => Set<Event>();
+    public DbSet<Notice> Notices => Set<Notice>();
     public DbSet<AuthSession> AuthSessions => Set<AuthSession>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
