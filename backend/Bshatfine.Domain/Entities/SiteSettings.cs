@@ -14,6 +14,10 @@ public partial class SiteSettings
     public const int TextMaxLength = 300;
     public const int UrlMaxLength = 500;
 
+    // Characters that never belong in a link a person types or pastes,
+    // and that could break out of an HTML attribute
+    private static readonly char[] ForbiddenUrlChars = ['"', '\'', '<', '>', '\\', '`', ' ', '\t', '\r', '\n'];
+
     public int Id { get; private set; }
     public string? Phone { get; private set; }
     public string? SecondaryPhone { get; private set; }
@@ -52,6 +56,11 @@ public partial class SiteSettings
     [GeneratedRegex(@"^\+?[0-9][0-9 \-()]{4,28}$")]
     private static partial Regex PhonePattern();
 
+    // An everyday address only: name@domain.tld
+    // (no quoted names, no spaces, no IP addresses, at least one dot in the domain)
+    [GeneratedRegex(@"^[A-Za-z0-9._%+\-]+@[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9\-]*[A-Za-z0-9])?)+$")]
+    private static partial Regex EmailPattern();
+
     private static string? OptionalText(string? value, string label)
     {
         var clean = value?.Trim();
@@ -78,6 +87,7 @@ public partial class SiteSettings
         if (string.IsNullOrEmpty(clean))
             return null;
         if (clean.Length > EmailMaxLength
+            || !EmailPattern().IsMatch(clean)
             || !MailAddress.TryCreate(clean, out var parsed)
             || parsed.Address != clean)
             throw new DomainException("The email address is not valid.");
@@ -90,10 +100,16 @@ public partial class SiteSettings
         if (string.IsNullOrEmpty(clean))
             return null;
         if (clean.Length > UrlMaxLength
+            || clean.IndexOfAny(ForbiddenUrlChars) >= 0              // no quotes, spaces, < > \ `
             || !Uri.TryCreate(clean, UriKind.Absolute, out var uri)
-            || uri.Scheme != Uri.UriSchemeHttps)
+            || uri.Scheme != Uri.UriSchemeHttps
+            || !string.IsNullOrEmpty(uri.UserInfo)                   // no https://user:password@...
+            || uri.HostNameType != UriHostNameType.Dns               // a real host name, not an IP
+            || !uri.Host.Contains('.'))                              // e.g. maps.google.com, not localhost
             throw new DomainException($"The {label} must be a complete https:// address.");
-        return uri.ToString();
+
+        // AbsoluteUri keeps special characters escaped (%22), so nothing unsafe is ever stored
+        return uri.AbsoluteUri;
     }
 }
 

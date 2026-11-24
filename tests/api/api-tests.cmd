@@ -311,6 +311,26 @@ call :http 404 "Delete entry - its cover photo is gone too" GET "%ECOVER%" - -
 call :http 403 "Council admin - Editor is refused" GET "/api/admin/council" editor.txt -
 call :http 403 "Site settings admin - Editor is refused" GET "/api/admin/site-settings" editor.txt -
 
+echo.
+echo --- Contact details validation (invalid values only: nothing is saved) ---
+call :getver "/api/admin/site-settings" admin.txt
+> ss-quote.json    echo {"mapUrl":"https://maps.example.com/a\"onmouseover=alert(1)","version":%VER%}
+> ss-space.json    echo {"mapUrl":"https://maps.example.com/a b","version":%VER%}
+> ss-userinfo.json echo {"facebookUrl":"https://user:pass@evil.example/page","version":%VER%}
+> ss-nodot.json    echo {"instagramUrl":"https://localhost/page","version":%VER%}
+> ss-http.json     echo {"mapUrl":"http://maps.example.com/x","version":%VER%}
+> ss-email1.json   echo {"email":"\"script\"@example.test","version":%VER%}
+> ss-email2.json   echo {"email":"info@localhost","version":%VER%}
+call :http 400 "Contact - link with a quote refused" PUT "/api/admin/site-settings" admin.txt ss-quote.json
+call :check ".detail" "The map link must be a complete https:// address." "Contact - quote refused by the link rule"
+call :http 400 "Contact - link with a space refused" PUT "/api/admin/site-settings" admin.txt ss-space.json
+call :http 400 "Contact - link with user:password refused" PUT "/api/admin/site-settings" admin.txt ss-userinfo.json
+call :http 400 "Contact - link without a real host refused" PUT "/api/admin/site-settings" admin.txt ss-nodot.json
+call :http 400 "Contact - http link refused" PUT "/api/admin/site-settings" admin.txt ss-http.json
+call :http 400 "Contact - quoted email refused" PUT "/api/admin/site-settings" admin.txt ss-email1.json
+call :check ".detail" "The email address is not valid." "Contact - quoted email refused by the email rule"
+call :http 400 "Contact - email without a real domain refused" PUT "/api/admin/site-settings" admin.txt ss-email2.json
+
 REM ==================================================================
 call :wait 61
 echo.
