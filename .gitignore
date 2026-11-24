@@ -489,3 +489,6 @@ admin2.txt
 
 # Security test suite output (tests/security)
 tests/security/results/
+tests/seed/seed-manifest.json
+tests/seed/seed-manifest.json
+tests/seed/seed-manifest.json
