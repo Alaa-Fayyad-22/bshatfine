@@ -18,6 +18,7 @@ public class NewsRepository(AppDbContext db) : INewsRepository
 
         var rows = await query
             .OrderByDescending(n => n.PublishedAt)
+            .ThenBy(n => n.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .Select(n => new
@@ -65,6 +66,7 @@ public class NewsRepository(AppDbContext db) : INewsRepository
             .Include(n => n.Translations)
             .AsNoTracking()
             .OrderByDescending(n => n.CreatedAt)
+            .ThenBy(n => n.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);
