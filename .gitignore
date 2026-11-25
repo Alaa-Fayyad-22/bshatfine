@@ -492,3 +492,8 @@ tests/security/results/
 tests/seed/seed-manifest.json
 tests/seed/seed-manifest.json
 tests/seed/seed-manifest.json
+tests/seed/seed-manifest-local.json
+
+tests/seed/import-manifest.json
+tests/seed/import-news.sql
+tests/seed/posts.csv

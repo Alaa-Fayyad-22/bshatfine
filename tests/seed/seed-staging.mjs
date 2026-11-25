@@ -3,6 +3,7 @@
 //   node tests/seed/seed-staging.mjs --dry-run   show what would be created, send nothing
 //   node tests/seed/seed-staging.mjs             create, add covers, publish
 //   node tests/seed/seed-staging.mjs --cleanup   remove everything this script created
+//   add --local to any of these to use the local dev API instead of staging
 //
 // Logs in as the staging Editor from the environment variables
 // STAGING_EDITOR_EMAIL and STAGING_EDITOR_PASSWORD (never printed or saved).
@@ -15,9 +16,13 @@ import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
 import { CONTENT } from "./seed-content.mjs";
 
-const SITE = "https://bshatfine.vercel.app";
+// --local: fill the LOCAL dev API instead (http://localhost:5246, Origin = the local frontend),
+// with its own manifest so it never mixes with staging.
+const LOCAL = process.argv.includes("--local");
+const SITE = LOCAL ? "http://localhost:5246" : "https://bshatfine.vercel.app";
+const ORIGIN = LOCAL ? "http://localhost:3000" : SITE;
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const MANIFEST = path.join(HERE, "seed-manifest.json");
+const MANIFEST = path.join(HERE, LOCAL ? "seed-manifest-local.json" : "seed-manifest.json");
 const MODE = process.argv.includes("--cleanup") ? "cleanup"
            : process.argv.includes("--dry-run") ? "dry-run" : "seed";
 const ONLY_MISSING = process.argv.includes("--missing"); // add only items not yet in the manifest
@@ -33,7 +38,7 @@ let lastUpload = 0;
 async function api(method, url, { json, form, quiet } = {}) {
   for (let attempt = 1; attempt <= 15; attempt++) {
     await sleep(GAP_MS);
-    const headers = { Origin: SITE, Accept: "application/json" };
+    const headers = { Origin: ORIGIN, Accept: "application/json" };
     if (cookie) headers.Cookie = cookie;
     let body;
     if (json !== undefined) { headers["Content-Type"] = "application/json"; body = JSON.stringify(json); }
@@ -158,7 +163,7 @@ async function login() {
   const r = await api("POST", "/api/auth/login", { json: { email, password } });
   if (!r.ok) { console.log("Login failed. Is the staging account enabled and the password right?"); process.exit(1); }
   if (r.data?.requiresTwoFactor) { console.log("This account needs 2FA; use an account without it."); process.exit(1); }
-  console.log("Logged in.\n");
+  console.log(`Logged in (${LOCAL ? "LOCAL " : ""}${SITE}).\n`);
 }
 const logout = () => api("POST", "/api/auth/logout", { quiet: true });
 
